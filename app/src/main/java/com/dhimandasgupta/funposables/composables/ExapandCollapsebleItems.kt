@@ -179,10 +179,10 @@ private fun ExpandableCardList(
 
 @Composable
 private fun AccountCard(
+    modifier: Modifier = Modifier,
     index: Int = 0,
     collapsed: Boolean = false,
-    accountName: String,
-    modifier: Modifier = Modifier
+    accountName: String
 ) {
     val density = LocalDensity.current
 
@@ -195,8 +195,18 @@ private fun AccountCard(
                     (-index * 96).toDp().roundToPx().toFloat()
                 }
             }
-            .zIndex(index.toFloat()),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            .zIndex(index.toFloat() * -1f),
+        border = CardDefaults.outlinedCardBorder(
+            enabled = true
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 12.dp,
+            pressedElevation = 0.dp,
+            focusedElevation = 0.dp,
+            hoveredElevation = 0.dp,
+            draggedElevation = 0.dp,
+            disabledElevation = 0.dp,
+        ),
         shape = RoundedCornerShape(12.dp)
     ) {
         Row(

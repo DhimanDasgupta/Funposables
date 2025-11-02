@@ -1,5 +1,6 @@
 package com.dhimandasgupta.funposables.composables
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
@@ -25,6 +27,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -36,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,20 +65,33 @@ fun ExpandableCollapsableItems(
 
     ExpandableCardList(
         accounts = accounts,
-        modifier = modifier.padding(
-            start = WindowInsets.displayCutout.union(WindowInsets.navigationBars).asPaddingValues()
-                .calculateStartPadding(
-                    LayoutDirection.Ltr
-                ),
-            top = WindowInsets.displayCutout.union(WindowInsets.statusBars).asPaddingValues()
-                .calculateTopPadding(),
-            end = WindowInsets.displayCutout.union(WindowInsets.navigationBars).asPaddingValues()
-                .calculateEndPadding(
-                    LayoutDirection.Ltr
-                ),
-            bottom = WindowInsets.displayCutout.union(WindowInsets.navigationBars).asPaddingValues()
-                .calculateBottomPadding()
-        )
+        modifier = modifier
+            .fillMaxSize()
+            .background(
+                brush = Brush.verticalGradient(
+                    colors = listOf(
+                        colorScheme.primaryContainer,
+                        colorScheme.secondaryContainer
+                    )
+                )
+            )
+            .padding(
+                start = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
+                    .asPaddingValues()
+                    .calculateStartPadding(
+                        LayoutDirection.Ltr
+                    ),
+                top = WindowInsets.displayCutout.union(WindowInsets.statusBars).asPaddingValues()
+                    .calculateTopPadding(),
+                end = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
+                    .asPaddingValues()
+                    .calculateEndPadding(
+                        LayoutDirection.Ltr
+                    ),
+                bottom = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
+                    .asPaddingValues()
+                    .calculateBottomPadding()
+            )
     )
 }
 
@@ -169,9 +186,11 @@ private fun ExpandableCardList(
 
         LazyColumn {
             items(100) { item ->
-                Text("This is Item : $item", modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth())
+                Text(
+                    "This is Item : $item", modifier = Modifier
+                        .padding(16.dp)
+                        .fillMaxWidth()
+                )
             }
         }
     }

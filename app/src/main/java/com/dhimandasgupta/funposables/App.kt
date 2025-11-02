@@ -11,8 +11,10 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navigation
+import androidx.navigation.compose.navigation
+import com.dhimandasgupta.funposables.composables.DragOrTransformBox
 import com.dhimandasgupta.funposables.composables.ExpandableCollapsableItems
+import com.dhimandasgupta.funposables.composables.FirstLineAlignedCheckbox
 import com.dhimandasgupta.funposables.composables.Launcher
 import kotlinx.serialization.Serializable
 
@@ -45,6 +47,10 @@ private fun NavGraphBuilder.appGraph(
     windowSizeClass: WindowSizeClass
 ) {
     navigation<AppDestinations.RootPane>(
+        enterTransition = { slideIn { IntOffset(x = it.width, y = 0) } },
+        exitTransition = { slideOut { IntOffset(x = -it.width / 3, y = 0) } },
+        popEnterTransition = { slideIn { IntOffset(x = -it.width, y = 0) } },
+        popExitTransition = { slideOut { IntOffset(x = it.width, y = 0) } },
         startDestination = AppDestinations.LauncherPane
     ) {
         composable<AppDestinations.LauncherPane> {
@@ -53,12 +59,32 @@ private fun NavGraphBuilder.appGraph(
                 windowSizeClass = windowSizeClass,
                 navigateToExpandableCollapsableItems = {
                     navController.navigate(AppDestinations.ExpandableCollapsableItems)
+                },
+                navigateToFirstLineAlignedCheckBox = {
+                    navController.navigate(AppDestinations.FirstLineAlignedCheckBox)
+                },
+                navigateToDragOrTransformBox = {
+                    navController.navigate(AppDestinations.DragOrTransformBox)
                 }
             )
         }
 
         composable<AppDestinations.ExpandableCollapsableItems> {
             ExpandableCollapsableItems(
+                modifier = modifier,
+                windowSizeClass = windowSizeClass,
+            )
+        }
+
+        composable<AppDestinations.FirstLineAlignedCheckBox> {
+            FirstLineAlignedCheckbox(
+                modifier = modifier,
+                windowSizeClass = windowSizeClass,
+            )
+        }
+
+        composable<AppDestinations.DragOrTransformBox> {
+            DragOrTransformBox(
                 modifier = modifier,
                 windowSizeClass = windowSizeClass,
             )
@@ -75,4 +101,10 @@ object AppDestinations {
 
     @Serializable
     data object ExpandableCollapsableItems
+
+    @Serializable
+    data object FirstLineAlignedCheckBox
+
+    @Serializable
+    data object DragOrTransformBox
 }

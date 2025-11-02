@@ -13,8 +13,10 @@ materialIcons = "1.7.8"
 material3WindowSizeClass = "1.4.0"
 navigationCompose = "2.9.5"
 kotlinxSerializationJson = "1.9.0"
+androidxSplashScreen = "1.0.1"
 
 [libraries]
+androidx-splash-screen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashScreen" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

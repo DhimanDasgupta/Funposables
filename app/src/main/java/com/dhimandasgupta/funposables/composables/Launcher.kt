@@ -38,7 +38,8 @@ fun Launcher(
     windowSizeClass: WindowSizeClass,
     navigateToExpandableCollapsableItems: () -> Unit,
     navigateToFirstLineAlignedCheckBox: () -> Unit,
-    navigateToDragOrTransformBox: () -> Unit
+    navigateToDragOrTransformBox: () -> Unit,
+    navigateToKenBurnsEffect: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -121,6 +122,20 @@ fun Launcher(
                 color = colorScheme.error
             )
         }
+
+        OutlinedCard(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .height(56.dp),
+            onClick = navigateToKenBurnsEffect
+        ) {
+            Text(
+                "Kenburns Effect",
+                modifier = Modifier.padding(16.dp),
+                color = colorScheme.error
+            )
+        }
     }
 }
 
@@ -133,6 +148,7 @@ private fun LauncherPreview() {
             navigateToExpandableCollapsableItems = {},
             navigateToFirstLineAlignedCheckBox = {},
             navigateToDragOrTransformBox = {},
+            navigateToKenBurnsEffect = {},
             windowSizeClass = WindowSizeClass.calculateFromSize(
                 size = DpSize(
                     width = 360.dp,

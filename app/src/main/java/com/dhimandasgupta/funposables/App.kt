@@ -15,6 +15,7 @@ import androidx.navigation.compose.navigation
 import com.dhimandasgupta.funposables.composables.DragOrTransformBox
 import com.dhimandasgupta.funposables.composables.ExpandableCollapsableItems
 import com.dhimandasgupta.funposables.composables.FirstLineAlignedCheckbox
+import com.dhimandasgupta.funposables.composables.KenBurnsEffectPane
 import com.dhimandasgupta.funposables.composables.Launcher
 import kotlinx.serialization.Serializable
 
@@ -58,33 +59,43 @@ private fun NavGraphBuilder.appGraph(
                 modifier = modifier,
                 windowSizeClass = windowSizeClass,
                 navigateToExpandableCollapsableItems = {
-                    navController.navigate(AppDestinations.ExpandableCollapsableItems)
+                    navController.navigate(AppDestinations.ExpandableCollapsableItemsPane)
                 },
                 navigateToFirstLineAlignedCheckBox = {
-                    navController.navigate(AppDestinations.FirstLineAlignedCheckBox)
+                    navController.navigate(AppDestinations.FirstLineAlignedCheckBoxPane)
                 },
                 navigateToDragOrTransformBox = {
-                    navController.navigate(AppDestinations.DragOrTransformBox)
+                    navController.navigate(AppDestinations.DragOrTransformBoxPane)
+                },
+                navigateToKenBurnsEffect = {
+                    navController.navigate(AppDestinations.KenBurnsEffectPane)
                 }
             )
         }
 
-        composable<AppDestinations.ExpandableCollapsableItems> {
+        composable<AppDestinations.ExpandableCollapsableItemsPane> {
             ExpandableCollapsableItems(
                 modifier = modifier,
                 windowSizeClass = windowSizeClass,
             )
         }
 
-        composable<AppDestinations.FirstLineAlignedCheckBox> {
+        composable<AppDestinations.FirstLineAlignedCheckBoxPane> {
             FirstLineAlignedCheckbox(
                 modifier = modifier,
                 windowSizeClass = windowSizeClass,
             )
         }
 
-        composable<AppDestinations.DragOrTransformBox> {
+        composable<AppDestinations.DragOrTransformBoxPane> {
             DragOrTransformBox(
+                modifier = modifier,
+                windowSizeClass = windowSizeClass,
+            )
+        }
+
+        composable<AppDestinations.KenBurnsEffectPane> {
+            KenBurnsEffectPane(
                 modifier = modifier,
                 windowSizeClass = windowSizeClass,
             )
@@ -100,11 +111,14 @@ object AppDestinations {
     data object LauncherPane
 
     @Serializable
-    data object ExpandableCollapsableItems
+    data object ExpandableCollapsableItemsPane
 
     @Serializable
-    data object FirstLineAlignedCheckBox
+    data object FirstLineAlignedCheckBoxPane
 
     @Serializable
-    data object DragOrTransformBox
+    data object DragOrTransformBoxPane
+
+    @Serializable
+    data object KenBurnsEffectPane
 }

@@ -17,6 +17,7 @@ import com.dhimandasgupta.funposables.composables.ExpandableCollapsableItems
 import com.dhimandasgupta.funposables.composables.FirstLineAlignedCheckbox
 import com.dhimandasgupta.funposables.composables.KenBurnsEffectPane
 import com.dhimandasgupta.funposables.composables.Launcher
+import com.dhimandasgupta.funposables.composables.SearchExpander
 import kotlinx.serialization.Serializable
 
 @Composable
@@ -69,6 +70,9 @@ private fun NavGraphBuilder.appGraph(
                 },
                 navigateToKenBurnsEffect = {
                     navController.navigate(AppDestinations.KenBurnsEffectPane)
+                },
+                navigateToSearchExpander = {
+                    navController.navigate(AppDestinations.SearchExpanderPane)
                 }
             )
         }
@@ -100,6 +104,13 @@ private fun NavGraphBuilder.appGraph(
                 windowSizeClass = windowSizeClass,
             )
         }
+
+        composable<AppDestinations.SearchExpanderPane> {
+            SearchExpander(
+                modifier = modifier,
+                windowSizeClass = windowSizeClass,
+            )
+        }
     }
 }
 
@@ -121,4 +132,7 @@ object AppDestinations {
 
     @Serializable
     data object KenBurnsEffectPane
+
+    @Serializable
+    data object SearchExpanderPane
 }

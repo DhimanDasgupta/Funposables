@@ -39,7 +39,8 @@ fun Launcher(
     navigateToExpandableCollapsableItems: () -> Unit,
     navigateToFirstLineAlignedCheckBox: () -> Unit,
     navigateToDragOrTransformBox: () -> Unit,
-    navigateToKenBurnsEffect: () -> Unit
+    navigateToKenBurnsEffect: () -> Unit,
+    navigateToSearchExpander: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -136,6 +137,20 @@ fun Launcher(
                 color = colorScheme.error
             )
         }
+
+        OutlinedCard(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .height(56.dp),
+            onClick = navigateToSearchExpander
+        ) {
+            Text(
+                "Search Expander",
+                modifier = Modifier.padding(16.dp),
+                color = colorScheme.error
+            )
+        }
     }
 }
 
@@ -149,6 +164,7 @@ private fun LauncherPreview() {
             navigateToFirstLineAlignedCheckBox = {},
             navigateToDragOrTransformBox = {},
             navigateToKenBurnsEffect = {},
+            navigateToSearchExpander = {},
             windowSizeClass = WindowSizeClass.calculateFromSize(
                 size = DpSize(
                     width = 360.dp,

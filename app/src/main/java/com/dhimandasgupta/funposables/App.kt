@@ -12,6 +12,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
+import com.dhimandasgupta.funposables.composables.CurvedLayoutScreen
 import com.dhimandasgupta.funposables.composables.DragOrTransformBox
 import com.dhimandasgupta.funposables.composables.ExpandableCollapsableItems
 import com.dhimandasgupta.funposables.composables.FirstLineAlignedCheckbox
@@ -73,6 +74,9 @@ private fun NavGraphBuilder.appGraph(
                 },
                 navigateToSearchExpander = {
                     navController.navigate(AppDestinations.SearchExpanderPane)
+                },
+                navigateToCurvedScreen = {
+                    navController.navigate(AppDestinations.CurvedLayoutPane)
                 }
             )
         }
@@ -111,6 +115,13 @@ private fun NavGraphBuilder.appGraph(
                 windowSizeClass = windowSizeClass,
             )
         }
+
+        composable<AppDestinations.CurvedLayoutPane> {
+            CurvedLayoutScreen(
+                modifier = modifier,
+                windowSizeClass = windowSizeClass,
+            )
+        }
     }
 }
 
@@ -135,4 +146,7 @@ object AppDestinations {
 
     @Serializable
     data object SearchExpanderPane
+
+    @Serializable
+    data object CurvedLayoutPane
 }

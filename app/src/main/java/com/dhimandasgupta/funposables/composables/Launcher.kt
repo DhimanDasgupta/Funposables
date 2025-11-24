@@ -40,7 +40,8 @@ fun Launcher(
     navigateToFirstLineAlignedCheckBox: () -> Unit,
     navigateToDragOrTransformBox: () -> Unit,
     navigateToKenBurnsEffect: () -> Unit,
-    navigateToSearchExpander: () -> Unit
+    navigateToSearchExpander: () -> Unit,
+    navigateToCurvedScreen: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -151,6 +152,20 @@ fun Launcher(
                 color = colorScheme.error
             )
         }
+
+        OutlinedCard(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .height(56.dp),
+            onClick = navigateToCurvedScreen
+        ) {
+            Text(
+                "Curved Screen",
+                modifier = Modifier.padding(16.dp),
+                color = colorScheme.error
+            )
+        }
     }
 }
 
@@ -165,6 +180,7 @@ private fun LauncherPreview() {
             navigateToDragOrTransformBox = {},
             navigateToKenBurnsEffect = {},
             navigateToSearchExpander = {},
+            navigateToCurvedScreen = {},
             windowSizeClass = WindowSizeClass.calculateFromSize(
                 size = DpSize(
                     width = 360.dp,

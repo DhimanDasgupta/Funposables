@@ -1,6 +1,11 @@
 package com.dhimandasgupta.funposables.composables
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionLayout
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -8,11 +13,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -93,6 +105,7 @@ fun CurvedLayoutScreen(
     ResponsiveCurvedLayoutScreen()
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun ResponsiveCurvedLayoutScreen() {
     val configuration = LocalConfiguration.current
@@ -104,28 +117,39 @@ fun ResponsiveCurvedLayoutScreen() {
         modifier = Modifier
             .fillMaxSize()
             .background(BackgroundGray)
+            .padding(
+                start = WindowInsets
+                    .displayCutout.union(insets = WindowInsets.navigationBars)
+                    .asPaddingValues()
+                    .calculateStartPadding(LayoutDirection.Ltr),
+                end = WindowInsets
+                    .displayCutout.union(insets = WindowInsets.navigationBars)
+                    .asPaddingValues()
+                    .calculateEndPadding(LayoutDirection.Ltr),
+                bottom = WindowInsets
+                    .displayCutout.union(insets = WindowInsets.navigationBars)
+                    .asPaddingValues()
+                    .calculateBottomPadding()
+            )
             .verticalScroll(scrollState)
     ) {
         // "Open" text visible in portrait mock
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 24.dp),
+                .weight(1f),
             contentAlignment = Alignment.Center
         ) {
             Text(
-                text = "Open",
-                style = typography.titleMedium,
+                text = "Open / Close",
+                style = typography.headlineLarge,
                 color = TextDark
             )
         }
 
         // Main overlapping container structure
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = if (isPortrait) 16.dp else 32.dp)
-                .padding(bottom = 32.dp)
+            modifier = Modifier.fillMaxWidth()
         ) {
             // 1. The White Content Container with Curved Top
             Surface(
@@ -141,16 +165,29 @@ fun ResponsiveCurvedLayoutScreen() {
                 // Content inside the white card
                 Box(
                     modifier = Modifier.padding(
-                        top = (IconSize / 2) + 16.dp, // Extra padding below icon area
+                        top = (IconSize / 2), // Extra padding below icon area
                         start = ContentPadding,
                         end = ContentPadding,
                         bottom = ContentPadding
                     )
                 ) {
-                    if (isPortrait) {
-                        PortraitContent()
-                    } else {
-                        LandscapeContent()
+                    SharedTransitionLayout {
+                        AnimatedContent(
+                            targetState = isPortrait,
+                            label = "layout_change"
+                        ) { target ->
+                            if (target) {
+                                PortraitContent(
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedVisibilityScope = this
+                                )
+                            } else {
+                                LandscapeContent(
+                                    sharedTransitionScope = this@SharedTransitionLayout,
+                                    animatedVisibilityScope = this
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -184,51 +221,131 @@ fun FPOIcon(modifier: Modifier = Modifier) {
 
 // --- Content Layouts ---
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun PortraitContent() {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
-    ) {
-        HeaderText(center = true)
-        SubheaderText(center = true)
-        BodyText(center = true)
-        Spacer(modifier = Modifier.height(8.dp))
-        MainButton()
-        SecondaryButton()
-        Spacer(modifier = Modifier.height(16.dp))
-        DisclosureSection(center = true)
+fun PortraitContent(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
+) {
+    with(sharedTransitionScope) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            HeaderText(
+                modifier = Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = "header"),
+                    animatedVisibilityScope = animatedVisibilityScope
+                ),
+                center = true
+            )
+            SubheaderText(
+                modifier = Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = "subHeaderText"),
+                    animatedVisibilityScope = animatedVisibilityScope
+                ),
+                center = true
+            )
+            BodyText(
+                modifier = Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = "bodyText"),
+                    animatedVisibilityScope = animatedVisibilityScope
+                ),
+                center = true
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            MainButton(
+                modifier = Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = "mainButton"),
+                    animatedVisibilityScope = animatedVisibilityScope
+                ),
+            )
+            SecondaryButton(
+                modifier = Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = "secondaryButton"),
+                    animatedVisibilityScope = animatedVisibilityScope
+                ),
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            DisclosureSection(
+                modifier = Modifier.sharedElement(
+                    sharedContentState = rememberSharedContentState(key = "disclosureSection"),
+                    animatedVisibilityScope = animatedVisibilityScope
+                ),
+                center = true
+            )
+        }
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun LandscapeContent() {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(32.dp)
-    ) {
-        // Left Column (Header & Buttons)
-        Column(
-            modifier = Modifier.weight(2f), // Takes 2/5 space
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(20.dp)
+fun LandscapeContent(
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
+) {
+    with(sharedTransitionScope) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(32.dp)
         ) {
-            HeaderText(center = false)
-            Spacer(modifier = Modifier.height(4.dp))
-            MainButton()
-            SecondaryButton()
-        }
+            // Left Column (Header & Buttons)
+            Column(
+                modifier = Modifier.weight(2f), // Takes 2/5 space
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                HeaderText(
+                    modifier = Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "header"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                    center = false
+                )
+                Spacer(modifier = Modifier.height(4.dp))
+                MainButton(
+                    modifier = Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "mainButton"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                )
+                SecondaryButton(
+                    modifier = Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "secondaryButton"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                )
+            }
 
-        // Right Column (Subheader, Body, Disclosures)
-        Column(
-            modifier = Modifier.weight(3f), // Takes 3/5 space
-            horizontalAlignment = Alignment.Start,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            SubheaderText(center = false)
-            BodyText(center = false)
-            Spacer(modifier = Modifier.weight(1f)) // Push disclosure to bottom if space allows
-            DisclosureSection(center = false)
+            // Right Column (Subheader, Body, Disclosures)
+            Column(
+                modifier = Modifier.weight(3f), // Takes 3/5 space
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                SubheaderText(
+                    modifier = Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "subHeaderText"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                    center = false
+                )
+                BodyText(
+                    modifier = Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "bodyText"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                    center = false
+                )
+                Spacer(modifier = Modifier.weight(1f)) // Push disclosure to bottom if space allows
+                DisclosureSection(
+                    modifier = Modifier.sharedElement(
+                        sharedContentState = rememberSharedContentState(key = "disclosureSection"),
+                        animatedVisibilityScope = animatedVisibilityScope
+                    ),
+                    center = false
+                )
+            }
         }
     }
 }
@@ -236,44 +353,61 @@ fun LandscapeContent() {
 // --- Reusable Text & Button Components ---
 
 @Composable
-fun HeaderText(center: Boolean) {
+fun HeaderText(
+    modifier: Modifier = Modifier,
+    center: Boolean
+) {
     Text(
         text = "Header",
         fontSize = 34.sp,
         lineHeight = 40.sp,
         color = TextDark,
-        textAlign = if (center) TextAlign.Center else TextAlign.Start
+        textAlign = if (center) TextAlign.Center else TextAlign.Start,
+        modifier = modifier
     )
 }
 
 @Composable
-fun SubheaderText(center: Boolean) {
+fun SubheaderText(
+    modifier: Modifier = Modifier,
+    center: Boolean
+) {
     Text(
         text = "Subheader text",
         fontSize = 18.sp,
         fontWeight = FontWeight.Bold,
         color = TextDark,
-        textAlign = if (center) TextAlign.Center else TextAlign.Start
+        textAlign = if (center) TextAlign.Center else TextAlign.Start,
+        modifier = modifier
     )
 }
 
 @Composable
-fun BodyText(center: Boolean) {
+fun BodyText(
+    modifier: Modifier = Modifier,
+    center: Boolean
+) {
     Text(
         text = "Body text lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod.",
         fontSize = 16.sp,
         color = TextDark.copy(alpha = 0.8f),
-        textAlign = if (center) TextAlign.Center else TextAlign.Start
+        textAlign = if (center) TextAlign.Center else TextAlign.Start,
+        modifier = modifier
     )
 }
 
 @Composable
-fun MainButton() {
+fun MainButton(
+    modifier: Modifier = Modifier,
+) {
     Button(
         onClick = { /* TODO */ },
-        colors = ButtonDefaults.buttonColors(containerColor = ButtonDark),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = ButtonDark,
+            contentColor = ContainerWhite
+        ),
         shape = CircleShape,
-        modifier = Modifier.height(48.dp)
+        modifier = modifier.height(48.dp)
     ) {
         Text(
             text = "Button label",
@@ -284,9 +418,12 @@ fun MainButton() {
 }
 
 @Composable
-fun SecondaryButton() {
+fun SecondaryButton(
+    modifier: Modifier = Modifier,
+) {
     TextButton(
         onClick = { /* TODO */ },
+        modifier = modifier
     ) {
         Text(
             text = "Dismiss CTA",
@@ -304,8 +441,14 @@ fun SecondaryButton() {
 }
 
 @Composable
-fun DisclosureSection(center: Boolean) {
-    Column(horizontalAlignment = if (center) Alignment.CenterHorizontally else Alignment.Start) {
+fun DisclosureSection(
+    modifier: Modifier = Modifier,
+    center: Boolean
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = if (center) Alignment.CenterHorizontally else Alignment.Start
+    ) {
         Text(
             text = "Disclosures",
             fontWeight = FontWeight.Bold,

@@ -30,7 +30,7 @@ class MainActivity : ComponentActivity() {
 
             FunposablesTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    App(
+                    AppNavHost(
                         modifier = Modifier.consumeWindowInsets(paddingValues = innerPadding),
                         navController = navController,
                         windowSizeClass = windowSizeClass

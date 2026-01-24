@@ -38,7 +38,8 @@ fun Launcher(
     navigateToDragOrTransformBox: () -> Unit,
     navigateToKenBurnsEffect: () -> Unit,
     navigateToSearchExpander: () -> Unit,
-    navigateToCurvedScreen: () -> Unit
+    navigateToCurvedScreen: () -> Unit,
+    navigateToCounter: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -163,6 +164,20 @@ fun Launcher(
                 color = colorScheme.error
             )
         }
+
+        OutlinedCard(
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .fillMaxWidth()
+                .height(56.dp),
+            onClick = navigateToCounter
+        ) {
+            Text(
+                "Counter with FlowRedux2",
+                modifier = Modifier.padding(16.dp),
+                color = colorScheme.error
+            )
+        }
     }
 }
 
@@ -178,6 +193,7 @@ private fun LauncherPreview() {
             navigateToKenBurnsEffect = {},
             navigateToSearchExpander = {},
             navigateToCurvedScreen = {},
+            navigateToCounter = {}
         )
     }
 }

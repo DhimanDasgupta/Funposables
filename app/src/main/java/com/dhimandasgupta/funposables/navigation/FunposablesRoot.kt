@@ -13,7 +13,8 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.dhimandasgupta.funposables.composables.CurvedLayoutScreen
+import com.dhimandasgupta.funposables.composables.Counter
+import com.dhimandasgupta.funposables.composables.CurvedLayout
 import com.dhimandasgupta.funposables.composables.DragOrTransformBox
 import com.dhimandasgupta.funposables.composables.ExpandableCollapsableItems
 import com.dhimandasgupta.funposables.composables.FirstLineAlignedCheckbox
@@ -78,6 +79,9 @@ fun FunposablesRoot(
                     },
                     navigateToCurvedScreen = {
                         backStack.add(CurvedLayoutNavKey)
+                    },
+                    navigateToCounter = {
+                        backStack.add(CounterNavKey)
                     }
                 )
             }
@@ -119,8 +123,15 @@ fun FunposablesRoot(
             entry<CurvedLayoutNavKey>(
                 metadata = ListDetailSceneStrategy.detailPane()
             ) {
-                CurvedLayoutScreen(
+                CurvedLayout(
                     modifier = modifier
+                )
+            }
+            entry<CounterNavKey>(
+                metadata = ListDetailSceneStrategy.detailPane()
+            ) {
+                Counter(
+                    modifier = Modifier
                 )
             }
         }

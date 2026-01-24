@@ -97,7 +97,7 @@ class ConcaveTopShape(private val dipDepthDp: Dp) : Shape {
 }
 
 @Composable
-fun CurvedLayoutScreen(
+fun CurvedLayout(
     modifier: Modifier = Modifier
 ) {
     ResponsiveCurvedLayoutScreen(modifier)

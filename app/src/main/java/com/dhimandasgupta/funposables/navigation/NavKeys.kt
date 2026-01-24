@@ -23,3 +23,6 @@ data object SearchExpanderNavKey: NavKey
 
 @Serializable
 data object CurvedLayoutNavKey: NavKey
+
+@Serializable
+data object CounterNavKey: NavKey

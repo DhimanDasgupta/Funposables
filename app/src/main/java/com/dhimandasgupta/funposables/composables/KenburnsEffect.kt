@@ -1,7 +1,6 @@
 package com.dhimandasgupta.funposables.composables
 
 import android.app.Activity
-import android.util.Log
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing

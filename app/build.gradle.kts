@@ -82,7 +82,7 @@ dependencies {
 
     // Flow Redux
     implementation(libs.flow.redux.jvm)
-    // implementation(libs.flow.redux.extension)
+    implementation(libs.flow.redux.extension.jvm)
 
     implementation(libs.timber)
 }

@@ -50,7 +50,7 @@ kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serializa
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
 
 flow-redux-jvm = { group = "com.freeletics.flowredux2", name = "flowredux-jvm", version.ref = "flow-redux2" }
-flow-redux-extension = { group = "com.freeletics.flowredux2", name = "extensions", version.ref = "flow-redux2" }
+flow-redux-extension-jvm = { module = "com.freeletics.flowredux2:extensions-jvm", version.ref = "flow-redux2" }
 
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 

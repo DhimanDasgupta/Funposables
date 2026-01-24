@@ -39,7 +39,6 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -99,22 +98,23 @@ class ConcaveTopShape(private val dipDepthDp: Dp) : Shape {
 
 @Composable
 fun CurvedLayoutScreen(
-    modifier: Modifier = Modifier,
-    windowSizeClass: WindowSizeClass
+    modifier: Modifier = Modifier
 ) {
-    ResponsiveCurvedLayoutScreen()
+    ResponsiveCurvedLayoutScreen(modifier)
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun ResponsiveCurvedLayoutScreen() {
+fun ResponsiveCurvedLayoutScreen(
+    modifier: Modifier = Modifier
+) {
     val configuration = LocalConfiguration.current
     val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
     val scrollState = rememberScrollState()
 
     // Outer container with gray background
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .background(BackgroundGray)
             .padding(

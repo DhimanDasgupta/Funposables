@@ -12,10 +12,13 @@ navigationRuntimeKtx = "2.9.6"
 materialIcons = "1.7.8"
 material3WindowSizeClass = "1.4.0"
 navigationCompose = "2.9.6"
-kotlinxSerializationJson = "1.9.0"
+kotlinxSerializationJson = "1.10.0"
 androidxSplashScreen = "1.2.0"
 coilCompose = "2.7.0"
-
+nav3Core = "1.0.0"
+material3AdaptiveNav3 = "1.3.0-alpha06"
+flow-redux2 = "2.0.1"
+timber = "5.0.1"
 
 [libraries]
 androidx-splash-screen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashScreen" }
@@ -38,7 +41,18 @@ androidx-material3-window-size-class1 = { group = "androidx.compose.material3", 
 androidx-material-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIcons" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose" }
+
+androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
+androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "nav3Core" }
+androidx-material3-adaptive-navigation3 = { group = "androidx.compose.material3.adaptive", name = "adaptive-navigation3", version.ref = "material3AdaptiveNav3" }
+
+kotlinx-serialization-core = { module = "org.jetbrains.kotlinx:kotlinx-serialization-core", version.ref = "kotlinxSerializationJson" }
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerializationJson" }
+
+flow-redux-jvm = { group = "com.freeletics.flowredux2", name = "flowredux-jvm", version.ref = "flow-redux2" }
+flow-redux-extension = { group = "com.freeletics.flowredux2", name = "extensions", version.ref = "flow-redux2" }
+
+timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -26,7 +26,6 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,7 +37,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -46,8 +44,7 @@ import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 @Composable
 fun FirstLineAlignedCheckbox(
-    modifier: Modifier = Modifier,
-    windowSizeClass: WindowSizeClass
+    modifier: Modifier = Modifier
 ) {
     var text by remember { mutableStateOf("Hello\nWorld\nHi\nThere") }
 
@@ -207,13 +204,6 @@ private fun TextAndCheckAlignment(
 @Composable
 private fun FirstLineAlignedCheckboxPreview() {
     FunposablesTheme {
-        FirstLineAlignedCheckbox(
-            windowSizeClass = WindowSizeClass.calculateFromSize(
-                size = DpSize(
-                    width = 360.dp,
-                    height = 780.dp
-                )
-            )
-        )
+        FirstLineAlignedCheckbox()
     }
 }

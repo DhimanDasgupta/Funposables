@@ -1,6 +1,8 @@
 package com.dhimandasgupta.funposables.composables
 
+import android.app.Activity
 import android.util.Log
+import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
@@ -24,7 +26,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
+import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
+import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -48,13 +51,13 @@ import coil.request.ImageRequest
 import com.dhimandasgupta.funposables.R
 import com.dhimandasgupta.funposables.ui.common.DeviceLayoutType
 import com.dhimandasgupta.funposables.ui.common.getDeviceLayoutType
+import timber.log.Timber
 import kotlin.random.Random
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun KenBurnsEffectPane(
-    modifier: Modifier = Modifier,
-    windowSizeClass: WindowSizeClass
+    modifier: Modifier = Modifier
 ) {
     val items = listOf(
         R.drawable.wallpaper_01,
@@ -67,8 +70,9 @@ fun KenBurnsEffectPane(
         R.drawable.wallpaper_08,
         R.drawable.wallpaper_09,
     )
-
-    val deviceLayoutType = getDeviceLayoutType(windowSizeClass = windowSizeClass)
+    val activity: Activity? = LocalActivity.current
+    requireNotNull(activity)
+    val deviceLayoutType = getDeviceLayoutType(windowSizeClass = calculateWindowSizeClass(activity))
 
     val carousalModifier = when (deviceLayoutType) {
         DeviceLayoutType.PHONE_PORTRAIT -> Modifier
@@ -121,8 +125,8 @@ fun ApplyKenBurnsEffect(
             .build()
 
         LaunchedEffect(key1 = imageSize, key2 = containerSize) {
-            Log.d("KenBurnsEffectPane", "Image size: $imageSize")
-            Log.d("KenBurnsEffectPane", "Container size: $containerSize")
+            Timber.tag("KenBurnsEffectPane").d("Image size: $imageSize")
+            Timber.tag("KenBurnsEffectPane").d("Container size: $containerSize")
         }
 
         val infiniteTransition = rememberInfiniteTransition(label = "KenBurns")

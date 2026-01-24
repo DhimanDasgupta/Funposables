@@ -22,7 +22,6 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -39,7 +38,6 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -50,8 +48,7 @@ import kotlin.math.roundToInt
 
 @Composable
 fun DragOrTransformBox(
-    modifier: Modifier = Modifier,
-    windowSizeClass: WindowSizeClass
+    modifier: Modifier = Modifier
 ) {
     Box(
         modifier = modifier
@@ -191,13 +188,6 @@ private fun DragOrTransformBox(
 @Composable
 private fun DragOrTransformBoxPreview() {
     FunposablesTheme {
-        DragOrTransformBox(
-            windowSizeClass = WindowSizeClass.calculateFromSize(
-                size = DpSize(
-                    width = 360.dp,
-                    height = 780.dp
-                )
-            )
-        )
+        DragOrTransformBox()
     }
 }

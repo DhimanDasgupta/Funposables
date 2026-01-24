@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
-import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
@@ -28,10 +27,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -40,26 +37,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 @Composable
 fun SearchExpander(
-    modifier: Modifier = Modifier,
-    windowSizeClass: WindowSizeClass,
+    modifier: Modifier = Modifier
 ) {
-    val searchTextState = rememberTextFieldState()
-
-    var searchClicked by remember { mutableStateOf(false) }
-    val onSearchClicked = {
-        if (searchClicked) {
-            searchTextState.clearText()
-        }
-        searchClicked = !searchClicked
-    }
-
     Scaffold(
         modifier = modifier,
     ) { innerPadding ->
@@ -88,9 +72,6 @@ fun SearchExpander(
                                 .asPaddingValues()
                                 .calculateBottomPadding()
                         ),
-                    // searchClicked = searchClicked,
-                    // onSearchClicked = onSearchClicked,
-                    // searchTextState = searchTextState
                 )
             }
         }
@@ -99,10 +80,10 @@ fun SearchExpander(
 
 @Composable
 fun ExpandableTextFieldVisibility(
-    modifier: Modifier
+    modifier: Modifier,
 ) {
+    val searchTextState = rememberTextFieldState()
     var isExpanded by remember { mutableStateOf(false) }
-    var text by remember { mutableStateOf("") }
 
     // Container Row
     Row(
@@ -134,11 +115,7 @@ fun ExpandableTextFieldVisibility(
             ) + fadeOut()
         ) {
             TextField(
-                value = text,
-                onValueChange = { text = it },
-                modifier = Modifier.fillMaxWidth(), // Takes remaining space
-                placeholder = { Text("Search...") },
-                singleLine = true
+                state = searchTextState,
             )
         }
     }
@@ -149,13 +126,6 @@ fun ExpandableTextFieldVisibility(
 @Composable
 private fun SearchExpanderPreview() {
     FunposablesTheme {
-        SearchExpander(
-            windowSizeClass = WindowSizeClass.calculateFromSize(
-                size = DpSize(
-                    width = 360.dp,
-                    height = 780.dp
-                )
-            )
-        )
+        SearchExpander()
     }
 }

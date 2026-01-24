@@ -7,10 +7,12 @@ import coil.intercept.Interceptor
 import coil.memory.MemoryCache
 import coil.request.ImageResult
 import coil.size.Precision
+import timber.log.Timber
 
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
+        Timber.plant(Timber.DebugTree())
         initCoil()
     }
 

@@ -22,12 +22,10 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
@@ -35,7 +33,6 @@ import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 @Composable
 fun Launcher(
     modifier: Modifier = Modifier,
-    windowSizeClass: WindowSizeClass,
     navigateToExpandableCollapsableItems: () -> Unit,
     navigateToFirstLineAlignedCheckBox: () -> Unit,
     navigateToDragOrTransformBox: () -> Unit,
@@ -181,12 +178,6 @@ private fun LauncherPreview() {
             navigateToKenBurnsEffect = {},
             navigateToSearchExpander = {},
             navigateToCurvedScreen = {},
-            windowSizeClass = WindowSizeClass.calculateFromSize(
-                size = DpSize(
-                    width = 360.dp,
-                    height = 780.dp
-                )
-            )
         )
     }
 }

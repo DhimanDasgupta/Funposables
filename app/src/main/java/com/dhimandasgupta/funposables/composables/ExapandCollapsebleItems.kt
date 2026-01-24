@@ -31,7 +31,6 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,7 +42,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
@@ -51,8 +49,7 @@ import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 @Composable
 fun ExpandableCollapsableItems(
-    modifier: Modifier = Modifier,
-    windowSizeClass: WindowSizeClass
+    modifier: Modifier = Modifier
 ) {
     val accounts = listOf(
         "Dhiman Dasgupta",
@@ -252,13 +249,6 @@ private fun AccountCard(
 @Composable
 private fun ExpandableCollapsableItemsPreView() {
     FunposablesTheme {
-        ExpandableCollapsableItems(
-            windowSizeClass = WindowSizeClass.calculateFromSize(
-                size = DpSize(
-                    width = 360.dp,
-                    height = 780.dp
-                )
-            )
-        )
+        ExpandableCollapsableItems()
     }
 }

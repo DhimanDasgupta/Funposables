@@ -22,13 +22,13 @@ import com.dhimandasgupta.funposables.statemachines.DecrementAction
 import com.dhimandasgupta.funposables.statemachines.IncrementAction
 import com.dhimandasgupta.funposables.statemachines.CounterBaseAction
 import com.dhimandasgupta.funposables.statemachines.CounterBaseState
-import com.dhimandasgupta.funposables.statemachines.SampleStateMachineFactory
+import com.dhimandasgupta.funposables.statemachines.CounterStateMachineFactory
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 import com.freeletics.flowredux2.produceStateMachine
 
 @Composable
 fun Counter(modifier: Modifier = Modifier) {
-    val factory = retain { SampleStateMachineFactory() }
+    val factory = retain { CounterStateMachineFactory() }
     val stateMachine = factory.produceStateMachine()
 
     CounterImplementation(
@@ -48,36 +48,51 @@ private fun CounterImplementation(
         modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        when (counterBaseState) {
+            is CounterState -> ValidCounter(
+                counterState = counterBaseState,
+                dispatch = dispatch
+            )
+            else -> error("Unknow state: $counterBaseState")
+        }
+    }
+}
+
+@Composable
+private fun ValidCounter(
+    modifier: Modifier = Modifier,
+    counterState: CounterState,
+    dispatch: (CounterBaseAction) -> Unit
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            modifier = Modifier
+                .padding(all = 16.dp),
+            text = "${counterState.counter}",
+            style = typography.displayLarge
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(all = 32.dp),
+            horizontalArrangement = Arrangement.SpaceAround,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            when (counterBaseState) {
-                is CounterState -> {
-                    Text(
-                        modifier = Modifier.padding(all = 16.dp),
-                        text = "${counterBaseState.counter}",
-                        style = typography.displayLarge
-                    )
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceAround,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Button(
-                            onClick = { dispatch(IncrementAction) },
-                            enabled = counterBaseState.enabled
-                        ) {
-                            Text(text = "Increment")
-                        }
-                        Button(
-                            onClick = { dispatch(DecrementAction) },
-                            enabled = counterBaseState.enabled
-                        ) {
-                            Text(text = "Decrement")
-                        }
-                    }
-                }
+            Button(
+                onClick = { dispatch(IncrementAction) },
+                enabled = counterState.enabled
+            ) {
+                Text(text = "Increment")
+            }
+            Button(
+                onClick = { dispatch(DecrementAction) },
+                enabled = counterState.enabled
+            ) {
+                Text(text = "Decrement")
             }
         }
     }

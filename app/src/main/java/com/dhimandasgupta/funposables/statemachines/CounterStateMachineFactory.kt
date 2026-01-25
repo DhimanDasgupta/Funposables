@@ -18,9 +18,9 @@ object IncrementAction : CounterBaseAction
 object DecrementAction : CounterBaseAction
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class SampleStateMachineFactory : FlowReduxStateMachineFactory<CounterBaseState, CounterBaseAction>() {
+class CounterStateMachineFactory : FlowReduxStateMachineFactory<CounterBaseState, CounterBaseAction>() {
     init {
-        initializeWith(reuseLastEmittedStateOnLaunch = true) { CounterState() }
+        initializeWith(reuseLastEmittedStateOnLaunch = true) { initialState() }
 
         spec {
             inState<CounterState> {
@@ -36,5 +36,9 @@ class SampleStateMachineFactory : FlowReduxStateMachineFactory<CounterBaseState,
                 }
             }
         }
+    }
+
+    private companion object {
+        fun initialState(): CounterBaseState = CounterState()
     }
 }

@@ -44,42 +44,31 @@ import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 fun SearchExpander(
     modifier: Modifier = Modifier
 ) {
-    Scaffold(
-        modifier = modifier,
-    ) { innerPadding ->
-        FunposablesTheme {
-            Column(
-                modifier = Modifier
-                    .consumeWindowInsets(innerPadding),
-            ) {
-                ExpandableTextFieldVisibility(
-                    modifier = Modifier
-                        .padding(
-                            start = WindowInsets
-                                .displayCutout.union(insets = WindowInsets.navigationBars)
-                                .asPaddingValues()
-                                .calculateStartPadding(LayoutDirection.Ltr),
-                            top = WindowInsets
-                                .displayCutout.union(insets = WindowInsets.statusBars)
-                                .asPaddingValues()
-                                .calculateTopPadding(),
-                            end = WindowInsets
-                                .displayCutout.union(insets = WindowInsets.navigationBars)
-                                .asPaddingValues()
-                                .calculateEndPadding(LayoutDirection.Ltr),
-                            bottom = WindowInsets
-                                .displayCutout.union(insets = WindowInsets.navigationBars)
-                                .asPaddingValues()
-                                .calculateBottomPadding()
-                        ),
-                )
-            }
-        }
-    }
+    ExpandableTextFieldVisibility(
+        modifier = modifier
+            .padding(
+                start = WindowInsets
+                    .displayCutout.union(insets = WindowInsets.navigationBars)
+                    .asPaddingValues()
+                    .calculateStartPadding(LayoutDirection.Ltr),
+                top = WindowInsets
+                    .displayCutout.union(insets = WindowInsets.statusBars)
+                    .asPaddingValues()
+                    .calculateTopPadding(),
+                end = WindowInsets
+                    .displayCutout.union(insets = WindowInsets.navigationBars)
+                    .asPaddingValues()
+                    .calculateEndPadding(LayoutDirection.Ltr),
+                bottom = WindowInsets
+                    .displayCutout.union(insets = WindowInsets.navigationBars)
+                    .asPaddingValues()
+                    .calculateBottomPadding()
+            ),
+    )
 }
 
 @Composable
-fun ExpandableTextFieldVisibility(
+private fun ExpandableTextFieldVisibility(
     modifier: Modifier,
 ) {
     val searchTextState = rememberTextFieldState()

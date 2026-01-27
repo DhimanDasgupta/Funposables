@@ -1,6 +1,6 @@
 package com.dhimandasgupta.funposables.composables
 
-import androidx.compose.foundation.background
+import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -24,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -39,18 +38,12 @@ fun Launcher(
     navigateToKenBurnsEffect: () -> Unit,
     navigateToSearchExpander: () -> Unit,
     navigateToCurvedScreen: () -> Unit,
-    navigateToCounter: () -> Unit
+    navigateToCounter: () -> Unit,
+    navigateToToJulia: () -> Unit,
+    navigateToMandelbrot: () -> Unit
 ) {
     Column(
         modifier = modifier
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        colorScheme.primaryContainer,
-                        colorScheme.secondaryContainer
-                    )
-                )
-            )
             .padding(
                 start = WindowInsets
                     .displayCutout.union(insets = WindowInsets.navigationBars)
@@ -178,6 +171,36 @@ fun Launcher(
                 color = colorScheme.error
             )
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            OutlinedCard(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+                    .height(56.dp),
+                onClick = navigateToToJulia
+            ) {
+                Text(
+                    "Julia",
+                    modifier = Modifier.padding(16.dp),
+                    color = colorScheme.error
+                )
+            }
+
+            OutlinedCard(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+                    .height(56.dp),
+                onClick = navigateToMandelbrot
+            ) {
+                Text(
+                    "Mandelbrot",
+                    modifier = Modifier.padding(16.dp),
+                    color = colorScheme.error
+                )
+            }
+        }
     }
 }
 
@@ -193,7 +216,9 @@ private fun LauncherPreview() {
             navigateToKenBurnsEffect = {},
             navigateToSearchExpander = {},
             navigateToCurvedScreen = {},
-            navigateToCounter = {}
+            navigateToCounter = {},
+            navigateToToJulia = {},
+            navigateToMandelbrot = {}
         )
     }
 }

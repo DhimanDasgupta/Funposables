@@ -18,8 +18,10 @@ import com.dhimandasgupta.funposables.composables.CurvedLayout
 import com.dhimandasgupta.funposables.composables.DragOrTransformBox
 import com.dhimandasgupta.funposables.composables.ExpandableCollapsableItems
 import com.dhimandasgupta.funposables.composables.FirstLineAlignedCheckbox
+import com.dhimandasgupta.funposables.composables.InteractiveJulia
 import com.dhimandasgupta.funposables.composables.KenBurnsEffectPane
 import com.dhimandasgupta.funposables.composables.Launcher
+import com.dhimandasgupta.funposables.composables.Mandelbrot
 import com.dhimandasgupta.funposables.composables.SearchExpander
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
@@ -82,6 +84,12 @@ fun FunposablesRoot(
                     },
                     navigateToCounter = {
                         backStack.add(CounterNavKey)
+                    },
+                    navigateToToJulia = {
+                        backStack.add(InteractiveJulia)
+                    },
+                    navigateToMandelbrot = {
+                        backStack.add(Mandelbrot)
                     }
                 )
             }
@@ -131,7 +139,21 @@ fun FunposablesRoot(
                 metadata = ListDetailSceneStrategy.detailPane()
             ) {
                 Counter(
-                    modifier = Modifier
+                    modifier = modifier
+                )
+            }
+            entry<InteractiveJulia>(
+                metadata = ListDetailSceneStrategy.detailPane()
+            ) {
+                InteractiveJulia(
+                    modifier = modifier
+                )
+            }
+            entry<Mandelbrot>(
+                metadata = ListDetailSceneStrategy.detailPane()
+            ) {
+                Mandelbrot(
+                    modifier = modifier
                 )
             }
         }

@@ -1,7 +1,6 @@
 package com.dhimandasgupta.funposables.composables
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,14 +49,6 @@ fun FirstLineAlignedCheckbox(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                brush = Brush.verticalGradient(
-                    colors = listOf(
-                        colorScheme.primaryContainer,
-                        colorScheme.secondaryContainer
-                    )
-                )
-            )
             .padding(
                 start = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
                     .asPaddingValues()

@@ -7,9 +7,12 @@ import coil.intercept.Interceptor
 import coil.memory.MemoryCache
 import coil.request.ImageResult
 import coil.size.Precision
+import com.dhimandasgupta.funposables.statemachines.CounterStateMachineFactory
 import timber.log.Timber
 
 class App : Application() {
+    private var factory: CounterStateMachineFactory? = null
+
     override fun onCreate() {
         super.onCreate()
         Timber.plant(Timber.DebugTree())
@@ -30,6 +33,13 @@ class App : Application() {
             .build()
 
         Coil.setImageLoader(imageLoader)
+    }
+
+    fun getCounterStateMachine(): CounterStateMachineFactory {
+        if (factory == null) {
+            factory = CounterStateMachineFactory()
+        }
+        return factory!!
     }
 }
 

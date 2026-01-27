@@ -58,9 +58,7 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// --- Constants for Styling ---
-val BackgroundGray = Color(0xFFF4F4F4)
-val ContainerWhite = Color.White
+val ContainerWhite = Color.Transparent
 val IconPink = Color(0xFFFFC0EB)
 val TextDark = Color(0xFF1A1A1A)
 val ButtonDark = Color(0xFF4A4A4A)
@@ -116,7 +114,6 @@ fun ResponsiveCurvedLayoutScreen(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .background(BackgroundGray)
             .padding(
                 start = WindowInsets
                     .displayCutout.union(insets = WindowInsets.navigationBars)

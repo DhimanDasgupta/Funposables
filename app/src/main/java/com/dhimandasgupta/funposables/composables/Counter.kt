@@ -15,20 +15,24 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.retain.retain
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.dhimandasgupta.funposables.App
 import com.dhimandasgupta.funposables.statemachines.CounterState
 import com.dhimandasgupta.funposables.statemachines.DecrementAction
 import com.dhimandasgupta.funposables.statemachines.IncrementAction
 import com.dhimandasgupta.funposables.statemachines.CounterBaseAction
 import com.dhimandasgupta.funposables.statemachines.CounterBaseState
-import com.dhimandasgupta.funposables.statemachines.CounterStateMachineFactory
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 import com.freeletics.flowredux2.produceStateMachine
 
 @Composable
 fun Counter(modifier: Modifier = Modifier) {
-    val factory = retain { CounterStateMachineFactory() }
+    val context = LocalContext.current
+
+    // Example, that if the Factory is a Singleton, then the last emitted state is cached.
+    val factory = retain { (context.applicationContext as App).getCounterStateMachine() }
     val stateMachine = factory.produceStateMachine()
 
     CounterImplementation(
@@ -53,6 +57,7 @@ private fun CounterImplementation(
                 counterState = counterBaseState,
                 dispatch = dispatch
             )
+
             else -> error("Unknow state: $counterBaseState")
         }
     }

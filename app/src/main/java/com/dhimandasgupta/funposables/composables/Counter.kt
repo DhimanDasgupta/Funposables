@@ -24,15 +24,21 @@ import com.dhimandasgupta.funposables.statemachines.DecrementAction
 import com.dhimandasgupta.funposables.statemachines.IncrementAction
 import com.dhimandasgupta.funposables.statemachines.CounterBaseAction
 import com.dhimandasgupta.funposables.statemachines.CounterBaseState
+import com.dhimandasgupta.funposables.statemachines.CounterStateMachineFactory
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 import com.freeletics.flowredux2.produceStateMachine
 
 @Composable
-fun Counter(modifier: Modifier = Modifier) {
+fun Counter(
+    modifier: Modifier = Modifier
+) {
     val context = LocalContext.current
 
     // Example, that if the Factory is a Singleton, then the last emitted state is cached.
-    val factory = retain { (context.applicationContext as App).getCounterStateMachine() }
+    val factory = retain {
+        // In Compose Preview, the applicationContext is not our App class, so we provide a fallback.
+        (context.applicationContext as? App)?.getCounterStateMachine() ?: CounterStateMachineFactory()
+    }
     val stateMachine = factory.produceStateMachine()
 
     CounterImplementation(

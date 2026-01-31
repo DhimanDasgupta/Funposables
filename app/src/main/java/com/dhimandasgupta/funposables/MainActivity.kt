@@ -24,6 +24,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        val appGraph = (application as App).getAppComponent()
         setContent {
             FunposablesTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
@@ -40,7 +41,8 @@ class MainActivity : ComponentActivity() {
                         contentAlignment = Alignment.Center
                     ) {
                         FunposablesRoot(
-                            modifier = Modifier.consumeWindowInsets(paddingValues = innerPadding)
+                            modifier = Modifier.consumeWindowInsets(paddingValues = innerPadding),
+                            appGraph = appGraph
                         )
                     }
                 }

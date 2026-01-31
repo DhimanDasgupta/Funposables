@@ -23,11 +23,14 @@ import com.dhimandasgupta.funposables.composables.KenBurnsEffectPane
 import com.dhimandasgupta.funposables.composables.Launcher
 import com.dhimandasgupta.funposables.composables.Mandelbrot
 import com.dhimandasgupta.funposables.composables.SearchExpander
+import com.dhimandasgupta.funposables.di.AppGraph
+import com.freeletics.flowredux2.produceStateMachine
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
 fun FunposablesRoot(
-    modifier: Modifier
+    modifier: Modifier,
+    appGraph: AppGraph
 ) {
     val backStack = rememberNavBackStack(LauncherNavKey)
     val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
@@ -138,8 +141,15 @@ fun FunposablesRoot(
             entry<CounterNavKey>(
                 metadata = ListDetailSceneStrategy.detailPane()
             ) {
+                println("AppGraph: $appGraph")
+                val counterStateMachineFactory = appGraph.counterStateMachineFactory
+                println("CounterStateMachineFactory: $counterStateMachineFactory")
+                val counterStateMachine = counterStateMachineFactory.produceStateMachine()
+
                 Counter(
-                    modifier = modifier
+                    modifier = modifier,
+                    counterBaseState = { counterStateMachine.state.value },
+                    dispatch = counterStateMachine.dispatchAction
                 )
             }
             entry<InteractiveJulia>(

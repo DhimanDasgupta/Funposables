@@ -19,6 +19,7 @@ nav3Core = "1.0.0"
 material3AdaptiveNav3 = "1.3.0-alpha07"
 flow-redux2 = "2.0.1"
 timber = "5.0.1"
+metro = "0.10.2"
 
 [libraries]
 androidx-splash-screen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashScreen" }
@@ -59,4 +60,5 @@ android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 

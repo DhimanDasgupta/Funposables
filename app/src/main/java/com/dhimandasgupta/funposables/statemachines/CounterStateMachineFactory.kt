@@ -2,6 +2,9 @@ package com.dhimandasgupta.funposables.statemachines
 
 import com.freeletics.flowredux2.FlowReduxStateMachineFactory
 import com.freeletics.flowredux2.initializeWith
+import dev.zacsweers.metro.AppScope
+import dev.zacsweers.metro.Inject
+import dev.zacsweers.metro.SingleIn
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 
@@ -18,7 +21,9 @@ object IncrementAction : CounterBaseAction
 object DecrementAction : CounterBaseAction
 
 @OptIn(ExperimentalCoroutinesApi::class)
-class CounterStateMachineFactory : FlowReduxStateMachineFactory<CounterBaseState, CounterBaseAction>() {
+@SingleIn(AppScope::class)
+class CounterStateMachineFactory @Inject constructor()
+    : FlowReduxStateMachineFactory<CounterBaseState, CounterBaseAction>() {
     init {
         initializeWith(reuseLastEmittedStateOnLaunch = true) { initialState() }
 
@@ -38,7 +43,7 @@ class CounterStateMachineFactory : FlowReduxStateMachineFactory<CounterBaseState
         }
     }
 
-    private companion object {
+    companion object {
         fun initialState(): CounterBaseState = CounterState()
     }
 }

@@ -7,14 +7,16 @@ import coil.intercept.Interceptor
 import coil.memory.MemoryCache
 import coil.request.ImageResult
 import coil.size.Precision
-import com.dhimandasgupta.funposables.statemachines.CounterStateMachineFactory
+import com.dhimandasgupta.funposables.di.AppGraph
+import dev.zacsweers.metro.createGraph
 import timber.log.Timber
 
 class App : Application() {
-    private var factory: CounterStateMachineFactory? = null
+    private lateinit var appGraph: AppGraph
 
     override fun onCreate() {
         super.onCreate()
+        appGraph = createGraph<AppGraph>()
         Timber.plant(Timber.DebugTree())
         initCoil()
     }
@@ -35,11 +37,9 @@ class App : Application() {
         Coil.setImageLoader(imageLoader)
     }
 
-    fun getCounterStateMachine(): CounterStateMachineFactory {
-        if (factory == null) {
-            factory = CounterStateMachineFactory()
-        }
-        return factory!!
+    fun getAppComponent(): AppGraph {
+        require(::appGraph.isInitialized)
+        return appGraph
     }
 }
 

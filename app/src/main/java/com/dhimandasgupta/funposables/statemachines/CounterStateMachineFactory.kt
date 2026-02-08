@@ -22,7 +22,8 @@ object DecrementAction : CounterBaseAction
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @SingleIn(AppScope::class)
-class CounterStateMachineFactory @Inject constructor()
+@Inject
+class CounterStateMachineFactory
     : FlowReduxStateMachineFactory<CounterBaseState, CounterBaseAction>() {
     init {
         initializeWith(reuseLastEmittedStateOnLaunch = true) { initialState() }

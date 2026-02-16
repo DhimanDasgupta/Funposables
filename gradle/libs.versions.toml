@@ -19,7 +19,7 @@ nav3Core = "1.0.1"
 material3AdaptiveNav3 = "1.3.0-alpha08"
 flow-redux2 = "2.0.1"
 timber = "5.0.1"
-metro = "0.10.2"
+metro = "0.10.4"
 googleDevtoolsKsp = "2.3.5"
 
 [libraries]

@@ -48,17 +48,25 @@ import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 fun ExpandableCollapsableItems(
     modifier: Modifier = Modifier
 ) {
-    val accounts = listOf(
-        "Dhiman Dasgupta",
-        "Paramita Banerjee",
-        "Nilanjan Sen",
-        "Shraboni Basu Mallick",
-        "Indranil Sen",
-        "Sanhita Dasgupta"
+    val accountItem = listOf(
+        Item.AccountItem("Dhiman Dasgupta", "$12,345.67"),
+        Item.AccountItem("Paramita Banerjee", "$12,345.67"),
+        Item.AccountItem("Nilanjan Sen", "$12,345.67"),
+        Item.AccountItem("Shraboni Basu Mallick", "$12,345.67"),
+        Item.AccountItem("Indranil Sen", "$12,345.67"),
+        Item.AccountItem("Sanhita Dasgupta", "$12,345.67")
     )
 
+    val normalItems = buildList<Item> {
+        repeat(100) { index ->
+            add(Item.NormalItem("This is Item : $index"))
+        }
+    }
+
+    val items = accountItem + normalItems
+
     ExpandableCardList(
-        accounts = accounts,
+        items = items,
         modifier = modifier
             .fillMaxSize()
             .padding(
@@ -83,7 +91,7 @@ fun ExpandableCollapsableItems(
 
 @Composable
 private fun ExpandableCardList(
-    accounts: List<String>, // list of items (ex: account names)
+    items: List<Item>, // list of items (ex: account names)
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -127,56 +135,16 @@ private fun ExpandableCardList(
         }
 
         LazyColumn {
-            itemsIndexed(accounts.reversed()) { index, account ->
-                AccountCard(
-                    index = index,
-                    collapsed = expanded,
-                    accountName = account
-                )
-            }
-        }
-
-        /*AnimatedContent(targetState = expanded, label = "") { isExpanded ->
-
-            if (isExpanded) {
-                // Expanded → full lazy list
-                LazyColumn {
-                    itemsIndexed(accounts.reversed()) { index, account ->
-                        AccountCard(
-                            index = index,
-                            accountName = account
-                        )
-                    }
+            itemsIndexed(items) { index, item ->
+                when (item) {
+                    is Item.AccountItem -> AccountCard(
+                        index = index,
+                        collapsed = expanded,
+                        accountName = item.name,
+                        accountBalance = item.amount
+                    )
+                    is Item.NormalItem -> NormalCard(item = item.name)
                 }
-            } else {
-                // Collapsed → show up to 3 overlapping
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .graphicsLayer {
-                            translationY = 36f
-                        }
-                ) {
-                    accounts.take(3).reversed().forEachIndexed { index, account ->
-                        AccountCard(
-                            accountName = account,
-                            modifier = Modifier
-                                .graphicsLayer {
-                                    translationY = (-index * 36).toFloat()
-                                }
-                        )
-                    }
-                }
-            }
-        }*/
-
-        LazyColumn {
-            items(100) { item ->
-                Text(
-                    "This is Item : $item", modifier = Modifier
-                        .padding(16.dp)
-                        .fillMaxWidth()
-                )
             }
         }
     }
@@ -187,7 +155,8 @@ private fun AccountCard(
     modifier: Modifier = Modifier,
     index: Int = 0,
     collapsed: Boolean = false,
-    accountName: String
+    accountName: String,
+    accountBalance: String
 ) {
     val density = LocalDensity.current
 
@@ -225,11 +194,29 @@ private fun AccountCard(
                 style = typography.bodyLarge
             )
             Text(
-                text = "$12,345.67", // Example balance per account
+                text = accountBalance, // Example balance per account
                 style = typography.bodyLarge
             )
         }
     }
+}
+
+@Composable
+private fun NormalCard(
+    modifier: Modifier = Modifier,
+    item: String
+) {
+    Text(
+        text = "This is Item : $item",
+        modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth()
+    )
+}
+
+sealed interface Item {
+    data class AccountItem(val name: String, val amount: String): Item
+    data class NormalItem(val name: String): Item
 }
 
 

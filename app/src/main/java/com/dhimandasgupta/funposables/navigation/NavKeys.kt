@@ -28,7 +28,10 @@ data object CurvedLayoutNavKey: NavKey
 data object CounterNavKey: NavKey
 
 @Serializable
-data object InteractiveJulia: NavKey
+data object InteractiveJuliaNavKey: NavKey
 
 @Serializable
-data object Mandelbrot: NavKey
+data object MandelbrotNavKey: NavKey
+
+@Serializable
+data object CircularLayoutNavKey: NavKey

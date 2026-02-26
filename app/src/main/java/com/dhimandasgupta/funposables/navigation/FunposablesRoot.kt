@@ -8,11 +8,13 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.dhimandasgupta.funposables.composables.CircularLayoutPane
 import com.dhimandasgupta.funposables.composables.Counter
 import com.dhimandasgupta.funposables.composables.CurvedLayout
 import com.dhimandasgupta.funposables.composables.DragOrTransformBox
@@ -89,10 +91,13 @@ fun FunposablesRoot(
                         backStack.add(CounterNavKey)
                     },
                     navigateToToJulia = {
-                        backStack.add(InteractiveJulia)
+                        backStack.add(InteractiveJuliaNavKey)
                     },
                     navigateToMandelbrot = {
-                        backStack.add(Mandelbrot)
+                        backStack.add(MandelbrotNavKey)
+                    },
+                    navigateToCircularLayout = {
+                        backStack.add(CircularLayoutNavKey)
                     }
                 )
             }
@@ -142,7 +147,7 @@ fun FunposablesRoot(
                 metadata = ListDetailSceneStrategy.detailPane()
             ) {
                 println("AppGraph: $appGraph")
-                val counterStateMachineFactory = appGraph.counterStateMachineFactory
+                val counterStateMachineFactory = remember { appGraph.counterStateMachineFactory }
                 println("CounterStateMachineFactory: $counterStateMachineFactory")
                 val counterStateMachine = counterStateMachineFactory.produceStateMachine()
 
@@ -152,17 +157,24 @@ fun FunposablesRoot(
                     dispatch = counterStateMachine.dispatchAction
                 )
             }
-            entry<InteractiveJulia>(
+            entry<InteractiveJuliaNavKey>(
                 metadata = ListDetailSceneStrategy.detailPane()
             ) {
                 InteractiveJulia(
                     modifier = modifier
                 )
             }
-            entry<Mandelbrot>(
+            entry<MandelbrotNavKey>(
                 metadata = ListDetailSceneStrategy.detailPane()
             ) {
                 Mandelbrot(
+                    modifier = modifier
+                )
+            }
+            entry<CircularLayoutNavKey>(
+                metadata = ListDetailSceneStrategy.detailPane()
+            ) {
+                CircularLayoutPane(
                     modifier = modifier
                 )
             }

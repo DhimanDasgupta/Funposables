@@ -40,7 +40,8 @@ fun Launcher(
     navigateToCurvedScreen: () -> Unit,
     navigateToCounter: () -> Unit,
     navigateToToJulia: () -> Unit,
-    navigateToMandelbrot: () -> Unit
+    navigateToMandelbrot: () -> Unit,
+    navigateToCircularLayout: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -200,6 +201,20 @@ fun Launcher(
                     color = colorScheme.error
                 )
             }
+
+            OutlinedCard(
+                modifier = Modifier
+                    .padding(horizontal = 16.dp)
+                    .fillMaxWidth()
+                    .height(56.dp),
+                onClick = navigateToCircularLayout
+            ) {
+                Text(
+                    "Circular Layout",
+                    modifier = Modifier.padding(16.dp),
+                    color = colorScheme.error
+                )
+            }
         }
     }
 }
@@ -218,7 +233,8 @@ private fun LauncherPreview() {
             navigateToCurvedScreen = {},
             navigateToCounter = {},
             navigateToToJulia = {},
-            navigateToMandelbrot = {}
+            navigateToMandelbrot = {},
+            navigateToCircularLayout = {}
         )
     }
 }

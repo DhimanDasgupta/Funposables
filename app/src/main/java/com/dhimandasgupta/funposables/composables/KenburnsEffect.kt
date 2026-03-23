@@ -119,6 +119,8 @@ fun ApplyKenBurnsEffect(
         var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
         val imageRequest = ImageRequest.Builder(LocalContext.current)
+            .memoryCacheKey(drawableResourceId.toString())
+            .diskCacheKey(drawableResourceId.toString())
             .data(drawableResourceId)
             .crossfade(true)
             .build()

@@ -24,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -43,6 +44,15 @@ fun Launcher(
     navigateToMandelbrot: () -> Unit,
     navigateToCircularLayout: () -> Unit
 ) {
+    val cardModifier = Modifier
+        .padding(horizontal = 16.dp)
+        .fillMaxWidth()
+        .height(56.dp)
+
+    val textModifier = Modifier
+        .padding(16.dp)
+        .blur(0.45.dp)
+    
     Column(
         modifier = modifier
             .padding(
@@ -50,18 +60,18 @@ fun Launcher(
                     .displayCutout.union(insets = WindowInsets.navigationBars)
                     .asPaddingValues()
                     .calculateStartPadding(LayoutDirection.Ltr),
-                top = WindowInsets
+                /*top = WindowInsets
                     .displayCutout.union(insets = WindowInsets.statusBars)
                     .asPaddingValues()
-                    .calculateTopPadding(),
+                    .calculateTopPadding(),*/
                 end = WindowInsets
                     .displayCutout.union(insets = WindowInsets.navigationBars)
                     .asPaddingValues()
                     .calculateEndPadding(LayoutDirection.Ltr),
-                bottom = WindowInsets
+                /*bottom = WindowInsets
                     .displayCutout.union(insets = WindowInsets.navigationBars)
                     .asPaddingValues()
-                    .calculateBottomPadding()
+                    .calculateBottomPadding()*/
             )
             .fillMaxSize()
             .verticalScroll(
@@ -72,150 +82,136 @@ fun Launcher(
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(height = 8.dp)
+                .height(
+                    height = WindowInsets
+                        .displayCutout.union(insets = WindowInsets.statusBars)
+                        .asPaddingValues()
+                        .calculateTopPadding() + 8.dp
+                )
         )
 
         OutlinedCard(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = cardModifier,
             onClick = navigateToExpandableCollapsableItems
         ) {
             Text(
                 "Expand Collapsable Items",
-                modifier = Modifier.padding(16.dp),
+                modifier = textModifier,
                 color = colorScheme.error
             )
         }
 
         OutlinedCard(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = cardModifier,
             onClick = navigateToFirstLineAlignedCheckBox
         ) {
             Text(
                 "Checkbox aligned to First line of the text",
-                modifier = Modifier.padding(16.dp),
+                modifier = textModifier,
                 color = colorScheme.error
             )
         }
 
         OutlinedCard(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = cardModifier,
             onClick = navigateToDragOrTransformBox
         ) {
             Text(
                 "Transformable Box",
-                modifier = Modifier.padding(16.dp),
+                modifier = textModifier,
                 color = colorScheme.error
             )
         }
 
         OutlinedCard(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = cardModifier,
             onClick = navigateToKenBurnsEffect
         ) {
             Text(
                 "Kenburns Effect",
-                modifier = Modifier.padding(16.dp),
+                modifier = textModifier,
                 color = colorScheme.error
             )
         }
 
         OutlinedCard(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = cardModifier,
             onClick = navigateToSearchExpander
         ) {
             Text(
                 "Search Expander",
-                modifier = Modifier.padding(16.dp),
+                modifier = textModifier,
                 color = colorScheme.error
             )
         }
 
         OutlinedCard(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = cardModifier,
             onClick = navigateToCurvedScreen
         ) {
             Text(
                 "Curved Screen",
-                modifier = Modifier.padding(16.dp),
+                modifier = textModifier,
                 color = colorScheme.error
             )
         }
 
         OutlinedCard(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-                .height(56.dp),
+            modifier = cardModifier,
             onClick = navigateToCounter
         ) {
             Text(
                 "Counter with FlowRedux2",
-                modifier = Modifier.padding(16.dp),
+                modifier = textModifier,
                 color = colorScheme.error
             )
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             OutlinedCard(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = cardModifier,
                 onClick = navigateToToJulia
             ) {
                 Text(
                     "Julia",
-                    modifier = Modifier.padding(16.dp),
+                    modifier = textModifier,
                     color = colorScheme.error
                 )
             }
 
             OutlinedCard(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = cardModifier,
                 onClick = navigateToMandelbrot
             ) {
                 Text(
                     "Mandelbrot",
-                    modifier = Modifier.padding(16.dp),
+                    modifier = textModifier,
                     color = colorScheme.error
                 )
             }
 
             OutlinedCard(
-                modifier = Modifier
-                    .padding(horizontal = 16.dp)
-                    .fillMaxWidth()
-                    .height(56.dp),
+                modifier = cardModifier,
                 onClick = navigateToCircularLayout
             ) {
                 Text(
                     "Circular Layout",
-                    modifier = Modifier.padding(16.dp),
+                    modifier = textModifier,
                     color = colorScheme.error
                 )
             }
         }
+
+        Spacer(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(
+                    height = WindowInsets
+                        .displayCutout.union(insets = WindowInsets.navigationBars)
+                        .asPaddingValues()
+                        .calculateBottomPadding() + 8.dp
+                )
+        )
     }
 }
 

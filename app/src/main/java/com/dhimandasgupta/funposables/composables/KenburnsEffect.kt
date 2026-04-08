@@ -1,6 +1,7 @@
 package com.dhimandasgupta.funposables.composables
 
 import android.app.Activity
+import android.graphics.drawable.BitmapDrawable
 import androidx.activity.compose.LocalActivity
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -10,13 +11,16 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,11 +36,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -45,11 +51,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.palette.graphics.Palette
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.dhimandasgupta.funposables.R
 import com.dhimandasgupta.funposables.ui.common.DeviceLayoutType
 import com.dhimandasgupta.funposables.ui.common.getDeviceLayoutType
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import timber.log.Timber
 import kotlin.random.Random
 
@@ -81,6 +90,8 @@ fun KenBurnsEffectPane(
             .fillMaxSize(0.75f)
     }
 
+    var palette by remember { mutableStateOf<Palette?>(null) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -101,8 +112,34 @@ fun KenBurnsEffectPane(
         ) { itemIndex ->
             ApplyKenBurnsEffect(
                 modifier = Modifier,
-                drawableResourceId = items[itemIndex]
+                drawableResourceId = items[itemIndex],
+                updatePalette = { newPalette ->
+                    palette = newPalette
+                }
             )
+        }
+
+        FlowRow(
+            modifier = Modifier.padding(
+                horizontal = 16.dp,
+                vertical = 32.dp
+            ),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            maxItemsInEachRow = Int.MAX_VALUE
+        ) {
+            palette?.swatches?.forEach { swatch ->
+                swatch?.let { swatch ->
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                color = Color(swatch.rgb),
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                    )
+                }
+            }
         }
     }
 }
@@ -111,8 +148,10 @@ fun KenBurnsEffectPane(
 fun ApplyKenBurnsEffect(
     modifier: Modifier = Modifier,
     drawableResourceId: Int,
+    updatePalette: (Palette) -> Unit
 ) {
     key(drawableResourceId) {
+        val scope = rememberCoroutineScope()
 
         val painter = painterResource(id = drawableResourceId)
         val imageSize = painter.intrinsicSize
@@ -122,7 +161,14 @@ fun ApplyKenBurnsEffect(
             .memoryCacheKey(drawableResourceId.toString())
             .diskCacheKey(drawableResourceId.toString())
             .data(drawableResourceId)
+            .allowHardware(false) // Required for the Palette API
             .crossfade(true)
+            .listener { _, result ->
+                scope.launch(Dispatchers.Default) {
+                    val bitmap = (result.drawable as? BitmapDrawable)?.bitmap ?: return@launch
+                    updatePalette(Palette.from(bitmap).generate())
+                }
+            }
             .build()
 
         LaunchedEffect(key1 = imageSize, key2 = containerSize) {

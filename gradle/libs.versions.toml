@@ -22,6 +22,7 @@ timber = "5.0.1"
 metro = "0.13.0"
 googleDevtoolsKsp = "2.3.6"
 runtime = "1.10.6"
+paletteKtx = "1.0.0"
 
 [libraries]
 androidx-splash-screen = { module = "androidx.core:core-splashscreen", version.ref = "androidxSplashScreen" }
@@ -57,6 +58,7 @@ flow-redux-extension-jvm = { module = "com.freeletics.flowredux2:extensions-jvm"
 
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
+androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

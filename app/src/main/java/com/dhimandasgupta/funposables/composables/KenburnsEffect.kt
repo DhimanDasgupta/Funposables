@@ -10,7 +10,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +19,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -36,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -76,7 +76,7 @@ fun KenBurnsEffectPane(
     val carousalModifier = when (deviceLayoutType) {
         DeviceLayoutType.PHONE_PORTRAIT -> Modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.25f)
+            .fillMaxHeight(0.4f)
         else -> Modifier
             .fillMaxSize(0.75f)
     }
@@ -92,7 +92,7 @@ fun KenBurnsEffectPane(
     ) {
         HorizontalCenteredHeroCarousel(
             state = rememberCarouselState(
-                initialItem = items.size / 2,
+                initialItem = 0,
                 itemCount = { items.size }
             ),
             itemSpacing = 8.dp,
@@ -143,8 +143,8 @@ fun ApplyKenBurnsEffect(
         )
 
         val panningX by infiniteTransition.animateFloat(
-            initialValue = Random.nextDouble(-0.01, 0.0).toFloat(),
-            targetValue = Random.nextDouble(0.0, 0.01).toFloat(),
+            initialValue = Random.nextDouble(-0.05, 0.0).toFloat(),
+            targetValue = Random.nextDouble(0.0, 0.05).toFloat(),
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 12000, easing = LinearOutSlowInEasing),
                 repeatMode = RepeatMode.Reverse
@@ -153,8 +153,8 @@ fun ApplyKenBurnsEffect(
         )
 
         val panningY by infiniteTransition.animateFloat(
-            initialValue = Random.nextDouble(-0.01, 0.0).toFloat(),
-            targetValue = Random.nextDouble(0.0, 0.01).toFloat(),
+            initialValue = Random.nextDouble(-0.05, 0.0).toFloat(),
+            targetValue = Random.nextDouble(0.0, 0.05).toFloat(),
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 8000, easing = FastOutLinearInEasing),
                 repeatMode = RepeatMode.Reverse
@@ -165,11 +165,8 @@ fun ApplyKenBurnsEffect(
         Box(
             modifier = modifier
                 .fillMaxSize()
-                .clipToBounds()
-                .border(
-                    width = 1.dp,
-                    color = colorScheme.onBackground
-                ),
+                .clip(RoundedCornerShape(16.dp))
+                .clipToBounds(),
             contentAlignment = Alignment.Center
         ) {
             AsyncImage(

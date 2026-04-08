@@ -1,8 +1,11 @@
 package com.dhimandasgupta.funposables
 
+import android.app.ActivityManager
 import android.app.Application
+import android.content.Context
 import coil.Coil
 import coil.ImageLoader
+import coil.disk.DiskCache
 import coil.intercept.Interceptor
 import coil.memory.MemoryCache
 import coil.request.ImageResult
@@ -24,8 +27,16 @@ class App : Application() {
     private fun initCoil() {
         val imageLoader = ImageLoader.Builder(this)
             .precision(Precision.INEXACT)
+            .allowHardware(enable = true)
+            .allowRgb565(enable = !isLowRamDevice(this))
             .components {
                 add(LargeImageInterceptor())
+            }
+            .diskCache {
+                DiskCache.Builder()
+                    .directory(this.cacheDir.resolve("image_cache"))
+                    .maxSizeBytes(100 * 1024 * 1024) // 100 MB cache
+                    .build()
             }
             .memoryCache {
                 MemoryCache.Builder(this)
@@ -54,4 +65,13 @@ private class LargeImageInterceptor : Interceptor {
 
         return chain.proceed(modifiedRequest)
     }
+}
+
+private fun isLowRamDevice(context: Context): Boolean {
+    val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    val memoryInfo = ActivityManager.MemoryInfo().also { memoryInfo ->
+        activityManager.getMemoryInfo(memoryInfo)
+    }
+
+    return memoryInfo.lowMemory
 }

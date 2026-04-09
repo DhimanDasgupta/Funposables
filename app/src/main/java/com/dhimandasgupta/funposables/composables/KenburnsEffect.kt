@@ -179,7 +179,7 @@ fun ApplyKenBurnsEffect(
         val infiniteTransition = rememberInfiniteTransition(label = "KenBurns")
 
         val scale by infiniteTransition.animateFloat(
-            initialValue = Random.nextDouble(1.5, 2.9).toFloat(),
+            initialValue = Random.nextDouble(2.05, 2.95).toFloat(),
             targetValue = Random.nextDouble(3.0, 5.0).toFloat(),
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 10000, easing = FastOutSlowInEasing),
@@ -189,8 +189,8 @@ fun ApplyKenBurnsEffect(
         )
 
         val panningX by infiniteTransition.animateFloat(
-            initialValue = Random.nextDouble(-0.05, 0.0).toFloat(),
-            targetValue = Random.nextDouble(0.0, 0.05).toFloat(),
+            initialValue = Random.nextDouble(-0.01, 0.0).toFloat(),
+            targetValue = Random.nextDouble(0.0, 0.01).toFloat(),
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 12000, easing = LinearOutSlowInEasing),
                 repeatMode = RepeatMode.Reverse
@@ -199,8 +199,8 @@ fun ApplyKenBurnsEffect(
         )
 
         val panningY by infiniteTransition.animateFloat(
-            initialValue = Random.nextDouble(-0.05, 0.0).toFloat(),
-            targetValue = Random.nextDouble(0.0, 0.05).toFloat(),
+            initialValue = Random.nextDouble(-0.01, 0.0).toFloat(),
+            targetValue = Random.nextDouble(0.0, 0.01).toFloat(),
             animationSpec = infiniteRepeatable(
                 animation = tween(durationMillis = 8000, easing = FastOutLinearInEasing),
                 repeatMode = RepeatMode.Reverse

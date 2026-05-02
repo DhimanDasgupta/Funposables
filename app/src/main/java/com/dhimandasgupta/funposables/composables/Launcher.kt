@@ -42,7 +42,9 @@ fun Launcher(
     navigateToCounter: () -> Unit,
     navigateToToJulia: () -> Unit,
     navigateToMandelbrot: () -> Unit,
-    navigateToCircularLayout: () -> Unit
+    navigateToCircularLayout: () -> Unit,
+    navigateToOrbitalLoader: () -> Unit,
+    navigateToBackgroundGrid: () -> Unit
 ) {
     val cardModifier = Modifier
         .padding(horizontal = 16.dp)
@@ -202,6 +204,28 @@ fun Launcher(
             }
         }
 
+        OutlinedCard(
+            modifier = cardModifier,
+            onClick = navigateToOrbitalLoader
+        ) {
+            Text(
+                "Orbital Loader",
+                modifier = textModifier,
+                color = colorScheme.error
+            )
+        }
+
+        OutlinedCard(
+            modifier = cardModifier,
+            onClick = navigateToBackgroundGrid
+        ) {
+            Text(
+                "Background Grid",
+                modifier = textModifier,
+                color = colorScheme.error
+            )
+        }
+
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
@@ -230,7 +254,9 @@ private fun LauncherPreview() {
             navigateToCounter = {},
             navigateToToJulia = {},
             navigateToMandelbrot = {},
-            navigateToCircularLayout = {}
+            navigateToCircularLayout = {},
+            navigateToOrbitalLoader = {},
+            navigateToBackgroundGrid = {}
         )
     }
 }

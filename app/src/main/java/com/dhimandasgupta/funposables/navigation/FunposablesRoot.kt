@@ -16,6 +16,7 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
+import com.dhimandasgupta.funposables.composables.BackgroundGrid
 import com.dhimandasgupta.funposables.composables.CircularLayoutPane
 import com.dhimandasgupta.funposables.composables.Counter
 import com.dhimandasgupta.funposables.composables.CurvedLayout
@@ -26,6 +27,7 @@ import com.dhimandasgupta.funposables.composables.InteractiveJulia
 import com.dhimandasgupta.funposables.composables.KenBurnsEffectPane
 import com.dhimandasgupta.funposables.composables.Launcher
 import com.dhimandasgupta.funposables.composables.Mandelbrot
+import com.dhimandasgupta.funposables.composables.OrbitalLoader
 import com.dhimandasgupta.funposables.composables.SearchExpander
 import com.dhimandasgupta.funposables.di.AppGraph
 import com.freeletics.flowredux2.produceStateMachine
@@ -103,6 +105,12 @@ fun FunposablesRoot(
                         },
                         navigateToCircularLayout = {
                             backStack.add(CircularLayoutNavKey)
+                        },
+                        navigateToOrbitalLoader = {
+                            backStack.add(OrbitalLoaderNavKey)
+                        },
+                        navigateToBackgroundGrid = {
+                            backStack.add(BackgroundGridNavKey)
                         }
                     )
                 }
@@ -180,6 +188,20 @@ fun FunposablesRoot(
                     metadata = ListDetailSceneStrategy.detailPane()
                 ) {
                     CircularLayoutPane(
+                        modifier = modifier
+                    )
+                }
+                entry<OrbitalLoaderNavKey>(
+                    metadata = ListDetailSceneStrategy.detailPane()
+                ) {
+                    OrbitalLoader(
+                        modifier = modifier
+                    )
+                }
+                entry<BackgroundGridNavKey>(
+                    metadata = ListDetailSceneStrategy.detailPane()
+                ) {
+                    BackgroundGrid(
                         modifier = modifier
                     )
                 }

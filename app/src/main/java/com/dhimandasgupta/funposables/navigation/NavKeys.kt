@@ -35,3 +35,9 @@ data object MandelbrotNavKey: NavKey
 
 @Serializable
 data object CircularLayoutNavKey: NavKey
+
+@Serializable
+data object OrbitalLoaderNavKey: NavKey
+
+@Serializable
+data object BackgroundGridNavKey: NavKey

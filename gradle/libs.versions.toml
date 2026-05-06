@@ -1,5 +1,5 @@
 [versions]
-agp = "9.2.0"
+agp = "9.2.1"
 kotlin = "2.3.21"
 coreKtx = "1.18.0"
 junit = "4.13.2"
@@ -7,7 +7,7 @@ junitVersion = "1.3.0"
 espressoCore = "3.7.0"
 lifecycleRuntimeKtx = "2.10.0"
 activityCompose = "1.13.0"
-composeBom = "2026.04.01"
+composeBom = "2026.05.00"
 navigationRuntimeKtx = "2.9.8"
 materialIcons = "1.7.8"
 material3WindowSizeClass = "1.4.0"
@@ -16,12 +16,12 @@ kotlinxSerializationJson = "1.11.0"
 androidxSplashScreen = "1.2.0"
 coilCompose = "2.7.0"
 nav3Core = "1.1.1"
-material3AdaptiveNav3 = "1.3.0-alpha10"
+material3AdaptiveNav3 = "1.3.0-beta01"
 flow-redux2 = "2.0.1"
 timber = "5.0.1"
-metro = "0.13.2"
+metro = "1.0.0"
 googleDevtoolsKsp = "2.3.6"
-runtime = "1.11.0"
+runtime = "1.11.1"
 paletteKtx = "1.0.0"
 
 [libraries]
@@ -44,6 +44,8 @@ androidx-navigation-runtime-ktx = { group = "androidx.navigation", name = "navig
 androidx-material3-window-size-class1 = { group = "androidx.compose.material3", name = "material3-window-size-class", version.ref = "material3WindowSizeClass" }
 androidx-material-icons = { group = "androidx.compose.material", name = "material-icons-extended", version.ref = "materialIcons" }
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigationCompose" }
+androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
+androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coilCompose" }
 
 androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runtime", version.ref = "nav3Core" }
@@ -57,8 +59,6 @@ flow-redux-jvm = { group = "com.freeletics.flowredux2", name = "flowredux", vers
 flow-redux-extension-jvm = { module = "com.freeletics.flowredux2:extensions-jvm", version.ref = "flow-redux2" }
 
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
-androidx-compose-runtime = { group = "androidx.compose.runtime", name = "runtime", version.ref = "runtime" }
-androidx-palette-ktx = { group = "androidx.palette", name = "palette-ktx", version.ref = "paletteKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

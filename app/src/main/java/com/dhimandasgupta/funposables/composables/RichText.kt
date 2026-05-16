@@ -27,10 +27,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
+import androidx.compose.ui.text.LinkInteractionListener
 import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
@@ -56,7 +58,7 @@ fun RichText(
     val html = """
         This </br>is a sample<br /> HTML string.<br>
         Take my $500 for this.
-        <p>Hello there how are <sup>you</sup>. If you want to <sub><b>contact me</b></sub> then reach me via <a href='tel:+910000000000'>phone</a> or via <a href='https://www.example.com'>website</a>.</p>
+        <p>Hello there how are <sup>you</sup>. If you want to <sub><b><u><i>contact me</i></u></b></sub> then reach me via <i><a href='tel:+910000000000'>phone</a></i> or via <a href='https://www.example.com'>website</a>.</p>
         <ol>
             <li>Name one</li>
             <li>Item two item with https://www.example.com</li>
@@ -173,6 +175,7 @@ suspend fun htmlToAnnotatedString(
             )
         }
     } catch (e: Exception) {
+        currentCoroutineContext().ensureActive()
         println("Error parsing HTML: ${e.message}")
         buildAnnotatedString {}
     }
@@ -281,9 +284,7 @@ private suspend fun parseTag(
                 builder.append("\n")
             }
 
-            val startIndex = parser.getAttributeValue(null, "start")
-                ?.toIntOrNull()
-                ?: 1
+            val startIndex = parser.getAttributeValue(null, "start")?.toIntOrNull() ?: 1
 
             listStack.add(HtmlListContext.Ordered(nextIndex = startIndex))
 
@@ -313,8 +314,7 @@ private suspend fun parseTag(
                     currentList.nextIndex++
                 }
 
-                HtmlListContext.Unordered,
-                null -> {
+                HtmlListContext.Unordered, null -> {
                     builder.append("• ")
                 }
             }
@@ -329,6 +329,38 @@ private suspend fun parseTag(
 
             if (!builder.endsWithNewLine() && AddExtraSpaceBetween) {
                 builder.append("\n")
+            }
+        }
+
+        "u" -> {
+            builder.withStyle(
+                SpanStyle(
+                    textDecoration = TextDecoration.Underline
+                )
+            ) {
+                parseChildren(
+                    parser = parser,
+                    builder = builder,
+                    parentTag = tagName,
+                    linkColor = linkColor,
+                    listStack = listStack
+                )
+            }
+        }
+
+        "i" -> {
+            builder.withStyle(
+                SpanStyle(
+                    fontStyle = FontStyle.Italic
+                )
+            ) {
+                parseChildren(
+                    parser = parser,
+                    builder = builder,
+                    parentTag = tagName,
+                    linkColor = linkColor,
+                    listStack = listStack
+                )
             }
         }
 

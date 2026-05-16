@@ -90,6 +90,7 @@ fun RichText(
             <li><b>Third item</b></li>
         </ol>
         This is a plain and simple string. This dose not have any style what so ever. 
+        Now coming back to hyperlinked texts - here is a <strong>strong with <u>underlined</u></strong> text.
         """.trimIndent()
 
     val linkColor = colorScheme.primary
@@ -103,14 +104,20 @@ fun RichText(
             linkColor = linkColor,
             clickListeners = mapOf(
                 "Hello" to LinkInteractionListener {
-                    Toast.makeText(context, "You clicked on 'Hello'", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "You clicked on Hello", Toast.LENGTH_SHORT).show()
                 },
                 "$500" to LinkInteractionListener {
                     scope.launch {
                         clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("", "$500")))
                     }
                     Toast.makeText(context, "You have copied $500", Toast.LENGTH_SHORT).show()
-                }
+                },
+                "strong" to LinkInteractionListener {
+                    Toast.makeText(context, "You clicked on strong", Toast.LENGTH_SHORT).show()
+                },
+                "underlined" to LinkInteractionListener {
+                    Toast.makeText(context, "You clicked on underlined", Toast.LENGTH_SHORT).show()
+                },
             )
         )
     }
@@ -167,7 +174,7 @@ private sealed class HtmlListContext {
     data object Unordered : HtmlListContext()
 
     data class Ordered(
-        var nextIndex: Int
+        val nextIndex: Int
     ) : HtmlListContext()
 }
 
@@ -368,7 +375,9 @@ private suspend fun parseTag(
             when (val currentList = listStack.lastOrNull()) {
                 is HtmlListContext.Ordered -> {
                     builder.append("${currentList.nextIndex}. ")
-                    currentList.nextIndex++
+                    listStack[listStack.lastIndex] = currentList.copy(
+                        nextIndex = currentList.nextIndex + 1
+                    )
                 }
 
                 HtmlListContext.Unordered, null -> {

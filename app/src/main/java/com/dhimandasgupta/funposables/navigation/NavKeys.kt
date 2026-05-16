@@ -41,3 +41,6 @@ data object OrbitalLoaderNavKey: NavKey
 
 @Serializable
 data object BackgroundGridNavKey: NavKey
+
+@Serializable
+data object RichTextNavKey: NavKey

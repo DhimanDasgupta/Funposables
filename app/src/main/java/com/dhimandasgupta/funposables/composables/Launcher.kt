@@ -44,7 +44,8 @@ fun Launcher(
     navigateToMandelbrot: () -> Unit,
     navigateToCircularLayout: () -> Unit,
     navigateToOrbitalLoader: () -> Unit,
-    navigateToBackgroundGrid: () -> Unit
+    navigateToBackgroundGrid: () -> Unit,
+    navigateToRichText: () -> Unit
 ) {
     val cardModifier = Modifier
         .padding(horizontal = 16.dp)
@@ -226,6 +227,17 @@ fun Launcher(
             )
         }
 
+        OutlinedCard(
+            modifier = cardModifier,
+            onClick = navigateToRichText
+        ) {
+            Text(
+                "Rich Text",
+                modifier = textModifier,
+                color = colorScheme.error
+            )
+        }
+
         Spacer(
             modifier = Modifier
                 .fillMaxWidth()
@@ -256,7 +268,8 @@ private fun LauncherPreview() {
             navigateToMandelbrot = {},
             navigateToCircularLayout = {},
             navigateToOrbitalLoader = {},
-            navigateToBackgroundGrid = {}
+            navigateToBackgroundGrid = {},
+            navigateToRichText = {}
         )
     }
 }

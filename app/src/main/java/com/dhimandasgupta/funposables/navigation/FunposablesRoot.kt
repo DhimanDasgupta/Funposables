@@ -28,6 +28,7 @@ import com.dhimandasgupta.funposables.composables.KenBurnsEffectPane
 import com.dhimandasgupta.funposables.composables.Launcher
 import com.dhimandasgupta.funposables.composables.Mandelbrot
 import com.dhimandasgupta.funposables.composables.OrbitalLoader
+import com.dhimandasgupta.funposables.composables.RichText
 import com.dhimandasgupta.funposables.composables.SearchExpander
 import com.dhimandasgupta.funposables.di.AppGraph
 import com.freeletics.flowredux2.produceStateMachine
@@ -111,6 +112,9 @@ fun FunposablesRoot(
                         },
                         navigateToBackgroundGrid = {
                             backStack.add(BackgroundGridNavKey)
+                        },
+                        navigateToRichText = {
+                            backStack.add(RichTextNavKey)
                         }
                     )
                 }
@@ -202,6 +206,13 @@ fun FunposablesRoot(
                     metadata = ListDetailSceneStrategy.detailPane()
                 ) {
                     BackgroundGrid(
+                        modifier = modifier
+                    )
+                }
+                entry<RichTextNavKey>(
+                    metadata = ListDetailSceneStrategy.detailPane()
+                ) {
+                    RichText(
                         modifier = modifier
                     )
                 }

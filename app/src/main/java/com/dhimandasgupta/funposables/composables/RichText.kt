@@ -154,7 +154,11 @@ suspend fun htmlToAnnotatedString(
     currentCoroutineContext().ensureActive()
 
     return@withContext try {
-        val wrappedHtml = "<root>${html.replace("<br>", "\n").replace("</br>", "\n").replace("<br />", "\n")}</root>"
+        val wrappedHtml = "<root>${
+            html.replace("<br>", "\n")
+                .replace("</br>", "\n")
+                .replace("<br />", "\n")
+        }</root>"
 
         val parser = Xml.newPullParser().apply {
             setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)

@@ -1,6 +1,8 @@
 package com.dhimandasgupta.funposables.composables
 
+import android.content.ClipData
 import android.util.Xml
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -22,9 +24,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.ClipEntry
+import androidx.compose.ui.platform.LocalClipboard
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.LinkInteractionListener
@@ -55,6 +61,9 @@ import kotlin.random.Random
 fun RichText(
     modifier: Modifier
 ) {
+    val context = LocalContext.current
+    val clipboardManager = LocalClipboard.current
+
     val html = """
         This </br>is a sample<br /> HTML string.<br>
         Take my $500 for this.
@@ -80,14 +89,29 @@ fun RichText(
             <li>Second item with https://www.example.com</li>
             <li><b>Third item</b></li>
         </ol>
+        This is a plain and simple string. This dose not have any style what so ever. 
         """.trimIndent()
 
     val linkColor = colorScheme.primary
     var annotatedString by remember { mutableStateOf(AnnotatedString("")) }
+
+    val scope = rememberCoroutineScope()
+
     LaunchedEffect(html) {
         annotatedString = htmlToAnnotatedString(
             html = html,
-            linkColor = linkColor
+            linkColor = linkColor,
+            clickListeners = mapOf(
+                "Hello" to LinkInteractionListener {
+                    Toast.makeText(context, "You clicked on 'Hello'", Toast.LENGTH_SHORT).show()
+                },
+                "$500" to LinkInteractionListener {
+                    scope.launch {
+                        clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("", "$500")))
+                    }
+                    Toast.makeText(context, "You have copied $500", Toast.LENGTH_SHORT).show()
+                }
+            )
         )
     }
 
@@ -147,9 +171,30 @@ private sealed class HtmlListContext {
     ) : HtmlListContext()
 }
 
+private sealed class TextLinkMatch {
+    abstract val start: Int
+    abstract val endExclusive: Int
+    abstract val text: String
+
+    data class Custom(
+        override val start: Int,
+        override val endExclusive: Int,
+        override val text: String,
+        val listener: LinkInteractionListener
+    ) : TextLinkMatch()
+
+    data class Auto(
+        override val start: Int,
+        override val endExclusive: Int,
+        override val text: String,
+        val url: String
+    ) : TextLinkMatch()
+}
+
 suspend fun htmlToAnnotatedString(
     html: String,
-    linkColor: Color = Color(0xFF1565C0)
+    linkColor: Color = Color(0xFF1565C0),
+    clickListeners: Map<String, LinkInteractionListener> = emptyMap()
 ): AnnotatedString = withContext(Dispatchers.Default) {
     currentCoroutineContext().ensureActive()
 
@@ -175,6 +220,7 @@ suspend fun htmlToAnnotatedString(
                 builder = this,
                 parentTag = "root",
                 linkColor = linkColor,
+                clickListeners = clickListeners,
                 listStack = mutableListOf()
             )
         }
@@ -190,6 +236,7 @@ private suspend fun parseChildren(
     builder: AnnotatedString.Builder,
     parentTag: String,
     linkColor: Color,
+    clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
     listStack: MutableList<HtmlListContext>
 ) {
     var parsedEvents = 0
@@ -208,6 +255,7 @@ private suspend fun parseChildren(
                     parser = parser,
                     builder = builder,
                     linkColor = linkColor,
+                    clickListeners = clickListeners,
                     listStack = listStack
                 )
             }
@@ -215,7 +263,8 @@ private suspend fun parseChildren(
             XmlPullParser.TEXT -> {
                 builder.appendTextWithAutoLinks(
                     text = parser.text,
-                    linkColor = linkColor
+                    linkColor = linkColor,
+                    clickListeners = clickListeners
                 )
             }
 
@@ -236,6 +285,7 @@ private suspend fun parseTag(
     parser: XmlPullParser,
     builder: AnnotatedString.Builder,
     linkColor: Color,
+    clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
     listStack: MutableList<HtmlListContext>
 ) = coroutineScope {
     currentCoroutineContext().ensureActive()
@@ -251,6 +301,7 @@ private suspend fun parseTag(
                         builder = builder,
                         parentTag = tagName,
                         linkColor = linkColor,
+                        clickListeners = clickListeners,
                         listStack = listStack
                     )
                 }
@@ -273,6 +324,7 @@ private suspend fun parseTag(
                 builder = builder,
                 parentTag = tagName,
                 linkColor = linkColor,
+                clickListeners = clickListeners,
                 listStack = listStack
             )
 
@@ -297,6 +349,7 @@ private suspend fun parseTag(
                 builder = builder,
                 parentTag = tagName,
                 linkColor = linkColor,
+                clickListeners = clickListeners,
                 listStack = listStack
             )
 
@@ -328,6 +381,7 @@ private suspend fun parseTag(
                 builder = builder,
                 parentTag = tagName,
                 linkColor = linkColor,
+                clickListeners = clickListeners,
                 listStack = listStack
             )
 
@@ -347,6 +401,7 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    clickListeners = clickListeners,
                     listStack = listStack
                 )
             }
@@ -363,6 +418,7 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    clickListeners = clickListeners,
                     listStack = listStack
                 )
             }
@@ -383,6 +439,7 @@ private suspend fun parseTag(
                         builder = builder,
                         parentTag = tagName,
                         linkColor = linkColor,
+                        clickListeners = clickListeners,
                         listStack = listStack
                     )
                 }
@@ -408,6 +465,7 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    clickListeners = clickListeners,
                     listStack = listStack
                 )
             }
@@ -425,6 +483,7 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    clickListeners = clickListeners,
                     listStack = listStack
                 )
             }
@@ -442,6 +501,7 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    clickListeners = clickListeners,
                     listStack = listStack
                 )
             }
@@ -453,6 +513,7 @@ private suspend fun parseTag(
                 builder = builder,
                 parentTag = tagName,
                 linkColor = linkColor,
+                clickListeners = clickListeners,
                 listStack = listStack
             )
         }
@@ -464,6 +525,7 @@ private suspend fun parseChildrenWithoutAutoLinks(
     builder: AnnotatedString.Builder,
     parentTag: String,
     linkColor: Color,
+    clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
     listStack: MutableList<HtmlListContext>
 ) {
     while (true) {
@@ -475,12 +537,17 @@ private suspend fun parseChildrenWithoutAutoLinks(
                     parser = parser,
                     builder = builder,
                     linkColor = linkColor,
+                    clickListeners = clickListeners,
                     listStack = listStack
                 )
             }
 
             XmlPullParser.TEXT -> {
-                builder.append(parser.text)
+                builder.appendTextWithCustomLinks(
+                    text = parser.text,
+                    linkColor = linkColor,
+                    clickListeners = clickListeners,
+                )
             }
 
             XmlPullParser.END_TAG -> {
@@ -498,39 +565,127 @@ private suspend fun parseChildrenWithoutAutoLinks(
 
 private fun AnnotatedString.Builder.appendTextWithAutoLinks(
     text: String,
-    linkColor: Color
+    linkColor: Color,
+    clickListeners: Map<String, LinkInteractionListener>
 ) {
+    appendTextWithLinks(
+        text = text,
+        linkColor = linkColor,
+        clickListeners = clickListeners,
+        includeAutoLinks = true
+    )
+}
+
+private fun AnnotatedString.Builder.appendTextWithCustomLinks(
+    text: String,
+    linkColor: Color,
+    clickListeners: Map<String, LinkInteractionListener>
+) {
+    appendTextWithLinks(
+        text = text,
+        linkColor = linkColor,
+        clickListeners = clickListeners,
+        includeAutoLinks = false
+    )
+}
+
+private fun AnnotatedString.Builder.appendTextWithLinks(
+    text: String,
+    linkColor: Color,
+    clickListeners: Map<String, LinkInteractionListener>,
+    includeAutoLinks: Boolean
+) {
+    if (text.isEmpty()) return
+
+    val customMatches = clickListeners
+        .filterKeys { it.isNotEmpty() }
+        .flatMap { (clickableText, listener) ->
+            Regex.escape(clickableText)
+                .toRegex()
+                .findAll(text)
+                .map { matchResult ->
+                    TextLinkMatch.Custom(
+                        start = matchResult.range.first,
+                        endExclusive = matchResult.range.last + 1,
+                        text = matchResult.value,
+                        listener = listener
+                    )
+                }
+        }
+
+    val autoMatches = if (includeAutoLinks) {
+        AutoLinkRegex.findAll(text).mapNotNull { matchResult ->
+            val matchedText = matchResult.value
+            val url = when {
+                matchedText.isHttpsUrl() -> matchedText
+                matchedText.isPhoneNumber() -> matchedText.toTelUrl()
+                else -> null
+            }
+
+            url?.let {
+                TextLinkMatch.Auto(
+                    start = matchResult.range.first,
+                    endExclusive = matchResult.range.last + 1,
+                    text = matchedText,
+                    url = it
+                )
+            }
+        }
+    } else {
+        emptySequence()
+    }
+
+    val matches = (customMatches.asSequence() + autoMatches)
+        .sortedWith(
+            compareBy<TextLinkMatch> { it.start }
+                .thenByDescending { it.endExclusive - it.start }
+                .thenBy { if (it is TextLinkMatch.Custom) 0 else 1 }
+        )
+        .fold(mutableListOf<TextLinkMatch>()) { acceptedMatches, candidate ->
+            val overlapsExistingMatch = acceptedMatches.any { accepted ->
+                candidate.start < accepted.endExclusive && candidate.endExclusive > accepted.start
+            }
+
+            if (!overlapsExistingMatch) {
+                acceptedMatches.add(candidate)
+            }
+
+            acceptedMatches
+        }
+
     var currentIndex = 0
 
-    AutoLinkRegex.findAll(text).forEach { matchResult ->
-        val matchStart = matchResult.range.first
-        val matchEndExclusive = matchResult.range.last + 1
-
-        if (currentIndex < matchStart) {
-            append(text.substring(currentIndex, matchStart))
+    matches.forEach { match ->
+        if (currentIndex < match.start) {
+            append(text.substring(currentIndex, match.start))
         }
 
-        val matchedText = matchResult.value
-        val url = when {
-            matchedText.isHttpsUrl() -> matchedText
-            matchedText.isPhoneNumber() -> matchedText.toTelUrl()
-            else -> null
-        }
-
-        if (url != null) {
-            withLink(
-                LinkAnnotation.Url(
-                    url = url,
-                    styles = linkStyles(linkColor)
-                )
-            ) {
-                append(matchedText)
+        when (match) {
+            is TextLinkMatch.Custom -> {
+                withLink(
+                    LinkAnnotation.Clickable(
+                        tag = match.text,
+                        styles = linkStyles(linkColor),
+                        linkInteractionListener = match.listener
+                    )
+                ) {
+                    append(match.text)
+                }
             }
-        } else {
-            append(matchedText)
+
+            is TextLinkMatch.Auto -> {
+                withLink(
+                    LinkAnnotation.Url(
+                        url = match.url,
+                        styles = linkStyles(linkColor)
+                    )
+                ) {
+                    append(match.text)
+                }
+            }
         }
 
-        currentIndex = matchEndExclusive
+        currentIndex = match.endExclusive
     }
 
     if (currentIndex < text.length) {
@@ -547,11 +702,31 @@ private fun String.isPhoneNumber(): Boolean {
 }
 
 private fun String.toTelUrl(): String {
-    val sanitizedPhoneNumber = filter { character ->
-        character.isDigit() || character == '+'
+    val sanitizedPhoneNumber = buildString {
+        this@toTelUrl.forEachIndexed { index, character ->
+            when {
+                character.isDigit() -> append(character)
+                character == '+' && index == 0 -> append(character)
+                character.isLetter() -> append(character.toPhoneKeypadDigit())
+            }
+        }
     }
 
     return "tel:$sanitizedPhoneNumber"
+}
+
+private fun Char.toPhoneKeypadDigit(): Char {
+    return when (uppercaseChar()) {
+        'A', 'B', 'C' -> '2'
+        'D', 'E', 'F' -> '3'
+        'G', 'H', 'I' -> '4'
+        'J', 'K', 'L' -> '5'
+        'M', 'N', 'O' -> '6'
+        'P', 'Q', 'R', 'S' -> '7'
+        'T', 'U', 'V' -> '8'
+        'W', 'X', 'Y', 'Z' -> '9'
+        else -> this
+    }
 }
 
 private fun linkStyles(

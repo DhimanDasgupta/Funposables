@@ -53,6 +53,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
@@ -69,7 +70,7 @@ fun RichText(
     val html = """
         This </br>is a sample<br /> HTML string with break tags within.<br>
         Take my $500 for this.
-        <p>Hello there how are <sup>you</sup>. If you want to <sub><b><u><i>contact me</i></u></b></sub> then reach me via <i><a href='tel:+910000000000'>phone</a></i> or via <a href='https://www.anthropic.com'>website</a>.</p>
+        <p>Hello there how are <sup>you</sup>. If you want to <sub><b><u><i>contact me</i></u></b></sub> then reach me via <i><a href='tel:+919916107291'>phone</a></i> or via <a href='https://www.anthropic.com'>website</a>.</p>
         <ol>
             <li>Name one</li>
             <li>Item two item with https://gemini.google.com/</li>
@@ -84,7 +85,7 @@ fun RichText(
         <ul>
             <li>Call 1-800-662-HELP</li>
             <li>Visit https://www.openai.com</li>
-            <li><b>Emergency:</b> use  <a href='tel:+910000000000'>phone</a> support</li>
+            <li><b>Emergency:</b> use  <a href='tel:+910123456789'>phone</a> support</li>
         </ul>
         <ol>
             <li>First item</li>
@@ -286,11 +287,14 @@ private suspend fun parseChildren(
 ) {
     var parsedEvents = 0
 
-    while (true) {
+    while (currentCoroutineContext().isActive) {
         currentCoroutineContext().ensureActive()
 
+        /**
+         * Making sure that the dispatcher runs other tasks while parsing the HTML.
+         * */
         parsedEvents++
-        if (parsedEvents % 50 == 0) {
+        if (parsedEvents % 5 == 0) {
             yield()
         }
 
@@ -579,7 +583,7 @@ private suspend fun parseChildrenWithoutAutoLinks(
     clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
     listStack: MutableList<HtmlListContext>
 ) {
-    while (true) {
+    while (currentCoroutineContext().isActive) {
         currentCoroutineContext().ensureActive()
 
         when (parser.next()) {

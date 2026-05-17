@@ -3,6 +3,7 @@ package com.dhimandasgupta.funposables.composables
 import android.content.ClipData
 import android.util.Xml
 import android.widget.Toast
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -45,6 +47,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
@@ -55,7 +58,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
-import kotlin.random.Random
 
 @Composable
 fun RichText(
@@ -65,35 +67,44 @@ fun RichText(
     val clipboardManager = LocalClipboard.current
 
     val html = """
-        This </br>is a sample<br /> HTML string.<br>
+        This </br>is a sample<br /> HTML string with break tags within.<br>
         Take my $500 for this.
-        <p>Hello there how are <sup>you</sup>. If you want to <sub><b><u><i>contact me</i></u></b></sub> then reach me via <i><a href='tel:+910000000000'>phone</a></i> or via <a href='https://www.example.com'>website</a>.</p>
+        <p>Hello there how are <sup>you</sup>. If you want to <sub><b><u><i>contact me</i></u></b></sub> then reach me via <i><a href='tel:+910000000000'>phone</a></i> or via <a href='https://www.anthropic.com'>website</a>.</p>
         <ol>
             <li>Name one</li>
-            <li>Item two item with https://www.example.com</li>
+            <li>Item two item with https://gemini.google.com/</li>
             <li><b>Third item</b></li>
         </ol>
         <p>
-        Visit https://www.example.com or call 1-800-622-4357.
+        Visit https://www.jetbrains.com/junie or call 1-800-622-4357.
         You can also use <a href='https://www.google.com'>this website</a>.
         1-800-662-HELP and 1-800-662-HELP or 1—800—662—HELP or 1-800-622-HELP
         </p>
         <p>Contact options:</p>
         <ul>
             <li>Call 1-800-662-HELP</li>
-            <li>Visit https://www.example.com</li>
+            <li>Visit https://www.openai.com</li>
             <li><b>Emergency:</b> use  <a href='tel:+910000000000'>phone</a> support</li>
         </ul>
         <ol>
             <li>First item</li>
-            <li>Second item with https://www.example.com</li>
+            <li>Second item with https://www.kotlinlang.org</li>
             <li><b>Third item</b></li>
         </ol>
         This is a plain and simple string. This dose not have any style what so ever. 
         Now coming back to hyperlinked texts - here is a <strong>strong with <u>underlined</u></strong> text.
+        <ol>
+            <li>First item</li>
+            <li>Second <u>item</u></li>
+            <li><b>Third item</b></li>
+            <li>Fourth <sup>item</sup></li>
+            <li>Fifth <sub>item</sub></li>
+            <li>Sixth <i>item</i></li>
+        </ol>
         """.trimIndent()
 
     val linkColor = colorScheme.primary
+    val customLinkColor = colorScheme.error
     var annotatedString by remember { mutableStateOf(AnnotatedString("")) }
 
     val scope = rememberCoroutineScope()
@@ -102,6 +113,8 @@ fun RichText(
         annotatedString = htmlToAnnotatedString(
             html = html,
             linkColor = linkColor,
+            customLinkColor = customLinkColor,
+            customLinkShouldBeUnderlined = false,
             clickListeners = mapOf(
                 "Hello" to LinkInteractionListener {
                     Toast.makeText(context, "You clicked on Hello", Toast.LENGTH_SHORT).show()
@@ -118,7 +131,12 @@ fun RichText(
                 "underlined" to LinkInteractionListener {
                     Toast.makeText(context, "You clicked on underlined", Toast.LENGTH_SHORT).show()
                 },
-            )
+            ),
+            onException = { exception ->
+                scope.launch {
+                    Toast.makeText(context, "Error parsing HTML: ${exception.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
         )
     }
 
@@ -128,32 +146,44 @@ fun RichText(
                 start = WindowInsets
                     .displayCutout.union(insets = WindowInsets.navigationBars)
                     .asPaddingValues()
-                    .calculateStartPadding(LayoutDirection.Ltr),
-                top = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.statusBars)
-                    .asPaddingValues()
-                    .calculateTopPadding(),
+                    .calculateStartPadding(LayoutDirection.Ltr) + 16.dp,
                 end = WindowInsets
                     .displayCutout.union(insets = WindowInsets.navigationBars)
                     .asPaddingValues()
-                    .calculateEndPadding(LayoutDirection.Ltr),
-                bottom = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateBottomPadding()
+                    .calculateEndPadding(LayoutDirection.Ltr) + 16.dp,
             )
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
+        Box(
+            modifier = Modifier
+                .padding(
+                    top = WindowInsets
+                        .displayCutout.union(insets = WindowInsets.statusBars)
+                        .asPaddingValues()
+                        .calculateTopPadding()
+                )
+                .fillMaxWidth()
+        )
+
         Text(
             text = annotatedString,
             style = typography.labelMedium,
             color = colorScheme.onPrimary
         )
+
+        Box(
+            modifier = Modifier
+                .padding(
+                    bottom = WindowInsets
+                        .displayCutout.union(insets = WindowInsets.navigationBars)
+                        .asPaddingValues()
+                        .calculateBottomPadding()
+                )
+                .fillMaxWidth()
+        )
     }
 }
-
-private val AddExtraSpaceBetween = Random.nextBoolean()
 
 private val UrlRegex = Regex(
     pattern = """https://[^\s<>"']+""",
@@ -200,8 +230,11 @@ private sealed class TextLinkMatch {
 
 suspend fun htmlToAnnotatedString(
     html: String,
-    linkColor: Color = Color(0xFF1565C0),
-    clickListeners: Map<String, LinkInteractionListener> = emptyMap()
+    linkColor: Color = Color.Unspecified,
+    customLinkColor: Color = Color.Unspecified,
+    customLinkShouldBeUnderlined: Boolean = false,
+    clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
+    onException: (Exception) -> Unit = {}
 ): AnnotatedString = withContext(Dispatchers.Default) {
     currentCoroutineContext().ensureActive()
 
@@ -227,6 +260,8 @@ suspend fun htmlToAnnotatedString(
                 builder = this,
                 parentTag = "root",
                 linkColor = linkColor,
+                customLinkColor = customLinkColor,
+                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                 clickListeners = clickListeners,
                 listStack = mutableListOf()
             )
@@ -234,6 +269,7 @@ suspend fun htmlToAnnotatedString(
     } catch (e: Exception) {
         currentCoroutineContext().ensureActive()
         println("Error parsing HTML: ${e.message}")
+        onException(e)
         buildAnnotatedString {}
     }
 }
@@ -243,6 +279,8 @@ private suspend fun parseChildren(
     builder: AnnotatedString.Builder,
     parentTag: String,
     linkColor: Color,
+    customLinkColor: Color,
+    customLinkShouldBeUnderlined: Boolean,
     clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
     listStack: MutableList<HtmlListContext>
 ) {
@@ -261,6 +299,8 @@ private suspend fun parseChildren(
                 parseTag(
                     parser = parser,
                     builder = builder,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     linkColor = linkColor,
                     clickListeners = clickListeners,
                     listStack = listStack
@@ -270,6 +310,8 @@ private suspend fun parseChildren(
             XmlPullParser.TEXT -> {
                 builder.appendTextWithAutoLinks(
                     text = parser.text,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     linkColor = linkColor,
                     clickListeners = clickListeners
                 )
@@ -292,6 +334,8 @@ private suspend fun parseTag(
     parser: XmlPullParser,
     builder: AnnotatedString.Builder,
     linkColor: Color,
+    customLinkColor: Color,
+    customLinkShouldBeUnderlined: Boolean,
     clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
     listStack: MutableList<HtmlListContext>
 ) = coroutineScope {
@@ -308,22 +352,16 @@ private suspend fun parseTag(
                         builder = builder,
                         parentTag = tagName,
                         linkColor = linkColor,
+                        customLinkColor = customLinkColor,
+                        customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                         clickListeners = clickListeners,
                         listStack = listStack
                     )
                 }
             }
-
-            if (builder.isNotBlank() && AddExtraSpaceBetween) {
-                builder.append("\n\n")
-            }
         }
 
         "ul" -> {
-            if (builder.isNotBlank() && !builder.endsWithNewLine() && AddExtraSpaceBetween) {
-                builder.append("\n")
-            }
-
             listStack.add(HtmlListContext.Unordered)
 
             parseChildren(
@@ -331,22 +369,16 @@ private suspend fun parseTag(
                 builder = builder,
                 parentTag = tagName,
                 linkColor = linkColor,
+                customLinkColor = customLinkColor,
+                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                 clickListeners = clickListeners,
                 listStack = listStack
             )
 
             listStack.removeLastOrNull()
-
-            if (builder.isNotBlank() && !builder.endsWithDoubleNewLine() && AddExtraSpaceBetween) {
-                builder.append("\n")
-            }
         }
 
         "ol" -> {
-            if (builder.isNotBlank() && !builder.endsWithNewLine() && AddExtraSpaceBetween) {
-                builder.append("\n")
-            }
-
             val startIndex = parser.getAttributeValue(null, "start")?.toIntOrNull() ?: 1
 
             listStack.add(HtmlListContext.Ordered(nextIndex = startIndex))
@@ -356,22 +388,16 @@ private suspend fun parseTag(
                 builder = builder,
                 parentTag = tagName,
                 linkColor = linkColor,
+                customLinkColor = customLinkColor,
+                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                 clickListeners = clickListeners,
                 listStack = listStack
             )
 
             listStack.removeLastOrNull()
-
-            if (builder.isNotBlank() && !builder.endsWithDoubleNewLine() && AddExtraSpaceBetween) {
-                builder.append("\n")
-            }
         }
 
         "li" -> {
-            if (builder.isNotBlank() && !builder.endsWithNewLine() && AddExtraSpaceBetween) {
-                builder.append("\n")
-            }
-
             when (val currentList = listStack.lastOrNull()) {
                 is HtmlListContext.Ordered -> {
                     builder.append("${currentList.nextIndex}. ")
@@ -381,7 +407,7 @@ private suspend fun parseTag(
                 }
 
                 HtmlListContext.Unordered, null -> {
-                    builder.append("• ")
+                    builder.append("\u2022 ")
                 }
             }
 
@@ -390,13 +416,11 @@ private suspend fun parseTag(
                 builder = builder,
                 parentTag = tagName,
                 linkColor = linkColor,
+                customLinkColor = customLinkColor,
+                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                 clickListeners = clickListeners,
                 listStack = listStack
             )
-
-            if (!builder.endsWithNewLine() && AddExtraSpaceBetween) {
-                builder.append("\n")
-            }
         }
 
         "u" -> {
@@ -410,6 +434,8 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     clickListeners = clickListeners,
                     listStack = listStack
                 )
@@ -427,6 +453,8 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     clickListeners = clickListeners,
                     listStack = listStack
                 )
@@ -447,6 +475,8 @@ private suspend fun parseTag(
                         parser = parser,
                         builder = builder,
                         parentTag = tagName,
+                        customLinkColor = customLinkColor,
+                        customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                         linkColor = linkColor,
                         clickListeners = clickListeners,
                         listStack = listStack
@@ -458,6 +488,8 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     listStack = listStack
                 )
             }
@@ -474,6 +506,8 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     clickListeners = clickListeners,
                     listStack = listStack
                 )
@@ -492,6 +526,8 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     clickListeners = clickListeners,
                     listStack = listStack
                 )
@@ -510,6 +546,8 @@ private suspend fun parseTag(
                     builder = builder,
                     parentTag = tagName,
                     linkColor = linkColor,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     clickListeners = clickListeners,
                     listStack = listStack
                 )
@@ -522,6 +560,8 @@ private suspend fun parseTag(
                 builder = builder,
                 parentTag = tagName,
                 linkColor = linkColor,
+                customLinkColor = customLinkColor,
+                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                 clickListeners = clickListeners,
                 listStack = listStack
             )
@@ -533,6 +573,8 @@ private suspend fun parseChildrenWithoutAutoLinks(
     parser: XmlPullParser,
     builder: AnnotatedString.Builder,
     parentTag: String,
+    customLinkColor: Color,
+    customLinkShouldBeUnderlined: Boolean,
     linkColor: Color,
     clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
     listStack: MutableList<HtmlListContext>
@@ -545,6 +587,8 @@ private suspend fun parseChildrenWithoutAutoLinks(
                 parseTag(
                     parser = parser,
                     builder = builder,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     linkColor = linkColor,
                     clickListeners = clickListeners,
                     listStack = listStack
@@ -554,6 +598,8 @@ private suspend fun parseChildrenWithoutAutoLinks(
             XmlPullParser.TEXT -> {
                 builder.appendTextWithCustomLinks(
                     text = parser.text,
+                    customLinkColor = customLinkColor,
+                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     linkColor = linkColor,
                     clickListeners = clickListeners,
                 )
@@ -575,11 +621,15 @@ private suspend fun parseChildrenWithoutAutoLinks(
 private fun AnnotatedString.Builder.appendTextWithAutoLinks(
     text: String,
     linkColor: Color,
+    customLinkColor: Color,
+    customLinkShouldBeUnderlined: Boolean,
     clickListeners: Map<String, LinkInteractionListener>
 ) {
     appendTextWithLinks(
         text = text,
         linkColor = linkColor,
+        customLinkColor = customLinkColor,
+        customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
         clickListeners = clickListeners,
         includeAutoLinks = true
     )
@@ -588,11 +638,15 @@ private fun AnnotatedString.Builder.appendTextWithAutoLinks(
 private fun AnnotatedString.Builder.appendTextWithCustomLinks(
     text: String,
     linkColor: Color,
+    customLinkColor: Color,
+    customLinkShouldBeUnderlined: Boolean,
     clickListeners: Map<String, LinkInteractionListener>
 ) {
     appendTextWithLinks(
         text = text,
         linkColor = linkColor,
+        customLinkColor = customLinkColor,
+        customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
         clickListeners = clickListeners,
         includeAutoLinks = false
     )
@@ -601,6 +655,8 @@ private fun AnnotatedString.Builder.appendTextWithCustomLinks(
 private fun AnnotatedString.Builder.appendTextWithLinks(
     text: String,
     linkColor: Color,
+    customLinkColor: Color,
+    customLinkShouldBeUnderlined: Boolean,
     clickListeners: Map<String, LinkInteractionListener>,
     includeAutoLinks: Boolean
 ) {
@@ -674,7 +730,7 @@ private fun AnnotatedString.Builder.appendTextWithLinks(
                 withLink(
                     LinkAnnotation.Clickable(
                         tag = match.text,
-                        styles = linkStyles(linkColor),
+                        styles = if (customLinkShouldBeUnderlined) linkStyles(customLinkColor) else noStyle(),
                         linkInteractionListener = match.listener
                     )
                 ) {
@@ -686,7 +742,7 @@ private fun AnnotatedString.Builder.appendTextWithLinks(
                 withLink(
                     LinkAnnotation.Url(
                         url = match.url,
-                        styles = linkStyles(linkColor)
+                        styles = linkStyles(linkColor),
                     )
                 ) {
                     append(match.text)
@@ -702,16 +758,12 @@ private fun AnnotatedString.Builder.appendTextWithLinks(
     }
 }
 
-private fun String.isHttpsUrl(): Boolean {
-    return UrlRegex.matches(this)
-}
+private fun String.isHttpsUrl() = UrlRegex.matches(this)
 
-private fun String.isPhoneNumber(): Boolean {
-    return PhoneRegex.matches(this)
-}
+private fun String.isPhoneNumber() = PhoneRegex.matches(this)
 
-private fun String.toTelUrl(): String {
-    val sanitizedPhoneNumber = buildString {
+private fun String.toTelUrl() = "tel:${
+    buildString {
         this@toTelUrl.forEachIndexed { index, character ->
             when {
                 character.isDigit() -> append(character)
@@ -720,43 +772,29 @@ private fun String.toTelUrl(): String {
             }
         }
     }
+}"
 
-    return "tel:$sanitizedPhoneNumber"
+private fun Char.toPhoneKeypadDigit() = when (uppercaseChar()) {
+    'A', 'B', 'C' -> '2'
+    'D', 'E', 'F' -> '3'
+    'G', 'H', 'I' -> '4'
+    'J', 'K', 'L' -> '5'
+    'M', 'N', 'O' -> '6'
+    'P', 'Q', 'R', 'S' -> '7'
+    'T', 'U', 'V' -> '8'
+    'W', 'X', 'Y', 'Z' -> '9'
+    else -> this
 }
 
-private fun Char.toPhoneKeypadDigit(): Char {
-    return when (uppercaseChar()) {
-        'A', 'B', 'C' -> '2'
-        'D', 'E', 'F' -> '3'
-        'G', 'H', 'I' -> '4'
-        'J', 'K', 'L' -> '5'
-        'M', 'N', 'O' -> '6'
-        'P', 'Q', 'R', 'S' -> '7'
-        'T', 'U', 'V' -> '8'
-        'W', 'X', 'Y', 'Z' -> '9'
-        else -> this
-    }
-}
+private fun noStyle() = TextLinkStyles(
+    style = SpanStyle()
+)
 
 private fun linkStyles(
     linkColor: Color
-): TextLinkStyles {
-    return TextLinkStyles(
-        style = SpanStyle(
-            color = linkColor,
-            textDecoration = TextDecoration.Underline
-        )
+) = TextLinkStyles(
+    style = SpanStyle(
+        color = linkColor,
+        textDecoration = TextDecoration.Underline
     )
-}
-
-private fun AnnotatedString.Builder.isNotBlank(): Boolean {
-    return toAnnotatedString().text.isNotBlank()
-}
-
-private fun AnnotatedString.Builder.endsWithNewLine(): Boolean {
-    return toAnnotatedString().text.endsWith("\n")
-}
-
-private fun AnnotatedString.Builder.endsWithDoubleNewLine(): Boolean {
-    return toAnnotatedString().text.endsWith("\n\n")
-}
+)

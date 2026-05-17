@@ -50,6 +50,7 @@ fun FunposablesRoot(
             backStack = backStack,
             sceneStrategies = listOf(sceneStrategy),
             onBack = { backStack.removeLastOrNull() },
+            sharedTransitionScope = this,
             transitionSpec = {
                 slideIntoContainer(
                     towards = AnimatedContentTransitionScope.SlideDirection.Start,

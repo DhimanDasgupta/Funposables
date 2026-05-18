@@ -102,6 +102,8 @@ fun RichText(
             <li>Fifth <sub>item</sub></li>
             <li>Sixth <i>item</i></li>
         </ol>
+        Email support at mailto:support@example.com
+        Or use <strong><i><a href="mailto:support@example.com">email support</a></i>.</strong>
         """.trimIndent()
 
     val linkColor = colorScheme.primary
@@ -191,13 +193,18 @@ private val UrlRegex = Regex(
     option = RegexOption.IGNORE_CASE
 )
 
+private val MailToRegex = Regex(
+    pattern = """mailto:[^\s<>"']+""",
+    option = RegexOption.IGNORE_CASE
+)
+
 private val PhoneRegex = Regex(
     pattern = """\b(?:\+?\d{1,3}[-‐‑‒–—.\s]?)?\(?\d{3}\)?[-‐‑‒–—.\s]?\d{3}[-‐‑‒–—.\s]?[A-Z0-9]{4}\b""",
     option = RegexOption.IGNORE_CASE
 )
 
 private val AutoLinkRegex = Regex(
-    pattern = """https://[^\s<>"']+|\b(?:\+?\d{1,3}[-‐‑‒–—.\s]?)?\(?\d{3}\)?[-‐‑‒–—.\s]?\d{3}[-‐‑‒–—.\s]?[A-Z0-9]{4}\b""",
+    pattern = """https://[^\s<>"']+|mailto:[^\s<>"']+|\b(?:\+?\d{1,3}[-‐‑‒–—.\s]?)?\(?\d{3}\)?[-‐‑‒–—.\s]?\d{3}[-‐‑‒–—.\s]?[A-Z0-9]{4}\b""",
     option = RegexOption.IGNORE_CASE
 )
 
@@ -522,7 +529,7 @@ private suspend fun parseTag(
             builder.withStyle(
                 SpanStyle(
                     baselineShift = BaselineShift.Superscript,
-                    fontSize = 0.75.em
+                    fontSize = 0.61.em
                 )
             ) {
                 parseChildren(
@@ -542,7 +549,7 @@ private suspend fun parseTag(
             builder.withStyle(
                 SpanStyle(
                     baselineShift = BaselineShift.Subscript,
-                    fontSize = 0.75.em
+                    fontSize = 0.61.em
                 )
             ) {
                 parseChildren(
@@ -687,6 +694,7 @@ private fun AnnotatedString.Builder.appendTextWithLinks(
             val matchedText = matchResult.value
             val url = when {
                 matchedText.isHttpsUrl() -> matchedText
+                matchedText.isMailToUrl() -> matchedText
                 matchedText.isPhoneNumber() -> matchedText.toTelUrl()
                 else -> null
             }
@@ -763,6 +771,8 @@ private fun AnnotatedString.Builder.appendTextWithLinks(
 }
 
 private fun String.isHttpsUrl() = UrlRegex.matches(this)
+
+private fun String.isMailToUrl() = MailToRegex.matches(this)
 
 private fun String.isPhoneNumber() = PhoneRegex.matches(this)
 

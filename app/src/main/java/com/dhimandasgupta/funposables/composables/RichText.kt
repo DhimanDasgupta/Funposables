@@ -50,7 +50,6 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.isActive
@@ -275,7 +274,8 @@ suspend fun htmlToAnnotatedString(
                 customLinkColor = customLinkColor,
                 customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                 clickListeners = clickListeners,
-                listStack = mutableListOf()
+                listStack = mutableListOf(),
+                includeAutoLinks = true
             )
         }
     } catch (e: Exception) {
@@ -294,7 +294,8 @@ private suspend fun parseChildren(
     customLinkColor: Color,
     customLinkShouldBeUnderlined: Boolean,
     clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
-    listStack: MutableList<HtmlListContext>
+    listStack: MutableList<HtmlListContext>,
+    includeAutoLinks: Boolean = true
 ) {
     var parsedEvents = 0
 
@@ -323,12 +324,13 @@ private suspend fun parseChildren(
             }
 
             XmlPullParser.TEXT -> {
-                builder.appendTextWithAutoLinks(
+                builder.appendTextWithLinks(
                     text = parser.text,
                     customLinkColor = customLinkColor,
                     customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                     linkColor = linkColor,
-                    clickListeners = clickListeners
+                    clickListeners = clickListeners,
+                    includeAutoLinks = includeAutoLinks
                 )
             }
 
@@ -353,27 +355,21 @@ private suspend fun parseTag(
     customLinkShouldBeUnderlined: Boolean,
     clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
     listStack: MutableList<HtmlListContext>
-) = coroutineScope {
-    currentCoroutineContext().ensureActive()
-
+) {
     when (val tagName = parser.name.lowercase()) {
         "p" -> {
-            builder.withStyle(
-                ParagraphStyle()
-            ) {
-                launch {
-                    parseChildren(
-                        parser = parser,
-                        builder = builder,
-                        parentTag = tagName,
-                        linkColor = linkColor,
-                        customLinkColor = customLinkColor,
-                        customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                        clickListeners = clickListeners,
-                        listStack = listStack
-                    )
-                }
-            }
+            val index = builder.pushStyle(ParagraphStyle())
+            parseChildren(
+                parser = parser,
+                builder = builder,
+                parentTag = tagName,
+                linkColor = linkColor,
+                customLinkColor = customLinkColor,
+                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
+                clickListeners = clickListeners,
+                listStack = listStack
+            )
+            builder.pop(index)
         }
 
         "ul" -> {
@@ -486,7 +482,7 @@ private suspend fun parseTag(
                         styles = linkStyles(linkColor)
                     )
                 ) {
-                    parseChildrenWithoutAutoLinks(
+                    parseChildren(
                         parser = parser,
                         builder = builder,
                         parentTag = tagName,
@@ -494,7 +490,8 @@ private suspend fun parseTag(
                         customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
                         linkColor = linkColor,
                         clickListeners = clickListeners,
-                        listStack = listStack
+                        listStack = listStack,
+                        includeAutoLinks = false
                     )
                 }
             } else {
@@ -505,7 +502,8 @@ private suspend fun parseTag(
                     linkColor = linkColor,
                     customLinkColor = customLinkColor,
                     customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    listStack = listStack
+                    listStack = listStack,
+                    includeAutoLinks = true
                 )
             }
         }
@@ -584,89 +582,6 @@ private suspend fun parseTag(
     }
 }
 
-private suspend fun parseChildrenWithoutAutoLinks(
-    parser: XmlPullParser,
-    builder: AnnotatedString.Builder,
-    parentTag: String,
-    customLinkColor: Color,
-    customLinkShouldBeUnderlined: Boolean,
-    linkColor: Color,
-    clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
-    listStack: MutableList<HtmlListContext>
-) {
-    while (currentCoroutineContext().isActive) {
-        currentCoroutineContext().ensureActive()
-
-        when (parser.next()) {
-            XmlPullParser.START_TAG -> {
-                parseTag(
-                    parser = parser,
-                    builder = builder,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    linkColor = linkColor,
-                    clickListeners = clickListeners,
-                    listStack = listStack
-                )
-            }
-
-            XmlPullParser.TEXT -> {
-                builder.appendTextWithCustomLinks(
-                    text = parser.text,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    linkColor = linkColor,
-                    clickListeners = clickListeners,
-                )
-            }
-
-            XmlPullParser.END_TAG -> {
-                if (parser.name.equals(parentTag, ignoreCase = true)) {
-                    return
-                }
-            }
-
-            XmlPullParser.END_DOCUMENT -> {
-                return
-            }
-        }
-    }
-}
-
-private fun AnnotatedString.Builder.appendTextWithAutoLinks(
-    text: String,
-    linkColor: Color,
-    customLinkColor: Color,
-    customLinkShouldBeUnderlined: Boolean,
-    clickListeners: Map<String, LinkInteractionListener>
-) {
-    appendTextWithLinks(
-        text = text,
-        linkColor = linkColor,
-        customLinkColor = customLinkColor,
-        customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-        clickListeners = clickListeners,
-        includeAutoLinks = true
-    )
-}
-
-private fun AnnotatedString.Builder.appendTextWithCustomLinks(
-    text: String,
-    linkColor: Color,
-    customLinkColor: Color,
-    customLinkShouldBeUnderlined: Boolean,
-    clickListeners: Map<String, LinkInteractionListener>
-) {
-    appendTextWithLinks(
-        text = text,
-        linkColor = linkColor,
-        customLinkColor = customLinkColor,
-        customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-        clickListeners = clickListeners,
-        includeAutoLinks = false
-    )
-}
-
 private fun AnnotatedString.Builder.appendTextWithLinks(
     text: String,
     linkColor: Color,
@@ -677,21 +592,22 @@ private fun AnnotatedString.Builder.appendTextWithLinks(
 ) {
     if (text.isEmpty()) return
 
-    val customMatches = clickListeners
-        .filterKeys { it.isNotEmpty() }
-        .flatMap { (clickableText, listener) ->
-            Regex.escape(clickableText)
-                .toRegex()
-                .findAll(text)
-                .map { matchResult ->
-                    TextLinkMatch.Custom(
-                        start = matchResult.range.first,
-                        endExclusive = matchResult.range.last + 1,
-                        text = matchResult.value,
-                        listener = listener
-                    )
-                }
-        }
+    val customMatches = if (clickListeners.isNotEmpty()) {
+        val patterns = clickListeners.keys.filter { it.isNotEmpty() }
+        if (patterns.isNotEmpty()) {
+            val combinedPattern = patterns
+                .sortedByDescending { it.length }
+                .joinToString("|") { Regex.escape(it) }
+            Regex(combinedPattern).findAll(text).map { matchResult ->
+                TextLinkMatch.Custom(
+                    start = matchResult.range.first,
+                    endExclusive = matchResult.range.last + 1,
+                    text = matchResult.value,
+                    listener = clickListeners[matchResult.value]!!
+                )
+            }
+        } else emptySequence()
+    } else emptySequence()
 
     val autoMatches = if (includeAutoLinks) {
         AutoLinkRegex.findAll(text).mapNotNull { matchResult ->
@@ -716,7 +632,7 @@ private fun AnnotatedString.Builder.appendTextWithLinks(
         emptySequence()
     }
 
-    val matches = (customMatches.asSequence() + autoMatches)
+    val matches = (customMatches + autoMatches)
         .sortedWith(
             compareBy<TextLinkMatch> { it.start }
                 .thenByDescending { it.endExclusive - it.start }

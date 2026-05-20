@@ -204,7 +204,11 @@ private val PhoneRegex = Regex(
 )
 
 private val AutoLinkRegex = Regex(
-    pattern = """https://[^\s<>"']+|mailto:[^\s<>"']+|\b(?:\+?\d{1,3}[-‐‑‒–—.\s]?)?\(?\d{3}\)?[-‐‑‒–—.\s]?\d{3}[-‐‑‒–—.\s]?[A-Z0-9]{4}\b""",
+    pattern = listOf(
+        UrlRegex.pattern,
+        MailToRegex.pattern,
+        PhoneRegex.pattern,
+    ).joinToString("|"),
     option = RegexOption.IGNORE_CASE
 )
 
@@ -774,7 +778,7 @@ private fun String.isHttpsUrl() = UrlRegex.matches(this)
 
 private fun String.isMailToUrl() = MailToRegex.matches(this)
 
-private fun String.isPhoneNumber() = PhoneRegex.matches(this)
+private fun String.isPhoneNumber() = PhoneRegex.matches(this) && any(Char::isDigit)
 
 private fun String.toTelUrl() = "tel:${
     buildString {

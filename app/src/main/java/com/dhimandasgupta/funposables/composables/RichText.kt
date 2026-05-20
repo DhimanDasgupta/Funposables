@@ -49,6 +49,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -56,6 +57,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.yield
+import okhttp3.internal.toImmutableList
 import org.xmlpull.v1.XmlPullParser
 import java.io.StringReader
 
@@ -112,27 +114,28 @@ fun RichText(
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(html) {
-        annotatedString = htmlToAnnotatedString(
-            html = html,
-            linkColor = linkColor,
-            customLinkColor = customLinkColor,
-            customLinkShouldBeUnderlined = false,
-            clickListeners = mapOf(
-                "Hello" to LinkInteractionListener {
-                    Toast.makeText(context, "You clicked on Hello", Toast.LENGTH_SHORT).show()
-                },
-                "$500" to LinkInteractionListener {
-                    scope.launch {
-                        clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("", "$500")))
-                    }
-                    Toast.makeText(context, "You have copied $500", Toast.LENGTH_SHORT).show()
-                },
-                "strong" to LinkInteractionListener {
-                    Toast.makeText(context, "You clicked on strong", Toast.LENGTH_SHORT).show()
-                },
-                "underlined" to LinkInteractionListener {
-                    Toast.makeText(context, "You clicked on underlined", Toast.LENGTH_SHORT).show()
-                },
+        annotatedString = html.convertToAnnotatedString(
+            params = RichTextHelperParams(
+                linkColor = linkColor,
+                customLinkColor = customLinkColor,
+                customLinkShouldBeUnderlined = false,
+                clickListeners = mapOf(
+                    "Hello" to LinkInteractionListener {
+                        Toast.makeText(context, "You clicked on Hello", Toast.LENGTH_SHORT).show()
+                    },
+                    "$500" to LinkInteractionListener {
+                        scope.launch {
+                            clipboardManager.setClipEntry(ClipEntry(ClipData.newPlainText("", "$500")))
+                        }
+                        Toast.makeText(context, "You have copied $500", Toast.LENGTH_SHORT).show()
+                    },
+                    "strong" to LinkInteractionListener {
+                        Toast.makeText(context, "You clicked on strong", Toast.LENGTH_SHORT).show()
+                    },
+                    "underlined" to LinkInteractionListener {
+                        Toast.makeText(context, "You clicked on underlined", Toast.LENGTH_SHORT).show()
+                    },
+                )
             ),
             onException = { exception ->
                 scope.launch {
@@ -187,71 +190,43 @@ fun RichText(
     }
 }
 
-private val UrlRegex = Regex(
-    pattern = """https://[^\s<>"']+""",
-    option = RegexOption.IGNORE_CASE
-)
-
-private val MailToRegex = Regex(
-    pattern = """mailto:[^\s<>"']+""",
-    option = RegexOption.IGNORE_CASE
-)
-
-private val PhoneRegex = Regex(
-    pattern = """\b(?:\+?\d{1,3}[-‐‑‒–—.\s]?)?\(?\d{3}\)?[-‐‑‒–—.\s]?\d{3}[-‐‑‒–—.\s]?[A-Z0-9]{4}\b""",
-    option = RegexOption.IGNORE_CASE
-)
-
-private val AutoLinkRegex = Regex(
-    pattern = listOf(
-        UrlRegex.pattern,
-        MailToRegex.pattern,
-        PhoneRegex.pattern,
-    ).joinToString("|"),
-    option = RegexOption.IGNORE_CASE
-)
-
-private sealed class HtmlListContext {
-    data object Unordered : HtmlListContext()
-
-    data class Ordered(
-        val nextIndex: Int
-    ) : HtmlListContext()
+/**
+ * Data class to hold parameters for customizing the behavior and appearance of rich text.
+ *
+ * @property linkColor The color of links in the text.
+ * @property customLinkColor The color of custom links in the text.
+ * @property customLinkShouldBeUnderlined Whether custom links should be underlined.
+ * @property superScriptFontSize The font size for superscript text.
+ * @property clickListeners A map of custom link tags to their respective click listeners.
+ */
+data class RichTextHelperParams(
+    val linkColor: Color = Color.Unspecified,
+    val customLinkColor: Color = Color.Unspecified,
+    val customLinkShouldBeUnderlined: Boolean = false,
+    val superScriptFontSize: Float = 0.61f,
+    val clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
+) {
+    companion object {
+        val Default = RichTextHelperParams()
+    }
 }
 
-private sealed class TextLinkMatch {
-    abstract val start: Int
-    abstract val endExclusive: Int
-    abstract val text: String
-
-    data class Custom(
-        override val start: Int,
-        override val endExclusive: Int,
-        override val text: String,
-        val listener: LinkInteractionListener
-    ) : TextLinkMatch()
-
-    data class Auto(
-        override val start: Int,
-        override val endExclusive: Int,
-        override val text: String,
-        val url: String
-    ) : TextLinkMatch()
-}
-
-suspend fun htmlToAnnotatedString(
-    html: String,
-    linkColor: Color = Color.Unspecified,
-    customLinkColor: Color = Color.Unspecified,
-    customLinkShouldBeUnderlined: Boolean = false,
-    clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
-    onException: (Exception) -> Unit = {}
-): AnnotatedString = withContext(Dispatchers.Default) {
-    currentCoroutineContext().ensureActive()
-
+/**
+ * Extension function to convert an HTML string into an AnnotatedString.
+ *
+ * @param dispatcher The coroutine dispatcher to use for parsing.
+ * @param params Parameters for customizing the appearance and behavior of the text.
+ * @param onException A callback for handling exceptions during parsing.
+ * @return An AnnotatedString representing the parsed HTML content.
+ */
+suspend fun String.convertToAnnotatedString(
+    dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    params: RichTextHelperParams = RichTextHelperParams.Default,
+    onException: (Exception) -> Unit = {},
+): AnnotatedString = withContext(dispatcher) {
     return@withContext try {
         val wrappedHtml = "<root>${
-            html.replace("<br>", "\n")
+            this@convertToAnnotatedString.replace("<br>", "\n")
                 .replace("</br>", "\n")
                 .replace("<br />", "\n")
         }</root>"
@@ -264,16 +239,13 @@ suspend fun htmlToAnnotatedString(
         buildAnnotatedString {
             currentCoroutineContext().ensureActive()
 
-            parser.nextTag() // Move to <root>
+            parser.nextTag()
 
             parseChildren(
                 parser = parser,
                 builder = this,
                 parentTag = "root",
-                linkColor = linkColor,
-                customLinkColor = customLinkColor,
-                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                clickListeners = clickListeners,
+                params = params,
                 listStack = mutableListOf(),
                 includeAutoLinks = true
             )
@@ -286,14 +258,21 @@ suspend fun htmlToAnnotatedString(
     }
 }
 
+/**
+ * Recursively parses the children of an XML tag and appends their content to the AnnotatedString builder.
+ *
+ * @param parser The XML parser.
+ * @param builder The AnnotatedString builder.
+ * @param parentTag The name of the parent tag.
+ * @param params Parameters for customizing the appearance and behavior of the text.
+ * @param listStack A stack to manage nested lists.
+ * @param includeAutoLinks Whether to include automatic links in the text.
+ */
 private suspend fun parseChildren(
     parser: XmlPullParser,
     builder: AnnotatedString.Builder,
     parentTag: String,
-    linkColor: Color,
-    customLinkColor: Color,
-    customLinkShouldBeUnderlined: Boolean,
-    clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
+    params: RichTextHelperParams,
     listStack: MutableList<HtmlListContext>,
     includeAutoLinks: Boolean = true
 ) {
@@ -315,10 +294,7 @@ private suspend fun parseChildren(
                 parseTag(
                     parser = parser,
                     builder = builder,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    linkColor = linkColor,
-                    clickListeners = clickListeners,
+                    params = params,
                     listStack = listStack
                 )
             }
@@ -326,10 +302,7 @@ private suspend fun parseChildren(
             XmlPullParser.TEXT -> {
                 builder.appendTextWithLinks(
                     text = parser.text,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    linkColor = linkColor,
-                    clickListeners = clickListeners,
+                    params = params,
                     includeAutoLinks = includeAutoLinks
                 )
             }
@@ -347,224 +320,59 @@ private suspend fun parseChildren(
     }
 }
 
+/**
+ * Parses an individual XML tag and applies the appropriate styles or actions.
+ *
+ * @param parser The XML parser.
+ * @param builder The AnnotatedString builder.
+ * @param params Parameters for customizing the appearance and behavior of the text.
+ * @param listStack A stack to manage nested lists.
+ */
 private suspend fun parseTag(
     parser: XmlPullParser,
     builder: AnnotatedString.Builder,
-    linkColor: Color,
-    customLinkColor: Color,
-    customLinkShouldBeUnderlined: Boolean,
-    clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
+    params: RichTextHelperParams,
     listStack: MutableList<HtmlListContext>
 ) {
     when (val tagName = parser.name.lowercase()) {
         "p" -> {
-            val index = builder.pushStyle(ParagraphStyle())
-            parseChildren(
-                parser = parser,
-                builder = builder,
-                parentTag = tagName,
-                linkColor = linkColor,
-                customLinkColor = customLinkColor,
-                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                clickListeners = clickListeners,
-                listStack = listStack
-            )
-            builder.pop(index)
+            paragraphContent(builder, parser, tagName, params, listStack)
         }
 
         "ul" -> {
-            listStack.add(HtmlListContext.Unordered)
-
-            parseChildren(
-                parser = parser,
-                builder = builder,
-                parentTag = tagName,
-                linkColor = linkColor,
-                customLinkColor = customLinkColor,
-                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                clickListeners = clickListeners,
-                listStack = listStack
-            )
-
-            listStack.removeLastOrNull()
+            unorderedListContent(listStack, parser, builder, tagName, params)
         }
 
         "ol" -> {
-            val startIndex = parser.getAttributeValue(null, "start")?.toIntOrNull() ?: 1
-
-            listStack.add(HtmlListContext.Ordered(nextIndex = startIndex))
-
-            parseChildren(
-                parser = parser,
-                builder = builder,
-                parentTag = tagName,
-                linkColor = linkColor,
-                customLinkColor = customLinkColor,
-                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                clickListeners = clickListeners,
-                listStack = listStack
-            )
-
-            listStack.removeLastOrNull()
+            orderedListContent(parser, listStack, builder, tagName, params)
         }
 
         "li" -> {
-            when (val currentList = listStack.lastOrNull()) {
-                is HtmlListContext.Ordered -> {
-                    builder.append("${currentList.nextIndex}. ")
-                    listStack[listStack.lastIndex] = currentList.copy(
-                        nextIndex = currentList.nextIndex + 1
-                    )
-                }
-
-                HtmlListContext.Unordered, null -> {
-                    builder.append("\u2022 ")
-                }
-            }
-
-            parseChildren(
-                parser = parser,
-                builder = builder,
-                parentTag = tagName,
-                linkColor = linkColor,
-                customLinkColor = customLinkColor,
-                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                clickListeners = clickListeners,
-                listStack = listStack
-            )
+            listItemContent(listStack, builder, parser, tagName, params)
         }
 
         "u" -> {
-            builder.withStyle(
-                SpanStyle(
-                    textDecoration = TextDecoration.Underline
-                )
-            ) {
-                parseChildren(
-                    parser = parser,
-                    builder = builder,
-                    parentTag = tagName,
-                    linkColor = linkColor,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    clickListeners = clickListeners,
-                    listStack = listStack
-                )
-            }
+            underlinedContent(builder, parser, tagName, params, listStack)
         }
 
         "i" -> {
-            builder.withStyle(
-                SpanStyle(
-                    fontStyle = FontStyle.Italic
-                )
-            ) {
-                parseChildren(
-                    parser = parser,
-                    builder = builder,
-                    parentTag = tagName,
-                    linkColor = linkColor,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    clickListeners = clickListeners,
-                    listStack = listStack
-                )
-            }
+            italicsContent(builder, parser, tagName, params, listStack)
         }
 
         "a" -> {
-            val href = parser.getAttributeValue(null, "href").orEmpty()
-
-            if (href.isNotBlank()) {
-                builder.withLink(
-                    LinkAnnotation.Url(
-                        url = href,
-                        styles = linkStyles(linkColor)
-                    )
-                ) {
-                    parseChildren(
-                        parser = parser,
-                        builder = builder,
-                        parentTag = tagName,
-                        customLinkColor = customLinkColor,
-                        customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                        linkColor = linkColor,
-                        clickListeners = clickListeners,
-                        listStack = listStack,
-                        includeAutoLinks = false
-                    )
-                }
-            } else {
-                parseChildren(
-                    parser = parser,
-                    builder = builder,
-                    parentTag = tagName,
-                    linkColor = linkColor,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    listStack = listStack,
-                    includeAutoLinks = true
-                )
-            }
+            anchorContent(parser, builder, params, tagName, listStack)
         }
 
         "b", "strong" -> {
-            builder.withStyle(
-                SpanStyle(
-                    fontWeight = FontWeight.Bold
-                )
-            ) {
-                parseChildren(
-                    parser = parser,
-                    builder = builder,
-                    parentTag = tagName,
-                    linkColor = linkColor,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    clickListeners = clickListeners,
-                    listStack = listStack
-                )
-            }
+            boldOrStrongContent(builder, parser, tagName, params, listStack)
         }
 
         "sup" -> {
-            builder.withStyle(
-                SpanStyle(
-                    baselineShift = BaselineShift.Superscript,
-                    fontSize = 0.61.em
-                )
-            ) {
-                parseChildren(
-                    parser = parser,
-                    builder = builder,
-                    parentTag = tagName,
-                    linkColor = linkColor,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    clickListeners = clickListeners,
-                    listStack = listStack
-                )
-            }
+            superscriptContent(builder, params, parser, tagName, listStack)
         }
 
         "sub" -> {
-            builder.withStyle(
-                SpanStyle(
-                    baselineShift = BaselineShift.Subscript,
-                    fontSize = 0.61.em
-                )
-            ) {
-                parseChildren(
-                    parser = parser,
-                    builder = builder,
-                    parentTag = tagName,
-                    linkColor = linkColor,
-                    customLinkColor = customLinkColor,
-                    customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                    clickListeners = clickListeners,
-                    listStack = listStack
-                )
-            }
+            subscriptContent(builder, params, parser, tagName, listStack)
         }
 
         else -> {
@@ -572,43 +380,324 @@ private suspend fun parseTag(
                 parser = parser,
                 builder = builder,
                 parentTag = tagName,
-                linkColor = linkColor,
-                customLinkColor = customLinkColor,
-                customLinkShouldBeUnderlined = customLinkShouldBeUnderlined,
-                clickListeners = clickListeners,
+                params = params,
                 listStack = listStack
             )
         }
     }
 }
 
+private suspend fun subscriptContent(
+    builder: AnnotatedString.Builder,
+    params: RichTextHelperParams,
+    parser: XmlPullParser,
+    tagName: String,
+    listStack: MutableList<HtmlListContext>
+) {
+    builder.withStyle(
+        SpanStyle(
+            baselineShift = BaselineShift.Subscript,
+            fontSize = params.superScriptFontSize.em
+        )
+    ) {
+        parseChildren(
+            parser = parser,
+            builder = builder,
+            parentTag = tagName,
+            params = params,
+            listStack = listStack
+        )
+    }
+}
+
+private suspend fun superscriptContent(
+    builder: AnnotatedString.Builder,
+    params: RichTextHelperParams,
+    parser: XmlPullParser,
+    tagName: String,
+    listStack: MutableList<HtmlListContext>
+) {
+    builder.withStyle(
+        SpanStyle(
+            baselineShift = BaselineShift.Superscript,
+            fontSize = params.superScriptFontSize.em
+        )
+    ) {
+        parseChildren(
+            parser = parser,
+            builder = builder,
+            parentTag = tagName,
+            params = params,
+            listStack = listStack
+        )
+    }
+}
+
+private suspend fun boldOrStrongContent(
+    builder: AnnotatedString.Builder,
+    parser: XmlPullParser,
+    tagName: String,
+    params: RichTextHelperParams,
+    listStack: MutableList<HtmlListContext>
+) {
+    builder.withStyle(
+        SpanStyle(
+            fontWeight = FontWeight.Bold
+        )
+    ) {
+        parseChildren(
+            parser = parser,
+            builder = builder,
+            parentTag = tagName,
+            params = params,
+            listStack = listStack
+        )
+    }
+}
+
+private suspend fun anchorContent(
+    parser: XmlPullParser,
+    builder: AnnotatedString.Builder,
+    params: RichTextHelperParams,
+    tagName: String,
+    listStack: MutableList<HtmlListContext>
+) {
+    val href = parser.getAttributeValue(null, "href").orEmpty()
+
+    if (href.isNotBlank()) {
+        builder.withLink(
+            LinkAnnotation.Url(
+                url = href,
+                styles = linkStyles(params.linkColor)
+            )
+        ) {
+            parseChildren(
+                parser = parser,
+                builder = builder,
+                parentTag = tagName,
+                params = params,
+                listStack = listStack,
+                includeAutoLinks = false
+            )
+        }
+    } else {
+        parseChildren(
+            parser = parser,
+            builder = builder,
+            parentTag = tagName,
+            params = params,
+            listStack = listStack,
+            includeAutoLinks = true
+        )
+    }
+}
+
+private suspend fun italicsContent(
+    builder: AnnotatedString.Builder,
+    parser: XmlPullParser,
+    tagName: String,
+    params: RichTextHelperParams,
+    listStack: MutableList<HtmlListContext>
+) {
+    builder.withStyle(
+        SpanStyle(
+            fontStyle = FontStyle.Italic
+        )
+    ) {
+        parseChildren(
+            parser = parser,
+            builder = builder,
+            parentTag = tagName,
+            params = params,
+            listStack = listStack
+        )
+    }
+}
+
+private suspend fun underlinedContent(
+    builder: AnnotatedString.Builder,
+    parser: XmlPullParser,
+    tagName: String,
+    params: RichTextHelperParams,
+    listStack: MutableList<HtmlListContext>
+) {
+    builder.withStyle(
+        SpanStyle(
+            textDecoration = TextDecoration.Underline
+        )
+    ) {
+        parseChildren(
+            parser = parser,
+            builder = builder,
+            parentTag = tagName,
+            params = params,
+            listStack = listStack
+        )
+    }
+}
+
+private suspend fun listItemContent(
+    listStack: MutableList<HtmlListContext>,
+    builder: AnnotatedString.Builder,
+    parser: XmlPullParser,
+    tagName: String,
+    params: RichTextHelperParams
+) {
+    when (val currentList = listStack.lastOrNull()) {
+        is HtmlListContext.Ordered -> {
+            builder.append("${currentList.nextIndex}. ")
+            listStack[listStack.lastIndex] = currentList.copy(
+                nextIndex = currentList.nextIndex + 1
+            )
+        }
+
+        HtmlListContext.Unordered, null -> {
+            builder.append("\u2022 ")
+        }
+    }
+
+    parseChildren(
+        parser = parser,
+        builder = builder,
+        parentTag = tagName,
+        params = params,
+        listStack = listStack
+    )
+}
+
+private suspend fun orderedListContent(
+    parser: XmlPullParser,
+    listStack: MutableList<HtmlListContext>,
+    builder: AnnotatedString.Builder,
+    tagName: String,
+    params: RichTextHelperParams
+) {
+    val startIndex = parser.getAttributeValue(null, "start")?.toIntOrNull() ?: 1
+
+    listStack.add(HtmlListContext.Ordered(nextIndex = startIndex))
+
+    parseChildren(
+        parser = parser,
+        builder = builder,
+        parentTag = tagName,
+        params = params,
+        listStack = listStack
+    )
+
+    listStack.removeLastOrNull()
+}
+
+private suspend fun unorderedListContent(
+    listStack: MutableList<HtmlListContext>,
+    parser: XmlPullParser,
+    builder: AnnotatedString.Builder,
+    tagName: String,
+    params: RichTextHelperParams
+) {
+    listStack.add(HtmlListContext.Unordered)
+
+    parseChildren(
+        parser = parser,
+        builder = builder,
+        parentTag = tagName,
+        params = params,
+        listStack = listStack
+    )
+
+    listStack.removeLastOrNull()
+}
+
+private suspend fun paragraphContent(
+    builder: AnnotatedString.Builder,
+    parser: XmlPullParser,
+    tagName: String,
+    params: RichTextHelperParams,
+    listStack: MutableList<HtmlListContext>
+) {
+    val index = builder.pushStyle(ParagraphStyle())
+    parseChildren(
+        parser = parser,
+        builder = builder,
+        parentTag = tagName,
+        params = params,
+        listStack = listStack
+    )
+    builder.pop(index)
+}
+
 private fun AnnotatedString.Builder.appendTextWithLinks(
     text: String,
-    linkColor: Color,
-    customLinkColor: Color,
-    customLinkShouldBeUnderlined: Boolean,
-    clickListeners: Map<String, LinkInteractionListener>,
+    params: RichTextHelperParams,
     includeAutoLinks: Boolean
 ) {
     if (text.isEmpty()) return
 
-    val customMatches = if (clickListeners.isNotEmpty()) {
-        val patterns = clickListeners.keys.filter { it.isNotEmpty() }
-        if (patterns.isNotEmpty()) {
-            val combinedPattern = patterns
-                .sortedByDescending { it.length }
-                .joinToString("|") { Regex.escape(it) }
-            Regex(combinedPattern).findAll(text).map { matchResult ->
-                TextLinkMatch.Custom(
-                    start = matchResult.range.first,
-                    endExclusive = matchResult.range.last + 1,
-                    text = matchResult.value,
-                    listener = clickListeners[matchResult.value]!!
-                )
-            }
-        } else emptySequence()
-    } else emptySequence()
+    val customMatches = getCustomMatchesAsSequence(params.clickListeners, text)
 
+    val autoMatches = autoMatchesAsSequence(includeAutoLinks, text)
+
+    val matches = (customMatches + autoMatches)
+        .sortedWith(
+            compareBy<TextLinkMatch> { it.start }
+                .thenByDescending { it.endExclusive - it.start }
+                .thenBy { if (it is TextLinkMatch.Custom) 0 else 1 }
+        )
+        .fold(mutableListOf<TextLinkMatch>()) { acceptedMatches, candidate ->
+            val overlapsExistingMatch = acceptedMatches.any { accepted ->
+                candidate.start < accepted.endExclusive && candidate.endExclusive > accepted.start
+            }
+
+            if (!overlapsExistingMatch) {
+                acceptedMatches.add(candidate)
+            }
+
+            acceptedMatches
+        }.toImmutableList()
+
+    var currentIndex = 0
+
+    matches.forEach { match ->
+        if (currentIndex < match.start) {
+            append(text.substring(currentIndex, match.start))
+        }
+
+        when (match) {
+            is TextLinkMatch.Custom -> {
+                withLink(
+                    LinkAnnotation.Clickable(
+                        tag = match.text,
+                        styles = if (params.customLinkShouldBeUnderlined) linkStyles(params.customLinkColor) else noStyle(),
+                        linkInteractionListener = match.listener
+                    )
+                ) {
+                    append(match.text)
+                }
+            }
+
+            is TextLinkMatch.Auto -> {
+                withLink(
+                    LinkAnnotation.Url(
+                        url = match.url,
+                        styles = linkStyles(params.linkColor),
+                    )
+                ) {
+                    append(match.text)
+                }
+            }
+        }
+
+        currentIndex = match.endExclusive
+    }
+
+    if (currentIndex < text.length) {
+        append(text.substring(currentIndex))
+    }
+}
+
+private fun autoMatchesAsSequence(
+    includeAutoLinks: Boolean,
+    text: String
+): Sequence<TextLinkMatch.Auto> {
     val autoMatches = if (includeAutoLinks) {
         AutoLinkRegex.findAll(text).mapNotNull { matchResult ->
             val matchedText = matchResult.value
@@ -631,63 +720,30 @@ private fun AnnotatedString.Builder.appendTextWithLinks(
     } else {
         emptySequence()
     }
+    return autoMatches
+}
 
-    val matches = (customMatches + autoMatches)
-        .sortedWith(
-            compareBy<TextLinkMatch> { it.start }
-                .thenByDescending { it.endExclusive - it.start }
-                .thenBy { if (it is TextLinkMatch.Custom) 0 else 1 }
-        )
-        .fold(mutableListOf<TextLinkMatch>()) { acceptedMatches, candidate ->
-            val overlapsExistingMatch = acceptedMatches.any { accepted ->
-                candidate.start < accepted.endExclusive && candidate.endExclusive > accepted.start
+private fun getCustomMatchesAsSequence(
+    clickListeners: Map<String, LinkInteractionListener>,
+    text: String
+): Sequence<TextLinkMatch.Custom> {
+    val customMatches = if (clickListeners.isNotEmpty()) {
+        val patterns = clickListeners.keys.filter { it.isNotEmpty() }
+        if (patterns.isNotEmpty()) {
+            val combinedPattern = patterns
+                .sortedByDescending { it.length }
+                .joinToString("|") { Regex.escape(it) }
+            Regex(combinedPattern).findAll(text).map { matchResult ->
+                TextLinkMatch.Custom(
+                    start = matchResult.range.first,
+                    endExclusive = matchResult.range.last + 1,
+                    text = matchResult.value,
+                    listener = clickListeners[matchResult.value]!!
+                )
             }
-
-            if (!overlapsExistingMatch) {
-                acceptedMatches.add(candidate)
-            }
-
-            acceptedMatches
-        }
-
-    var currentIndex = 0
-
-    matches.forEach { match ->
-        if (currentIndex < match.start) {
-            append(text.substring(currentIndex, match.start))
-        }
-
-        when (match) {
-            is TextLinkMatch.Custom -> {
-                withLink(
-                    LinkAnnotation.Clickable(
-                        tag = match.text,
-                        styles = if (customLinkShouldBeUnderlined) linkStyles(customLinkColor) else noStyle(),
-                        linkInteractionListener = match.listener
-                    )
-                ) {
-                    append(match.text)
-                }
-            }
-
-            is TextLinkMatch.Auto -> {
-                withLink(
-                    LinkAnnotation.Url(
-                        url = match.url,
-                        styles = linkStyles(linkColor),
-                    )
-                ) {
-                    append(match.text)
-                }
-            }
-        }
-
-        currentIndex = match.endExclusive
-    }
-
-    if (currentIndex < text.length) {
-        append(text.substring(currentIndex))
-    }
+        } else emptySequence()
+    } else emptySequence()
+    return customMatches
 }
 
 private fun String.isHttpsUrl() = UrlRegex.matches(this)
@@ -732,3 +788,75 @@ private fun linkStyles(
         textDecoration = TextDecoration.Underline
     )
 )
+
+private val UrlRegex = Regex(
+    pattern = """https://[^\s<>"']+""",
+    option = RegexOption.IGNORE_CASE
+)
+
+private val MailToRegex = Regex(
+    pattern = """mailto:[^\s<>"']+""",
+    option = RegexOption.IGNORE_CASE
+)
+
+// Separator class: hyphen, en dash, em dash, dot, or space
+private const val PHONE_SEP = "[-\u2013\u2014.\\s]"
+
+// Numeric NANP: optional +1 / 1, area code, then 3 + 4 digits
+private val NumericPhoneRegex = Regex(
+    pattern = "(?<!\\w)(?:\\+?1$PHONE_SEP?)?\\(?\\d{3}\\)?$PHONE_SEP?\\d{3}$PHONE_SEP?\\d{4}(?!\\w)"
+)
+
+// Vanity NANP: optional +1 / 1, area code, then 7 chars made of digits/letters
+// with at least one letter somewhere in the subscriber portion.
+private val VanityPhoneRegex = Regex(
+    pattern = "(?<!\\w)(?:\\+?1$PHONE_SEP?)?\\(?\\d{3}\\)?$PHONE_SEP?" +
+            "(?=[A-Z0-9$PHONE_SEP]{7,}\\b)" +
+            "(?=[^A-Z]*[A-Z])" +
+            "[A-Z0-9]{3}$PHONE_SEP?[A-Z0-9]{4}(?!\\w)",
+    option = RegexOption.IGNORE_CASE
+)
+
+// Merged regex used by the parser
+private val PhoneRegex = Regex(
+    pattern = "${NumericPhoneRegex.pattern}|${VanityPhoneRegex.pattern}",
+    option = RegexOption.IGNORE_CASE
+)
+
+// Merged regex for auto-linking: URLs, mailto links, and phone numbers
+private val AutoLinkRegex = Regex(
+    pattern = listOf(
+        UrlRegex.pattern,
+        MailToRegex.pattern,
+        PhoneRegex.pattern,
+    ).joinToString("|"),
+    option = RegexOption.IGNORE_CASE
+)
+
+private sealed class HtmlListContext {
+    data object Unordered : HtmlListContext()
+
+    data class Ordered(
+        val nextIndex: Int
+    ) : HtmlListContext()
+}
+
+private sealed class TextLinkMatch {
+    abstract val start: Int
+    abstract val endExclusive: Int
+    abstract val text: String
+
+    data class Custom(
+        override val start: Int,
+        override val endExclusive: Int,
+        override val text: String,
+        val listener: LinkInteractionListener
+    ) : TextLinkMatch()
+
+    data class Auto(
+        override val start: Int,
+        override val endExclusive: Int,
+        override val text: String,
+        val url: String
+    ) : TextLinkMatch()
+}

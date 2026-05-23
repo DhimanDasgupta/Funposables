@@ -11,7 +11,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithCache
-import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -477,32 +476,101 @@ private data class LazyListScrollbarMetrics(
     val canScroll: Boolean,
 )
 
-fun Modifier.bottomFade(
-    height: Dp = 48.dp,
-    color: Color = Color.Gray,
+/**
+ * Applies a bottom fade gradient to a column, based on the given scroll state and fading parameters.
+ * The gradient will appear only when the column is not fully scrolled to the bottom.
+ *
+ * @param scrollState The scroll state of the column to determine when to apply the fade effect.
+ * @param heightPercentage The percentage of the column's height over which the fade effect will be applied. The default is 0.15f.
+ * @param color The color of the fade gradient. The default is Color.Unspecified.
+ * @param maxAlpha The maximum alpha value of the fade gradient. Default is 0.8f.
+ * @return A [Modifier] with the bottom fade effect applied.
+ */
+fun Modifier.bottomFadeForColumn(
+    scrollState: ScrollState,
+    heightPercentage: Float = 0.15f,
+    color: Color = Color.Unspecified,
+    maxAlpha: Float = 0.8f,
 ): Modifier {
-    return drawWithContent {
-        drawContent()
+    return bottomFade(
+        heightPercentage = heightPercentage,
+        color = color,
+        maxAlpha = maxAlpha,
+        shouldDrawFade = {
+            scrollState.value < scrollState.maxValue
+        },
+    )
+}
 
-        val fadeHeightPx = height.toPx()
+/**
+ * Applies a fading effect at the bottom of a LazyColumn based on its scroll state.
+ * The fade effect is controlled by customizable properties such as height percentage,
+ * color, and maximum opacity, and is displayed when the LazyColumn can scroll forward.
+ *
+ * @param lazyListState The state object associated with the LazyColumn, which tracks its scroll position.
+ * @param heightPercentage The height of the fade effect as a percentage of the LazyColumn's total height.
+ *                         Must be between 0.0f and 1.0f. Defaults to 0.15f.
+ * @param color The color of the fade effect. Defaults to Color.Unspecified.
+ * @param maxAlpha The maximum alpha (opacity) of the fade effect. Must be between 0.0f and 1.0f. Defaults to 0.8f.
+ * @return A Modifier with the applied bottom fade effect for the LazyColumn.
+ */
+fun Modifier.bottomFadeForLazyColumn(
+    lazyListState: LazyListState,
+    heightPercentage: Float = 0.15f,
+    color: Color = Color.Unspecified,
+    maxAlpha: Float = 0.8f,
+): Modifier {
+    return bottomFade(
+        heightPercentage = heightPercentage,
+        color = color,
+        maxAlpha = maxAlpha,
+        shouldDrawFade = {
+            lazyListState.canScrollForward
+        },
+    )
+}
 
-        drawRect(
-            brush = Brush.verticalGradient(
-                colors = listOf(
-                    color.copy(alpha = 0f),
-                    color.copy(alpha = 0.8f),
-                ),
-                startY = size.height - fadeHeightPx,
-                endY = size.height,
+private fun Modifier.bottomFade(
+    heightPercentage: Float,
+    color: Color,
+    maxAlpha: Float,
+    shouldDrawFade: () -> Boolean,
+): Modifier {
+    return drawWithCache {
+        val coercedHeightPercentage = heightPercentage.coerceIn(0f, 1f)
+        val coercedMaxAlpha = maxAlpha.coerceIn(0f, 1f)
+
+        val fadeHeightPx = size.height * coercedHeightPercentage
+        val fadeTop = size.height - fadeHeightPx
+
+        val fadeBrush = Brush.verticalGradient(
+            colors = listOf(
+                color.copy(alpha = 0f),
+                color.copy(alpha = coercedMaxAlpha/4),
+                color.copy(alpha = coercedMaxAlpha/2),
+                color.copy(alpha = coercedMaxAlpha),
             ),
-            topLeft = Offset(
-                x = 0f,
-                y = size.height - fadeHeightPx,
-            ),
-            size = Size(
-                width = size.width,
-                height = fadeHeightPx,
-            ),
+            startY = fadeTop,
+            endY = size.height,
         )
+
+        onDrawWithContent {
+            drawContent()
+
+            if (!shouldDrawFade()) return@onDrawWithContent
+            if (fadeHeightPx <= 0f) return@onDrawWithContent
+
+            drawRect(
+                brush = fadeBrush,
+                topLeft = Offset(
+                    x = 0f,
+                    y = fadeTop,
+                ),
+                size = Size(
+                    width = size.width,
+                    height = fadeHeightPx,
+                ),
+            )
+        }
     }
 }

@@ -28,7 +28,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.dhimandasgupta.funposables.ui.common.bottomFade
+import com.dhimandasgupta.funposables.ui.common.bottomFadeForColumn
 import com.dhimandasgupta.funposables.ui.common.verticalScrollbarForColumn
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
@@ -81,15 +81,17 @@ fun Launcher(
                     .calculateBottomPadding()*/
             )
             .fillMaxSize()
-            .bottomFade(
-                height = 96.dp,
-                color = colorScheme.primary,
-            )
             .verticalScrollbarForColumn(
                 scrollState = scrollState,
                 width = 2.dp,
                 thumbWidth = 4.dp,
                 minThumbHeight = 32.dp,
+            )
+            .bottomFadeForColumn(
+                scrollState = scrollState,
+                heightPercentage = 0.25f,
+                color = colorScheme.primary,
+                maxAlpha = 0.8f,
             )
             .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(space = 8.dp)

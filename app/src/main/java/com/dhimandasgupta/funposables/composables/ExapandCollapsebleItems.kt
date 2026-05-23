@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -43,6 +44,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.dhimandasgupta.funposables.ui.common.bottomFadeForLazyColumn
 import com.dhimandasgupta.funposables.ui.common.verticalScrollbarForLazyColumn
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 import kotlinx.collections.immutable.toPersistentList
@@ -149,6 +151,12 @@ private fun ExpandableCardList(
                     thumbWidth = 8.dp,
                     minThumbHeight = 32.dp,
                     endPadding = 2.dp,
+                )
+                .bottomFadeForLazyColumn(
+                    lazyListState = scrollState,
+                    heightPercentage = 0.25f,
+                    color = colorScheme.primary,
+                    maxAlpha = 0.8f,
                 ),
         ) {
             itemsIndexed(items) { index, item ->

@@ -5,6 +5,7 @@ import android.util.Xml
 import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
@@ -107,13 +108,89 @@ fun RichText(
         Or use <strong><i><a href="mailto:support@example.com">email support</a></i>.</strong>
         """.trimIndent()
 
+    val markdown = """
+        # Markdown Support
+        This is a **bold** and *italic* text. 
+        You can also have ***bold and italic***.
+        ~~Strikethrough~~ is also supported.
+        `Inline code` for developers.
+        
+        [JetBrains](https://www.jetbrains.com) link.
+        
+        Nested styles: **bold with *italic* inside** and *italic with **bold** inside*.
+        
+        - List item 1
+        - List item 2 with `code`
+        - List item 3
+        
+        1. Ordered item 1
+        2. Ordered item 2
+        
+        > Blockquotes are also nice!
+        
+        ---
+        
+        Contact: [Email](mailto:support@example.com) or [Phone](tel:+18006624357).
+        
+        # Heading 1 (\#)
+        ## Heading 2 (\#\#)
+        ### Heading 3 (\#\#\#)
+        #### Heading 4 (\#\#\#\#)
+        ##### Heading 5 (\#\#\#\#\#)
+        ###### Heading 6 (\#\#\#\#\#\#)
+
+        ---
+        *Alternative Heading 1*
+        ===
+
+        *Alternative Heading 2*
+        ---
+
+        ---
+        ***
+        ___
+
+        *This text is italicized using asterisks.*
+        _This text is italicized using underscores._
+
+        **This text is bolded using double asterisks.**
+        __This text is bolded using double underscores.__
+
+        ***This text is bold and italicized using triple asterisks.***
+        ~~This text has a strikethrough applied.~~
+
+        > This is a standard blockquote.
+        >> This is a nested blockquote block.
+
+        * Unordered list item 1
+        - Unordered list item 2
+        + Unordered list item 3
+
+        1. Ordered list item 1
+        2. Ordered list item 2
+           1. Nested ordered item (indented 3 spaces or 1 tab)
+           
+        - [x] Completed task list item
+        - [ ] Incomplete task list item
+
+        Here is some inline code: `val x = 10`
+
+        ``kotlin
+        // This is a fenced code block with syntax highlighting
+        fun main() {
+            println("Hello World")
+        }
+        ``
+    """.trimIndent()
+
     val linkColor = colorScheme.primary
     val customLinkColor = colorScheme.error
     var annotatedString by remember { mutableStateOf(AnnotatedString("")) }
+    var markdownAnnotatedString by remember { mutableStateOf(AnnotatedString("")) }
 
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(html) {
+    LaunchedEffect(html, markdown) {
         annotatedString = html.convertToAnnotatedString(
             params = RichTextHelperParams(
                 linkColor = linkColor,
@@ -142,6 +219,13 @@ fun RichText(
                     Toast.makeText(context, "Error parsing HTML: ${exception.message}", Toast.LENGTH_SHORT).show()
                 }
             }
+        )
+
+        markdownAnnotatedString = markdown.convertMarkdownToAnnotatedString(
+            params = RichTextHelperParams(
+                linkColor = linkColor,
+                customLinkColor = customLinkColor,
+            )
         )
     }
 
@@ -172,9 +256,25 @@ fun RichText(
         )
 
         Text(
+            text = "HTML Content:",
+            style = typography.titleMedium,
+            color = colorScheme.onSurface
+        )
+        Text(
             text = annotatedString,
-            style = typography.labelMedium,
-            color = colorScheme.onPrimary
+            style = typography.labelMedium.copy(color = colorScheme.onSurface),
+        )
+
+        Spacer(modifier = Modifier.padding(128.dp))
+
+        Text(
+            text = "Markdown Content:",
+            style = typography.titleMedium,
+            color = colorScheme.onSurface
+        )
+        Text(
+            text = markdownAnnotatedString,
+            style = typography.labelMedium.copy(color = colorScheme.onSurface),
         )
 
         Box(
@@ -205,6 +305,12 @@ data class RichTextHelperParams(
     val customLinkShouldBeUnderlined: Boolean = false,
     val superScriptFontSize: Float = 0.61f,
     val clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
+    val h1Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 2.0.em),
+    val h2Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.7.em),
+    val h3Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.5.em),
+    val h4Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.3.em),
+    val h5Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.2.em),
+    val h6Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.1.em),
 ) {
     companion object {
         val Default = RichTextHelperParams()
@@ -839,6 +945,197 @@ private sealed class HtmlListContext {
     data class Ordered(
         val nextIndex: Int
     ) : HtmlListContext()
+}
+
+/**
+ * Extension function to convert a Markdown string into an AnnotatedString.
+ *
+ * @param dispatcher The coroutine dispatcher to use for parsing.
+ * @param params Parameters for customizing the appearance and behavior of the text.
+ * @param onException A callback for handling exceptions during parsing.
+ * @return An AnnotatedString representing the parsed Markdown content.
+ */
+suspend fun String.convertMarkdownToAnnotatedString(
+    dispatcher: CoroutineDispatcher = Dispatchers.Default,
+    params: RichTextHelperParams = RichTextHelperParams.Default,
+    onException: (Exception) -> Unit = {},
+): AnnotatedString = withContext(dispatcher) {
+    return@withContext try {
+        buildAnnotatedString {
+            currentCoroutineContext().ensureActive()
+            parseMarkdown(this@convertMarkdownToAnnotatedString, this, params)
+        }
+    } catch (e: Exception) {
+        currentCoroutineContext().ensureActive()
+        println("Error parsing Markdown: ${e.message}")
+        onException(e)
+        buildAnnotatedString {}
+    }
+}
+
+private suspend fun parseMarkdown(
+    markdown: String,
+    builder: AnnotatedString.Builder,
+    params: RichTextHelperParams
+) {
+    val lines = markdown.lines()
+    var inList = false
+    var listIndex = 1
+
+    lines.forEach { line ->
+        currentCoroutineContext().ensureActive()
+        val trimmedLine = line.trim()
+
+        when {
+            trimmedLine.startsWith("#") -> {
+                val level = trimmedLine.takeWhile { it == '#' }.length
+                val content = trimmedLine.removePrefix("#".repeat(level)).trim()
+                val style = when (level) {
+                    1 -> params.h1Style
+                    2 -> params.h2Style
+                    3 -> params.h3Style
+                    4 -> params.h4Style
+                    5 -> params.h5Style
+                    else -> params.h6Style
+                }
+                builder.withStyle(style) {
+                    parseInlineMarkdown(content, builder, params)
+                }
+                builder.append("\n")
+                inList = false
+            }
+            trimmedLine.startsWith(">") -> {
+                val content = trimmedLine.removePrefix(">").trim()
+                builder.withStyle(SpanStyle(fontStyle = FontStyle.Italic, color = Color.Gray)) {
+                    builder.append("▎ ")
+                    parseInlineMarkdown(content, builder, params)
+                }
+                builder.append("\n")
+                inList = false
+            }
+            trimmedLine.startsWith("- ") || trimmedLine.startsWith("* ") || trimmedLine.startsWith("+ ") -> {
+                val content = trimmedLine.substring(2).trim()
+                builder.append("  • ")
+                parseInlineMarkdown(content, builder, params)
+                builder.append("\n")
+                inList = true
+            }
+            trimmedLine.firstOrNull()?.isDigit() == true && trimmedLine.contains(". ") -> {
+                val dotIndex = trimmedLine.indexOf(". ")
+                val potentialNumber = trimmedLine.substring(0, dotIndex)
+                if (potentialNumber.all { it.isDigit() }) {
+                    val content = trimmedLine.substring(dotIndex + 2).trim()
+                    if (!inList) listIndex = 1
+                    builder.append("  $listIndex. ")
+                    parseInlineMarkdown(content, builder, params)
+                    builder.append("\n")
+                    listIndex++
+                    inList = true
+                } else {
+                    parseInlineMarkdown(line, builder, params)
+                    builder.append("\n")
+                    inList = false
+                }
+            }
+            trimmedLine == "---" || trimmedLine == "***" || trimmedLine == "___" -> {
+                builder.withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) {
+                    builder.append(" ".repeat(20))
+                }
+                builder.append("\n")
+                inList = false
+            }
+            else -> {
+                if (trimmedLine.isNotEmpty()) {
+                    parseInlineMarkdown(line, builder, params)
+                    builder.append("\n")
+                } else {
+                    builder.append("\n")
+                }
+                inList = false
+            }
+        }
+    }
+}
+
+private suspend fun parseInlineMarkdown(
+    text: String,
+    builder: AnnotatedString.Builder,
+    params: RichTextHelperParams
+) {
+    var currentIndex = 0
+    val length = text.length
+
+    while (currentIndex < length) {
+        yield()
+
+        val remaining = text.substring(currentIndex)
+
+        // Bold & Italic (*** or ___)
+        val boldItalicMatch = Regex("""^(\*\*\*|___)(.*?)\1""").find(remaining)
+        if (boldItalicMatch != null) {
+            builder.withStyle(SpanStyle(fontWeight = FontWeight.Bold, fontStyle = FontStyle.Italic)) {
+                parseInlineMarkdown(boldItalicMatch.groupValues[2], builder, params)
+            }
+            currentIndex += boldItalicMatch.value.length
+            continue
+        }
+
+        // Bold (** or __)
+        val boldMatch = Regex("""^(\*\*|__)(.*?)\1""").find(remaining)
+        if (boldMatch != null) {
+            builder.withStyle(SpanStyle(fontWeight = FontWeight.Bold)) {
+                parseInlineMarkdown(boldMatch.groupValues[2], builder, params)
+            }
+            currentIndex += boldMatch.value.length
+            continue
+        }
+
+        // Italic (* or _)
+        val italicMatch = Regex("""^([*_])(.*?)\1""").find(remaining)
+        if (italicMatch != null) {
+            builder.withStyle(SpanStyle(fontStyle = FontStyle.Italic)) {
+                parseInlineMarkdown(italicMatch.groupValues[2], builder, params)
+            }
+            currentIndex += italicMatch.value.length
+            continue
+        }
+
+        // Strikethrough (~~)
+        val strikeMatch = Regex("""^~~(.*?)~~""").find(remaining)
+        if (strikeMatch != null) {
+            builder.withStyle(SpanStyle(textDecoration = TextDecoration.LineThrough)) {
+                parseInlineMarkdown(strikeMatch.groupValues[1], builder, params)
+            }
+            currentIndex += strikeMatch.value.length
+            continue
+        }
+
+        // Inline Code (`)
+        val codeMatch = Regex("""^`(.*?)`""").find(remaining)
+        if (codeMatch != null) {
+            builder.withStyle(SpanStyle(background = Color.LightGray.copy(alpha = 0.2f), fontWeight = FontWeight.Medium)) {
+                append(codeMatch.groupValues[1])
+            }
+            currentIndex += codeMatch.value.length
+            continue
+        }
+
+        // Link [text](url)
+        val linkMatch = Regex("""^\[(.*?)]\((.*?)\)""").find(remaining)
+        if (linkMatch != null) {
+            val linkText = linkMatch.groupValues[1]
+            val url = linkMatch.groupValues[2]
+            builder.withLink(LinkAnnotation.Url(url = url, styles = linkStyles(params.linkColor))) {
+                append(linkText)
+            }
+            currentIndex += linkMatch.value.length
+            continue
+        }
+
+        // Fallback to text
+        builder.appendTextWithLinks(text[currentIndex].toString(), params, includeAutoLinks = true)
+        currentIndex++
+    }
 }
 
 private sealed class TextLinkMatch {

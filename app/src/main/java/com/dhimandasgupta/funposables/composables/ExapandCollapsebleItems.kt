@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -42,7 +43,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import com.dhimandasgupta.funposables.ui.common.verticalScrollbarForLazyColumn
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
+import kotlinx.collections.immutable.toPersistentList
 
 @Composable
 fun ExpandableCollapsableItems(
@@ -63,7 +66,7 @@ fun ExpandableCollapsableItems(
         }
     }
 
-    val items = accountItem + normalItems
+    val items = (accountItem + normalItems).toPersistentList()
 
     ExpandableCardList(
         items = items,
@@ -124,7 +127,7 @@ private fun ExpandableCardList(
 
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = "$575,147.23", // replace with dynamic data
+                    text = "$575,147.23", // replace it with dynamic data
                     style = typography.titleMedium
                 )
                 Text(
@@ -134,7 +137,20 @@ private fun ExpandableCardList(
             }
         }
 
-        LazyColumn {
+        val scrollState = rememberLazyListState()
+
+        LazyColumn(
+            state = scrollState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScrollbarForLazyColumn(
+                    lazyListState = scrollState,
+                    width = 4.dp,
+                    thumbWidth = 8.dp,
+                    minThumbHeight = 32.dp,
+                    endPadding = 2.dp,
+                ),
+        ) {
             itemsIndexed(items) { index, item ->
                 when (item) {
                     is Item.AccountItem -> AccountCard(

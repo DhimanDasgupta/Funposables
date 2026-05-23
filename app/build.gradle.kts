@@ -80,4 +80,5 @@ dependencies {
     implementation(libs.flow.redux.extension.jvm)
 
     implementation(libs.timber)
+    implementation(libs.kotlinx.collections.immutable)
 }

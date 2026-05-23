@@ -28,6 +28,8 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import com.dhimandasgupta.funposables.ui.common.bottomFade
+import com.dhimandasgupta.funposables.ui.common.verticalScrollbarForColumn
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 @Composable
@@ -55,6 +57,8 @@ fun Launcher(
     val textModifier = Modifier
         .padding(16.dp)
         .blur(0.45.dp)
+
+    val scrollState = rememberScrollState()
     
     Column(
         modifier = modifier
@@ -77,9 +81,17 @@ fun Launcher(
                     .calculateBottomPadding()*/
             )
             .fillMaxSize()
-            .verticalScroll(
-                state = rememberScrollState()
-            ),
+            .bottomFade(
+                height = 96.dp,
+                color = colorScheme.primary,
+            )
+            .verticalScrollbarForColumn(
+                scrollState = scrollState,
+                width = 2.dp,
+                thumbWidth = 4.dp,
+                minThumbHeight = 32.dp,
+            )
+            .verticalScroll(scrollState),
         verticalArrangement = Arrangement.spacedBy(space = 8.dp)
     ) {
         Spacer(

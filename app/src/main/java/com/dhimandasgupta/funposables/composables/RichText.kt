@@ -290,31 +290,24 @@ fun RichText(
     }
 }
 
-/**
- * Data class to hold parameters for customizing the behavior and appearance of rich text.
- *
- * @property linkColor The color of links in the text.
- * @property customLinkColor The color of custom links in the text.
- * @property customLinkShouldBeUnderlined Whether custom links should be underlined.
- * @property superScriptFontSize The font size for superscript text.
- * @property clickListeners A map of custom link tags to their respective click listeners.
- */
-data class RichTextHelperParams(
-    val linkColor: Color = Color.Unspecified,
-    val customLinkColor: Color = Color.Unspecified,
-    val customLinkShouldBeUnderlined: Boolean = false,
-    val superScriptFontSize: Float = 0.61f,
-    val clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
-    val h1Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 2.0.em),
-    val h2Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.7.em),
-    val h3Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.5.em),
-    val h4Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.3.em),
-    val h5Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.2.em),
-    val h6Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.1.em),
-) {
-    companion object {
-        val Default = RichTextHelperParams()
-    }
+private sealed class TextLinkMatch {
+    abstract val start: Int
+    abstract val endExclusive: Int
+    abstract val text: String
+
+    data class Custom(
+        override val start: Int,
+        override val endExclusive: Int,
+        override val text: String,
+        val listener: LinkInteractionListener
+    ) : TextLinkMatch()
+
+    data class Auto(
+        override val start: Int,
+        override val endExclusive: Int,
+        override val text: String,
+        val url: String
+    ) : TextLinkMatch()
 }
 
 /**
@@ -947,6 +940,34 @@ private sealed class HtmlListContext {
     ) : HtmlListContext()
 }
 
+
+/**
+ * Data class to hold parameters for customizing the behavior and appearance of rich text.
+ *
+ * @property linkColor The color of links in the text.
+ * @property customLinkColor The color of custom links in the text.
+ * @property customLinkShouldBeUnderlined Whether custom links should be underlined.
+ * @property superScriptFontSize The font size for superscript text.
+ * @property clickListeners A map of custom link tags to their respective click listeners.
+ */
+data class RichTextHelperParams(
+    val linkColor: Color = Color.Unspecified,
+    val customLinkColor: Color = Color.Unspecified,
+    val customLinkShouldBeUnderlined: Boolean = false,
+    val superScriptFontSize: Float = 0.61f,
+    val clickListeners: Map<String, LinkInteractionListener> = emptyMap(),
+    val h1Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 2.0.em),
+    val h2Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.7.em),
+    val h3Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.5.em),
+    val h4Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.3.em),
+    val h5Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.2.em),
+    val h6Style: SpanStyle = SpanStyle(fontWeight = FontWeight.Bold, fontSize = 1.1.em),
+) {
+    companion object {
+        val Default = RichTextHelperParams()
+    }
+}
+
 /**
  * Extension function to convert a Markdown string into an AnnotatedString.
  *
@@ -1136,24 +1157,4 @@ private suspend fun parseInlineMarkdown(
         builder.appendTextWithLinks(text[currentIndex].toString(), params, includeAutoLinks = true)
         currentIndex++
     }
-}
-
-private sealed class TextLinkMatch {
-    abstract val start: Int
-    abstract val endExclusive: Int
-    abstract val text: String
-
-    data class Custom(
-        override val start: Int,
-        override val endExclusive: Int,
-        override val text: String,
-        val listener: LinkInteractionListener
-    ) : TextLinkMatch()
-
-    data class Auto(
-        override val start: Int,
-        override val endExclusive: Int,
-        override val text: String,
-        val url: String
-    ) : TextLinkMatch()
 }

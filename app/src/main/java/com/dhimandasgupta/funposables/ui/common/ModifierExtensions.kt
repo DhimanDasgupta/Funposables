@@ -318,6 +318,7 @@ private class LazyListVerticalScrollbarNode(
     private var currentScrollProgress by mutableFloatStateOf(0f)
     private var currentViewportToContentRatio by mutableFloatStateOf(1f)
     private var canScroll by mutableStateOf(false)
+    private var reachedBottom by mutableStateOf(false)
 
     override fun onAttach() {
         observeLazyListState()
@@ -332,6 +333,7 @@ private class LazyListVerticalScrollbarNode(
         drawContent()
 
         if (!canScroll) return
+        if (reachedBottom) return
 
         drawScrollbar(
             scrollProgress = currentScrollProgress,
@@ -415,6 +417,7 @@ private class LazyListVerticalScrollbarNode(
                 currentScrollProgress = metrics.scrollProgress
                 currentViewportToContentRatio = metrics.viewportToContentRatio
                 canScroll = metrics.canScroll
+                reachedBottom = !lazyListState.canScrollForward
                 invalidateDraw()
             }
         }
@@ -474,6 +477,7 @@ private data class LazyListScrollbarMetrics(
     val scrollProgress: Float,
     val viewportToContentRatio: Float,
     val canScroll: Boolean,
+    val reachedBottom: Boolean = false,
 )
 
 /**

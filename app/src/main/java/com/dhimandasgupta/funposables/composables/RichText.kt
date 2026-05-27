@@ -81,7 +81,7 @@ fun RichText(
         <p>
         Visit https://www.jetbrains.com/junie or call 1-800-622-4357.
         You can also use <a href='https://www.google.com'>this website</a>.
-        1-800-662-HELP and 1-800-662-HELP or 1—800—662—HELP or 1-800-622-HELP
+        1-800-662-HELP and 1-800-662-HELP or 1—800—662—HELP or 1-800-622-HELP or 1-800-GO-FEDEX or 1-800-CONTACTS or 1-800-MATTRESS or 1-800-GOT-JUNK or 1-800-HURT-NOW or 1-800-DIAL-CASH or 1-800-USA-BANK or 1-800-HOMECARE or 1-800-DENTIST or 1-800-SOLAR-USA or 1-212-888-CATS or 1-888-2-HIRE-US
         </p>
         <p>Contact options:</p>
         <ul>
@@ -901,18 +901,22 @@ private val MailToRegex = Regex(
 // Separator class: hyphen, en dash, em dash, dot, or space
 private const val PHONE_SEP = "[-\u2013\u2014.\\s]"
 
+// Separator class for vanity subscriber portions.
+// Intentionally excludes whitespace so matches do not accidentally consume following words.
+private const val VANITY_PHONE_SEP = "[-\u2013\u2014.]"
+
 // Numeric NANP: optional +1 / 1, area code, then 3 + 4 digits
 private val NumericPhoneRegex = Regex(
     pattern = "(?<!\\w)(?:\\+?1$PHONE_SEP?)?\\(?\\d{3}\\)?$PHONE_SEP?\\d{3}$PHONE_SEP?\\d{4}(?!\\w)"
 )
 
-// Vanity NANP: optional +1 / 1, area code, then 7 chars made of digits/letters
-// with at least one letter somewhere in the subscriber portion.
+// Vanity NANP: optional +1 / 1, area code, then 7+ subscriber chars made of digits/letters,
+// optionally separated by hyphen/en dash/em dash/dot, with at least one letter.
 private val VanityPhoneRegex = Regex(
     pattern = "(?<!\\w)(?:\\+?1$PHONE_SEP?)?\\(?\\d{3}\\)?$PHONE_SEP?" +
-            "(?=[A-Z0-9$PHONE_SEP]{7,}\\b)" +
-            "(?=[^A-Z]*[A-Z])" +
-            "[A-Z0-9]{3}$PHONE_SEP?[A-Z0-9]{4}(?!\\w)",
+            "(?=(?:[A-Z0-9]$VANITY_PHONE_SEP?){7,}(?![A-Z0-9]))" +
+            "(?=[A-Z0-9$VANITY_PHONE_SEP]*[A-Z])" +
+            "[A-Z0-9]+(?:$VANITY_PHONE_SEP[A-Z0-9]+)*(?!\\w)",
     option = RegexOption.IGNORE_CASE
 )
 

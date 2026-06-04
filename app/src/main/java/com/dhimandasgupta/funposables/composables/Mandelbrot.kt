@@ -83,7 +83,7 @@ fun Mandelbrot(
         // Pre-initialize shader to avoid object allocation during draw phase
         val shader = remember { RuntimeShader(MANDELBROT_SHADER_CODE) }
 
-        val state = rememberTransformableState { zoomChange, offsetChange, _ ->
+        val state = rememberTransformableState { _, zoomChange, offsetChange, _ ->
             // Adjust zoom level (clamped to prevent floating point artifacts)
             zoom = (zoom / zoomChange).coerceIn(0.00001f, 5f)
 

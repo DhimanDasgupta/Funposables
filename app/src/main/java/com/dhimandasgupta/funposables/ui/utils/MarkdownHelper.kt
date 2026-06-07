@@ -22,6 +22,7 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -47,8 +48,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
+import kotlin.time.Clock
+import kotlin.uuid.ExperimentalUuidApi
+import kotlin.uuid.Uuid
 
 /* Configuration for styling the rendered Markdown content.
  *
@@ -121,30 +127,7 @@ data class WFMarkdownStyle(
  * - [ ] Unchecked item
  * - [X] Checked item
  * - [ ] Another unchecked item
- *
- * @param markdown The raw Markdown string to render.
- * @param modifier [Modifier] applied to the outer column.
- * @param style [WFMarkdownStyle] controlling typography, colors, and link handling.
  */
-@Suppress("kotlin:S100")
-@Composable
-fun WFMarkdownText(
-    markdown: String,
-    modifier: Modifier = Modifier,
-    style: WFMarkdownStyle = rememberDefaultMarkdownStyle()
-) {
-    val blocks = parseMarkdownBlocks(markdown)
-    Column(
-        modifier = modifier.semantics { testTag = "WFMarkdownText" }
-    ) {
-        blocks.forEachIndexed { index, block ->
-            RenderBlock(block = block, style = style)
-            if (index < blocks.lastIndex) {
-                Spacer(modifier = Modifier.height(4.dp))
-            }
-        }
-    }
-}
 
 @Composable
 private fun rememberDefaultMarkdownStyle(): WFMarkdownStyle {
@@ -205,7 +188,7 @@ private fun RenderHeading(
         else -> style.h6Style
     }
     Text(
-        text = parseInlineMarkdown(heading.text, style),
+        text = rememberParsedMarkdown(heading.text, style),
         style = textStyle,
         modifier = Modifier
             .fillMaxWidth()
@@ -219,7 +202,7 @@ private fun RenderParagraph(
     style: WFMarkdownStyle
 ) {
     Text(
-        text = parseInlineMarkdown(paragraph.text, style),
+        text = rememberParsedMarkdown(paragraph.text, style),
         style = style.bodyStyle,
         modifier = Modifier
             .fillMaxWidth()
@@ -269,7 +252,7 @@ private fun RenderBlockquote(
             .semantics { testTag = "WFMarkdownText_Blockquote" }
     ) {
         Text(
-            text = parseInlineMarkdown(blockquote.text, style),
+            text = rememberParsedMarkdown(blockquote.text, style),
             style = style.bodyStyle.copy(
                 fontStyle = FontStyle.Italic,
                 color = style.blockquoteTextColor
@@ -294,7 +277,7 @@ private fun RenderUnorderedList(
                     modifier = Modifier.padding(end = 8.dp)
                 )
                 Text(
-                    text = parseInlineMarkdown(item, style),
+                    text = rememberParsedMarkdown(item, style),
                     style = style.bodyStyle,
                     modifier = Modifier.weight(1f)
                 )
@@ -319,7 +302,7 @@ private fun RenderOrderedList(
                     modifier = Modifier.width(24.dp)
                 )
                 Text(
-                    text = parseInlineMarkdown(item, style),
+                    text = rememberParsedMarkdown(item, style),
                     style = style.bodyStyle,
                     modifier = Modifier.weight(1f)
                 )
@@ -414,13 +397,12 @@ private fun RowScope.TableCell(
 ) {
     Box(
         modifier = Modifier
-            .weight(1f)
             .border(width = 0.5.dp, color = borderColor)
             .padding(8.dp),
         contentAlignment = Alignment.CenterStart
     ) {
         Text(
-            text = parseInlineMarkdown(text.trim(), style),
+            text = rememberParsedMarkdown(text.trim(), style),
             style = textStyle
         )
     }
@@ -431,7 +413,13 @@ private fun RowScope.TableCell(
 // region Inline Markdown Parsing
 
 @Composable
-private fun parseInlineMarkdown(
+private fun rememberParsedMarkdown(text: String, style: WFMarkdownStyle): AnnotatedString {
+    return produceState(initialValue = AnnotatedString(""), text, style) {
+        value = parseInlineMarkdown(text, style)
+    }.value
+}
+
+private suspend fun parseInlineMarkdown(
     text: String,
     style: WFMarkdownStyle,
     includeAutoLinks: Boolean = true
@@ -624,57 +612,57 @@ private fun tokenizeInline(input: String): List<InlineToken> {
 
 // region Block-level Parser
 
-/**
- * Streams Markdown blocks as they are parsed from the input string.
- * Useful for long content or LLM streaming responses.
- */
-fun streamMarkdownBlocks(markdown: String): Flow<List<MarkdownBlock>> = flow {
-    val lines = markdown.lines()
-    val blocks = mutableListOf<MarkdownBlock>()
-    // For simplicity in this example, we reparse using the existing logic but emit increments
-    // Real streaming would parse line-by-line and maintain state
-    val result = parseMarkdownBlocks(markdown)
-    emit(result)
-}
-
+@OptIn(ExperimentalUuidApi::class)
 sealed class MarkdownBlock {
+    abstract val key: String
+
     data class Heading(
         val level: Int,
-        val text: String
+        val text: String,
+        override val key: String = "heading_$level" + "_${Uuid.generateV7()}_${Clock.System.now().nanosecondsOfSecond}"
     ) : MarkdownBlock()
 
     data class Paragraph(
-        val text: String
+        val text: String,
+        override val key: String = "paragraph_${text.hashCode()}" + "_${Uuid.generateV7()}_${Clock.System.now().nanosecondsOfSecond}"
     ) : MarkdownBlock()
 
     data class CodeBlock(
         val language: String,
-        val code: String
+        val code: String,
+        override val key: String = "codeblock_${language}_${code.hashCode()}" + "_${Uuid.generateV7()}_${Clock.System.now().nanosecondsOfSecond}"
     ) : MarkdownBlock()
 
     data class Blockquote(
-        val text: String
+        val text: String,
+        override val key: String = "blockquote_${text.hashCode()}" + "_${Uuid.generateV7()}_${Clock.System.now().nanosecondsOfSecond}"
     ) : MarkdownBlock()
 
     data class UnorderedList(
-        val items: List<String>
+        val items: ImmutableList<String>,
+        override val key: String = "unorderedlist_${items.hashCode()}" + "_${Uuid.generateV7()}_${Clock.System.now().nanosecondsOfSecond}"
     ) : MarkdownBlock()
 
     data class OrderedList(
-        val items: List<String>
+        val items: ImmutableList<String>,
+        override val key: String = "orderedlist_${items.hashCode()}" + "_${Uuid.generateV7()}_${Clock.System.now().nanosecondsOfSecond}"
     ) : MarkdownBlock()
 
-    data object HorizontalRule : MarkdownBlock()
+    data object HorizontalRule : MarkdownBlock() {
+        override val key: String = "horizontal_rule" + "_${Uuid.generateV7()}_${Clock.System.now().nanosecondsOfSecond}"
+    }
 
     data class Image(
         val altText: String,
-        val url: String
+        val url: String,
+        override val key: String = "image_${altText.hashCode()}_${url.hashCode()}" + "_${Uuid.generateV7()}_${Clock.System.now().nanosecondsOfSecond}"
     ) : MarkdownBlock()
 
     data class Table(
-        val headers: List<String>,
-        val alignments: List<TableAlignment>,
-        val rows: List<List<String>>
+        val headers: ImmutableList<String>,
+        val alignments: ImmutableList<TableAlignment>,
+        val rows: ImmutableList<ImmutableList<String>>,
+        override val key: String = "table_${headers.hashCode()}_${rows.hashCode()}" + "_${Uuid.generateV7()}_${Clock.System.now().nanosecondsOfSecond}"
     ) : MarkdownBlock()
 }
 
@@ -695,12 +683,15 @@ private val tableRowRegex = Regex("""^\|(.+)\|\s*$""")
 private val tableSeparatorRegex = Regex("""^\|([\s:]*-{3,}[\s:]*\|)+\s*$""")
 
 @Suppress("kotlin:S3776")
-private fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
+suspend fun parseMarkdownBlocks(markdown: String): ImmutableList<MarkdownBlock> {
+    val coroutineContext = currentCoroutineContext()
     val blocks = mutableListOf<MarkdownBlock>()
-    val lines = markdown.lines()
+    val lines = markdown.lines().toImmutableList()
     var i = 0
 
     while (i < lines.size) {
+        coroutineContext.ensureActive()
+
         val line = lines[i]
         val trimmedLine = line.trimEnd()
 
@@ -764,12 +755,12 @@ private fun parseMarkdownBlocks(markdown: String): List<MarkdownBlock> {
 
         i = parseParagraph(lines, i, blocks)
     }
-    return blocks
+    return blocks.toImmutableList()
 }
 
 private fun parseCodeBlock(
     codeFenceMatch: MatchResult,
-    lines: List<String>,
+    lines: ImmutableList<String>,
     startIndex: Int,
     blocks: MutableList<MarkdownBlock>
 ): Int {
@@ -798,7 +789,7 @@ private fun parseCodeBlock(
 }
 
 private fun parseBlockquote(
-    lines: List<String>,
+    lines: ImmutableList<String>,
     startIndex: Int,
     blocks: MutableList<MarkdownBlock>
 ): Int {
@@ -818,7 +809,7 @@ private fun parseBlockquote(
 }
 
 private fun parseUnorderedList(
-    lines: List<String>,
+    lines: ImmutableList<String>,
     startIndex: Int,
     blocks: MutableList<MarkdownBlock>
 ): Int {
@@ -833,12 +824,12 @@ private fun parseUnorderedList(
             break
         }
     }
-    blocks.add(MarkdownBlock.UnorderedList(items))
+    blocks.add(MarkdownBlock.UnorderedList(items.toImmutableList()))
     return i
 }
 
 private fun parseOrderedList(
-    lines: List<String>,
+    lines: ImmutableList<String>,
     startIndex: Int,
     blocks: MutableList<MarkdownBlock>
 ): Int {
@@ -853,12 +844,12 @@ private fun parseOrderedList(
             break
         }
     }
-    blocks.add(MarkdownBlock.OrderedList(items))
+    blocks.add(MarkdownBlock.OrderedList(items.toImmutableList()))
     return i
 }
 
 private fun parseParagraph(
-    lines: List<String>,
+    lines: ImmutableList<String>,
     startIndex: Int,
     blocks: MutableList<MarkdownBlock>
 ): Int {
@@ -888,7 +879,7 @@ private fun parseParagraph(
 }
 
 private fun isTableStart(
-    lines: List<String>,
+    lines: ImmutableList<String>,
     index: Int
 ): Boolean {
     if (index + 1 >= lines.size) return false
@@ -899,7 +890,7 @@ private fun isTableStart(
 }
 
 private fun parseTable(
-    lines: List<String>,
+    lines: ImmutableList<String>,
     startIndex: Int,
     blocks: MutableList<MarkdownBlock>
 ): Int {
@@ -912,21 +903,22 @@ private fun parseTable(
     val alignments = parseTableAlignments(separatorLine)
     i++
 
-    val rows = mutableListOf<List<String>>()
-    while (i < lines.size) {
-        val rowLine = lines[i].trimEnd()
-        if (!tableRowRegex.matches(rowLine)) break
-        val cells = parseTableRow(rowLine)
-        val paddedCells = if (cells.size < headers.size) {
-            cells + List(headers.size - cells.size) { "" }
-        } else {
-            cells.take(headers.size)
+    val rows = buildList {
+        while (i < lines.size) {
+            val rowLine = lines[i].trimEnd()
+            if (!tableRowRegex.matches(rowLine)) break
+            val cells = parseTableRow(rowLine)
+            val paddedCells = if (cells.size < headers.size) {
+                cells + List(headers.size - cells.size) { "" }
+            } else {
+                cells.take(headers.size)
+            }
+            add(paddedCells.toImmutableList())
+            i++
         }
-        rows.add(paddedCells)
-        i++
-    }
+    }.toImmutableList()
 
-    blocks.add(MarkdownBlock.Table(headers, alignments, rows))
+    blocks.add(MarkdownBlock.Table(headers.toImmutableList(), alignments.toImmutableList(), rows))
     return i
 }
 

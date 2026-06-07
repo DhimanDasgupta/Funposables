@@ -23,7 +23,6 @@ import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,11 +36,8 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkInteractionListener
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.dhimandasgupta.funposables.ui.utils.RenderBlock
 import com.dhimandasgupta.funposables.ui.utils.RichTextHelperParams
-import com.dhimandasgupta.funposables.ui.utils.WFMarkdownStyle
 import com.dhimandasgupta.funposables.ui.utils.convertToAnnotatedString
-import com.dhimandasgupta.funposables.ui.utils.streamMarkdownBlocks
 import kotlinx.coroutines.launch
 
 @Composable
@@ -90,91 +86,13 @@ fun RichHTMLText(
         Or use <strong><i><a href="mailto:support@example.com">email support</a></i>.</strong>
         """.trimIndent()
 
-    val markdown = """
-        # Markdown Support
-        This is a **bold** and *italic* text. 
-        You can also have ***bold and italic***.
-        ~~Strikethrough~~ is also supported.
-        `Inline code` for developers.
-        
-        [JetBrains](https://www.jetbrains.com) link.
-        
-        Nested styles: **bold with *italic* inside** and *italic with **bold** inside*.
-        
-        - List item 1
-        - List item 2 with `code`
-        - List item 3
-        
-        1. Ordered item 1
-        2. Ordered item 2
-        
-        > Blockquotes are also nice!
-        
-        ---
-        
-        Contact: [Email](mailto:support@example.com) or [Phone](tel:+18006624357) or [Phone](tel:1-800-GOT-JUNK).
-        
-        # Heading 1 (\#)
-        ## Heading 2 (\#\#)
-        ### Heading 3 (\#\#\#)
-        #### Heading 4 (\#\#\#\#)
-        ##### Heading 5 (\#\#\#\#\#)
-        ###### Heading 6 (\#\#\#\#\#\#)
-
-        ---
-        *Alternative Heading 1*
-        ===
-
-        *Alternative Heading 2*
-        ---
-
-        ---
-        ***
-        ___
-
-        *This text is italicized using asterisks.*
-        _This text is italicized using underscores._
-
-        **This text is bolded using double asterisks.**
-        __This text is bolded using double underscores.__
-
-        ***This text is bold and italicized using triple asterisks.***
-        ~~This text has a strikethrough applied.~~
-
-        > This is a standard blockquote.
-        >> This is a nested blockquote block.
-
-        * Unordered list item 1
-        - Unordered list item 2
-        + Unordered list item 3
-
-        1. Ordered list item 1
-        2. Ordered list item 2
-           1. Nested ordered item (indented 3 spaces or 1 tab)
-           
-        - [x] Completed task list item
-        - [ ] Incomplete task list item
-
-        Here is some inline code: `val x = 10`
-
-        ``kotlin
-        // This is a fenced code block with syntax highlighting
-        fun main() {
-            println("Hello World")
-        }
-        ``
-    """.trimIndent()
-
     val linkColor = colorScheme.primary
     val customLinkColor = colorScheme.error
     var annotatedString by remember { mutableStateOf(AnnotatedString("")) }
 
-    // Streaming Markdown State
-    val markdownBlocks by streamMarkdownBlocks(markdown).collectAsState(initial = emptyList())
-
     val scope = rememberCoroutineScope()
 
-    LaunchedEffect(html, markdown) {
+    LaunchedEffect(html) {
         annotatedString = html.convertToAnnotatedString(
             params = RichTextHelperParams(
                 linkColor = linkColor,
@@ -251,19 +169,6 @@ fun RichHTMLText(
         )
 
         Spacer(modifier = Modifier.padding(128.dp))
-
-        Text(
-            text = "Markdown Content:",
-            style = typography.titleMedium,
-            color = colorScheme.onSurface
-        )
-
-        WFMarkdownStyle(
-            bodyStyle = typography.labelMedium.copy(color = colorScheme.onSurface),
-            linkColor = linkColor,
-        ).let { style ->
-            markdownBlocks.forEach { block -> RenderBlock(block, style) }
-        }
 
         Box(
             modifier = Modifier

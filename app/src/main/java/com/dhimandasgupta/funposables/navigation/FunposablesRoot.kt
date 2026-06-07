@@ -114,8 +114,8 @@ fun FunposablesRoot(
                         navigateToBackgroundGrid = {
                             backStack.add(BackgroundGridNavKey)
                         },
-                        navigateToRichText = {
-                            backStack.add(RichTextNavKey)
+                        navigateToRichTextHTML = {
+                            backStack.add(RichTextHTMLNavKey)
                         }
                     )
                 }
@@ -210,7 +210,7 @@ fun FunposablesRoot(
                         modifier = modifier
                     )
                 }
-                entry<RichTextNavKey>(
+                entry<RichTextHTMLNavKey>(
                     metadata = ListDetailSceneStrategy.detailPane()
                 ) {
                     RichText(

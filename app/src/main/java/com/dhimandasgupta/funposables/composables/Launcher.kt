@@ -47,7 +47,7 @@ fun Launcher(
     navigateToCircularLayout: () -> Unit,
     navigateToOrbitalLoader: () -> Unit,
     navigateToBackgroundGrid: () -> Unit,
-    navigateToRichText: () -> Unit
+    navigateToRichTextHTML: () -> Unit
 ) {
     val cardModifier = Modifier
         .padding(horizontal = 16.dp)
@@ -243,10 +243,10 @@ fun Launcher(
 
         OutlinedCard(
             modifier = cardModifier,
-            onClick = navigateToRichText
+            onClick = navigateToRichTextHTML
         ) {
             Text(
-                "Rich Text",
+                "Rich Text (HTML)",
                 modifier = textModifier,
                 color = colorScheme.error
             )
@@ -283,7 +283,7 @@ private fun LauncherPreview() {
             navigateToCircularLayout = {},
             navigateToOrbitalLoader = {},
             navigateToBackgroundGrid = {},
-            navigateToRichText = {}
+            navigateToRichTextHTML = {}
         )
     }
 }

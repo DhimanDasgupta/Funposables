@@ -28,7 +28,8 @@ import com.dhimandasgupta.funposables.composables.KenBurnsEffectPane
 import com.dhimandasgupta.funposables.composables.Launcher
 import com.dhimandasgupta.funposables.composables.Mandelbrot
 import com.dhimandasgupta.funposables.composables.OrbitalLoader
-import com.dhimandasgupta.funposables.composables.RichText
+import com.dhimandasgupta.funposables.composables.RichHTMLText
+import com.dhimandasgupta.funposables.composables.RichTextMarkdownText
 import com.dhimandasgupta.funposables.composables.SearchExpander
 import com.dhimandasgupta.funposables.di.AppGraph
 import com.freeletics.flowredux2.produceStateMachine
@@ -116,6 +117,9 @@ fun FunposablesRoot(
                         },
                         navigateToRichTextHTML = {
                             backStack.add(RichTextHTMLNavKey)
+                        },
+                        navigateToRichTextMarkdown = {
+                            backStack.add(RichTextMarkdownNavKey)
                         }
                     )
                 }
@@ -213,7 +217,14 @@ fun FunposablesRoot(
                 entry<RichTextHTMLNavKey>(
                     metadata = ListDetailSceneStrategy.detailPane()
                 ) {
-                    RichText(
+                    RichHTMLText(
+                        modifier = modifier
+                    )
+                }
+                entry<RichTextMarkdownNavKey>(
+                    metadata = ListDetailSceneStrategy.detailPane()
+                ) {
+                    RichTextMarkdownText(
                         modifier = modifier
                     )
                 }

@@ -48,5 +48,3 @@ data object RichTextHTMLNavKey: NavKey
 @Serializable
 data object RichTextMarkdownNavKey: NavKey
 
-@Serializable
-data object RichTextNavKey: NavKey

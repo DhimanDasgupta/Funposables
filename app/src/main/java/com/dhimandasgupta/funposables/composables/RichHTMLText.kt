@@ -45,7 +45,7 @@ import com.dhimandasgupta.funposables.ui.utils.streamMarkdownBlocks
 import kotlinx.coroutines.launch
 
 @Composable
-fun RichText(
+fun RichHTMLText(
     modifier: Modifier
 ) {
     val context = LocalContext.current

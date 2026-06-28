@@ -34,269 +34,269 @@ import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 @Composable
 fun Launcher(
-    modifier: Modifier = Modifier,
-    navigateToExpandableCollapsableItems: () -> Unit,
-    navigateToFirstLineAlignedCheckBox: () -> Unit,
-    navigateToDragOrTransformBox: () -> Unit,
-    navigateToKenBurnsEffect: () -> Unit,
-    navigateToSearchExpander: () -> Unit,
-    navigateToCurvedScreen: () -> Unit,
-    navigateToCounter: () -> Unit,
-    navigateToToJulia: () -> Unit,
-    navigateToMandelbrot: () -> Unit,
-    navigateToCircularLayout: () -> Unit,
-    navigateToOrbitalLoader: () -> Unit,
-    navigateToBackgroundGrid: () -> Unit,
-    navigateToRichTextHTML: () -> Unit,
-    navigateToRichTextMarkdown: () -> Unit
+  modifier: Modifier = Modifier,
+  navigateToExpandableCollapsableItems: () -> Unit,
+  navigateToFirstLineAlignedCheckBox: () -> Unit,
+  navigateToDragOrTransformBox: () -> Unit,
+  navigateToKenBurnsEffect: () -> Unit,
+  navigateToSearchExpander: () -> Unit,
+  navigateToCurvedScreen: () -> Unit,
+  navigateToCounter: () -> Unit,
+  navigateToToJulia: () -> Unit,
+  navigateToMandelbrot: () -> Unit,
+  navigateToCircularLayout: () -> Unit,
+  navigateToOrbitalLoader: () -> Unit,
+  navigateToBackgroundGrid: () -> Unit,
+  navigateToRichTextHTML: () -> Unit,
+  navigateToRichTextMarkdown: () -> Unit,
 ) {
-    val cardModifier = Modifier
-        .padding(horizontal = 16.dp)
-        .fillMaxWidth()
-        .height(56.dp)
+  val cardModifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(56.dp)
 
-    val textModifier = Modifier
-        .padding(16.dp)
-        .blur(0.45.dp)
+  val textModifier = Modifier.padding(16.dp).blur(0.45.dp)
 
-    val scrollState = rememberScrollState()
-    
-    Column(
-        modifier = modifier
-            .padding(
-                start = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateStartPadding(LayoutDirection.Ltr),
-                /*top = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.statusBars)
-                    .asPaddingValues()
-                    .calculateTopPadding(),*/
-                end = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateEndPadding(LayoutDirection.Ltr),
-                /*bottom = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateBottomPadding()*/
-            )
-            .fillMaxSize()
-            .verticalScrollbarForColumn(
-                scrollState = scrollState,
-                width = 2.dp,
-                thumbWidth = 4.dp,
-                minThumbHeight = 32.dp,
-            )
-            .bottomFadeForColumn(
-                scrollState = scrollState,
-                heightPercentage = 0.25f,
-                color = colorScheme.primary,
-                maxAlpha = 0.8f,
-            )
-            .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(space = 8.dp)
+  val scrollState = rememberScrollState()
+
+  Column(
+    modifier =
+      modifier
+        .padding(
+          start =
+            WindowInsets.displayCutout
+              .union(insets = WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateStartPadding(LayoutDirection.Ltr),
+          /*top = WindowInsets
+          .displayCutout.union(insets = WindowInsets.statusBars)
+          .asPaddingValues()
+          .calculateTopPadding(),*/
+          end =
+            WindowInsets.displayCutout
+              .union(insets = WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateEndPadding(LayoutDirection.Ltr),
+          /*bottom = WindowInsets
+          .displayCutout.union(insets = WindowInsets.navigationBars)
+          .asPaddingValues()
+          .calculateBottomPadding()*/
+        )
+        .fillMaxSize()
+        .verticalScrollbarForColumn(
+          scrollState = scrollState,
+          width = 2.dp,
+          thumbWidth = 4.dp,
+          minThumbHeight = 32.dp,
+        )
+        .bottomFadeForColumn(
+          scrollState = scrollState,
+          heightPercentage = 0.25f,
+          color = colorScheme.primary,
+          maxAlpha = 0.8f,
+        )
+        .verticalScroll(scrollState),
+    verticalArrangement = Arrangement.spacedBy(space = 8.dp),
+  ) {
+    Spacer(
+      modifier =
+        Modifier.fillMaxWidth()
+          .height(
+            height =
+              WindowInsets.displayCutout
+                .union(insets = WindowInsets.statusBars)
+                .asPaddingValues()
+                .calculateTopPadding() + 8.dp
+          )
+    )
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToExpandableCollapsableItems,
     ) {
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(
-                    height = WindowInsets
-                        .displayCutout.union(insets = WindowInsets.statusBars)
-                        .asPaddingValues()
-                        .calculateTopPadding() + 8.dp
-                )
-        )
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToExpandableCollapsableItems
-        ) {
-            Text(
-                "Expand Collapsable Items",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToFirstLineAlignedCheckBox
-        ) {
-            Text(
-                "Checkbox aligned to First line of the text",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToDragOrTransformBox
-        ) {
-            Text(
-                "Transformable Box",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToKenBurnsEffect
-        ) {
-            Text(
-                "Kenburns Effect",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToSearchExpander
-        ) {
-            Text(
-                "Search Expander",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToCurvedScreen
-        ) {
-            Text(
-                "Curved Screen",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToCounter
-        ) {
-            Text(
-                "Counter with FlowRedux2",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            OutlinedCard(
-                modifier = cardModifier,
-                onClick = navigateToToJulia
-            ) {
-                Text(
-                    "Julia",
-                    modifier = textModifier,
-                    color = colorScheme.error
-                )
-            }
-
-            OutlinedCard(
-                modifier = cardModifier,
-                onClick = navigateToMandelbrot
-            ) {
-                Text(
-                    "Mandelbrot",
-                    modifier = textModifier,
-                    color = colorScheme.error
-                )
-            }
-
-            OutlinedCard(
-                modifier = cardModifier,
-                onClick = navigateToCircularLayout
-            ) {
-                Text(
-                    "Circular Layout",
-                    modifier = textModifier,
-                    color = colorScheme.error
-                )
-            }
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToOrbitalLoader
-        ) {
-            Text(
-                "Orbital Loader",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToBackgroundGrid
-        ) {
-            Text(
-                "Background Grid",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToRichTextHTML
-        ) {
-            Text(
-                "Rich Text (HTML)",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        OutlinedCard(
-            modifier = cardModifier,
-            onClick = navigateToRichTextMarkdown
-        ) {
-            Text(
-                "Rich Text (Markdown)",
-                modifier = textModifier,
-                color = colorScheme.error
-            )
-        }
-
-        Spacer(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(
-                    height = WindowInsets
-                        .displayCutout.union(insets = WindowInsets.navigationBars)
-                        .asPaddingValues()
-                        .calculateBottomPadding() + 8.dp
-                )
-        )
+      Text(
+        "Expand Collapsable Items",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
     }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToFirstLineAlignedCheckBox,
+    ) {
+      Text(
+        "Checkbox aligned to First line of the text",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToDragOrTransformBox,
+    ) {
+      Text(
+        "Transformable Box",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToKenBurnsEffect,
+    ) {
+      Text(
+        "Kenburns Effect",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToSearchExpander,
+    ) {
+      Text(
+        "Search Expander",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToCurvedScreen,
+    ) {
+      Text(
+        "Curved Screen",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToCounter,
+    ) {
+      Text(
+        "Counter with FlowRedux2",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+      OutlinedCard(
+        modifier = cardModifier,
+        onClick = navigateToToJulia,
+      ) {
+        Text(
+          "Julia",
+          modifier = textModifier,
+          color = colorScheme.error,
+        )
+      }
+
+      OutlinedCard(
+        modifier = cardModifier,
+        onClick = navigateToMandelbrot,
+      ) {
+        Text(
+          "Mandelbrot",
+          modifier = textModifier,
+          color = colorScheme.error,
+        )
+      }
+
+      OutlinedCard(
+        modifier = cardModifier,
+        onClick = navigateToCircularLayout,
+      ) {
+        Text(
+          "Circular Layout",
+          modifier = textModifier,
+          color = colorScheme.error,
+        )
+      }
+    }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToOrbitalLoader,
+    ) {
+      Text(
+        "Orbital Loader",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToBackgroundGrid,
+    ) {
+      Text(
+        "Background Grid",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToRichTextHTML,
+    ) {
+      Text(
+        "Rich Text (HTML)",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToRichTextMarkdown,
+    ) {
+      Text(
+        "Rich Text (Markdown)",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
+    Spacer(
+      modifier =
+        Modifier.fillMaxWidth()
+          .height(
+            height =
+              WindowInsets.displayCutout
+                .union(insets = WindowInsets.navigationBars)
+                .asPaddingValues()
+                .calculateBottomPadding() + 8.dp
+          )
+    )
+  }
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 private fun LauncherPreview() {
-    FunposablesTheme {
-        Launcher(
-            navigateToExpandableCollapsableItems = {},
-            navigateToFirstLineAlignedCheckBox = {},
-            navigateToDragOrTransformBox = {},
-            navigateToKenBurnsEffect = {},
-            navigateToSearchExpander = {},
-            navigateToCurvedScreen = {},
-            navigateToCounter = {},
-            navigateToToJulia = {},
-            navigateToMandelbrot = {},
-            navigateToCircularLayout = {},
-            navigateToOrbitalLoader = {},
-            navigateToBackgroundGrid = {},
-            navigateToRichTextHTML = {},
-            navigateToRichTextMarkdown = {}
-        )
-    }
+  FunposablesTheme {
+    Launcher(
+      navigateToExpandableCollapsableItems = {},
+      navigateToFirstLineAlignedCheckBox = {},
+      navigateToDragOrTransformBox = {},
+      navigateToKenBurnsEffect = {},
+      navigateToSearchExpander = {},
+      navigateToCurvedScreen = {},
+      navigateToCounter = {},
+      navigateToToJulia = {},
+      navigateToMandelbrot = {},
+      navigateToCircularLayout = {},
+      navigateToOrbitalLoader = {},
+      navigateToBackgroundGrid = {},
+      navigateToRichTextHTML = {},
+      navigateToRichTextMarkdown = {},
+    )
+  }
 }

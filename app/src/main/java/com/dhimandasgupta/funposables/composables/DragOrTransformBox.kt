@@ -45,139 +45,144 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 @Composable
-fun DragOrTransformBox(
-    modifier: Modifier = Modifier
-) {
-    Box(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(
-                start = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateStartPadding(
-                        LayoutDirection.Ltr
-                    ),
-                top = WindowInsets.displayCutout.union(WindowInsets.statusBars).asPaddingValues()
-                    .calculateTopPadding(),
-                end = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateEndPadding(
-                        LayoutDirection.Ltr
-                    ),
-                bottom = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateBottomPadding()
-            ),
-        contentAlignment = Alignment.Center
-    ) {
-        var offset by remember { mutableStateOf(Offset.Zero) }
-        var scale by remember { mutableFloatStateOf(1f) }
-        var rotation by remember { mutableFloatStateOf(0f) }
+fun DragOrTransformBox(modifier: Modifier = Modifier) {
+  Box(
+    modifier =
+      modifier
+        .fillMaxSize()
+        .padding(
+          start =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateStartPadding(LayoutDirection.Ltr),
+          top =
+            WindowInsets.displayCutout
+              .union(WindowInsets.statusBars)
+              .asPaddingValues()
+              .calculateTopPadding(),
+          end =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateEndPadding(LayoutDirection.Ltr),
+          bottom =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateBottomPadding(),
+        ),
+    contentAlignment = Alignment.Center,
+  ) {
+    var offset by remember { mutableStateOf(Offset.Zero) }
+    var scale by remember { mutableFloatStateOf(1f) }
+    var rotation by remember { mutableFloatStateOf(0f) }
 
-        DragOrTransformBox(
-            modifier = Modifier.fillMaxSize(),
-            onDrag = { delta ->
-                offset += delta
-            },
-            onTransform = { zoom, rot, pan ->
-                scale *= zoom
-                rotation += rot
-                offset += pan
-            }
-        ) {
-            Box(
-                modifier = Modifier
-                    .offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
-                    .graphicsLayer(
-                        scaleX = scale,
-                        scaleY = scale,
-                        rotationZ = rotation
-                    )
-                    .size(150.dp)
-                    .background(Color.Red, RoundedCornerShape(12.dp))
+    DragOrTransformBox(
+      modifier = Modifier.fillMaxSize(),
+      onDrag = { delta ->
+        offset += delta
+      },
+      onTransform = { zoom, rot, pan ->
+        scale *= zoom
+        rotation += rot
+        offset += pan
+      },
+    ) {
+      Box(
+        modifier =
+          Modifier.offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
+            .graphicsLayer(
+              scaleX = scale,
+              scaleY = scale,
+              rotationZ = rotation,
             )
-        }
+            .size(150.dp)
+            .background(Color.Red, RoundedCornerShape(12.dp))
+      )
     }
+  }
 }
 
 @Composable
 private fun DragOrTransformBox(
-    modifier: Modifier = Modifier,
-    onDrag: (Offset) -> Unit = {},
-    onTransform: (zoom: Float, rotation: Float, pan: Offset) -> Unit = { _, _, _ -> },
-    content: @Composable BoxScope.() -> Unit
+  modifier: Modifier = Modifier,
+  onDrag: (Offset) -> Unit = {},
+  onTransform: (zoom: Float, rotation: Float, pan: Offset) -> Unit = { _, _, _ -> },
+  content: @Composable BoxScope.() -> Unit,
 ) {
-    var transformMode by remember { mutableStateOf(false) }
+  var transformMode by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = modifier.pointerInput(Unit) {
-            val viewConfig = viewConfiguration
+  Box(
+    modifier =
+      modifier.pointerInput(Unit) {
+        val viewConfig = viewConfiguration
 
-            awaitEachGesture {
-                var pastTouchSlop = false
-                var zoom = 1f
-                var rotation = 0f
-                var pan = Offset.Zero
+        awaitEachGesture {
+          var pastTouchSlop = false
+          var zoom = 1f
+          var rotation = 0f
+          var pan = Offset.Zero
 
-                do {
-                    //Explicitly pass the event phase
-                    val event = awaitPointerEvent(PointerEventPass.Main)
-                    val pressed = event.changes.any { it.pressed }
+          do {
+            // Explicitly pass the event phase
+            val event = awaitPointerEvent(PointerEventPass.Main)
+            val pressed = event.changes.any { it.pressed }
 
-                    if (event.changes.size > 1) {
-                        transformMode = true
-                    }
-
-                    if (transformMode && event.changes.size > 1) {
-                        // Multi-touch transform mode
-                        val zoomChange = event.calculateZoom()
-                        val rotationChange = event.calculateRotation()
-                        val panChange = event.calculatePan()
-
-                        if (!pastTouchSlop) {
-                            zoom *= zoomChange
-                            rotation += rotationChange
-                            pan += panChange
-
-                            val zoomMotion = abs(1 - zoom)
-                            val rotationMotion = abs(rotation * PI.toFloat() / 180f)
-                            val panMotion = pan.getDistance()
-
-                            pastTouchSlop =
-                                zoomMotion > viewConfig.touchSlop ||
-                                        rotationMotion > viewConfig.touchSlop ||
-                                        panMotion > viewConfig.touchSlop
-                        }
-
-                        if (pastTouchSlop) {
-                            onTransform(zoomChange, rotationChange, panChange)
-                            event.changes.forEach { it.consume() }
-                        }
-                    } else if (!transformMode && event.changes.size == 1) {
-                        //Single-finger drag
-                        val change = event.changes.first()
-                        val dragAmount = change.positionChange()
-
-                        if (dragAmount != Offset.Zero) {
-                            onDrag(dragAmount)
-                            change.consume()
-                        }
-                    }
-
-                    if (!pressed) transformMode = false
-                } while (pressed)
+            if (event.changes.size > 1) {
+              transformMode = true
             }
+
+            if (transformMode && event.changes.size > 1) {
+              // Multi-touch transform mode
+              val zoomChange = event.calculateZoom()
+              val rotationChange = event.calculateRotation()
+              val panChange = event.calculatePan()
+
+              if (!pastTouchSlop) {
+                zoom *= zoomChange
+                rotation += rotationChange
+                pan += panChange
+
+                val zoomMotion = abs(1 - zoom)
+                val rotationMotion = abs(rotation * PI.toFloat() / 180f)
+                val panMotion = pan.getDistance()
+
+                pastTouchSlop =
+                  zoomMotion > viewConfig.touchSlop ||
+                    rotationMotion > viewConfig.touchSlop ||
+                    panMotion > viewConfig.touchSlop
+              }
+
+              if (pastTouchSlop) {
+                onTransform(zoomChange, rotationChange, panChange)
+                event.changes.forEach { it.consume() }
+              }
+            } else if (!transformMode && event.changes.size == 1) {
+              // Single-finger drag
+              val change = event.changes.first()
+              val dragAmount = change.positionChange()
+
+              if (dragAmount != Offset.Zero) {
+                onDrag(dragAmount)
+                change.consume()
+              }
+            }
+
+            if (!pressed) transformMode = false
+          } while (pressed)
         }
-    ) {
-        content()
-    }
+      }
+  ) {
+    content()
+  }
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 private fun DragOrTransformBoxPreview() {
-    FunposablesTheme {
-        DragOrTransformBox()
-    }
+  FunposablesTheme {
+    DragOrTransformBox()
+  }
 }

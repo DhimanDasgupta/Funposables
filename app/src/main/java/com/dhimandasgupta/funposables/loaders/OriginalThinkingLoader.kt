@@ -23,89 +23,105 @@ import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
 
-/**
- * From https://composeinternals.com/composeloaders
- * */
+/** From https://composeinternals.com/composeloaders */
 @Preview
 @Composable
 fun OriginalThinkingLoader(modifier: Modifier = Modifier) {
-    val infiniteTransition = rememberInfiniteTransition(label = "loader")
+  val infiniteTransition = rememberInfiniteTransition(label = "loader")
 
-    val progress by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 4600, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
+  val progress by
+    infiniteTransition.animateFloat(
+      initialValue = 0f,
+      targetValue = 1f,
+      animationSpec =
+        infiniteRepeatable(
+          animation = tween(durationMillis = 4600, easing = LinearEasing),
+          repeatMode = RepeatMode.Restart,
         ),
-        label = "progress"
+      label = "progress",
     )
 
-    val pulse by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 4200, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
+  val pulse by
+    infiniteTransition.animateFloat(
+      initialValue = 0f,
+      targetValue = 1f,
+      animationSpec =
+        infiniteRepeatable(
+          animation = tween(durationMillis = 4200, easing = LinearEasing),
+          repeatMode = RepeatMode.Restart,
         ),
-        label = "pulse"
+      label = "pulse",
     )
 
-    val rotation by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = -360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 28000, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
+  val rotation by
+    infiniteTransition.animateFloat(
+      initialValue = 0f,
+      targetValue = -360f,
+      animationSpec =
+        infiniteRepeatable(
+          animation = tween(durationMillis = 28000, easing = LinearEasing),
+          repeatMode = RepeatMode.Restart,
         ),
-        label = "rotation"
+      label = "rotation",
     )
 
-    Canvas(modifier = modifier.size(200.dp).graphicsLayer { rotationZ = rotation }) {
-        val baseRadius = 7.0f
-        val detailAmplitude = 3.0f
-        val petalCount = 7
-        val curveScale = 3.9f
-        val particleCount = 64
-        val trailSpan = 0.38f
+  Canvas(modifier = modifier.size(200.dp).graphicsLayer { rotationZ = rotation }) {
+    val baseRadius = 7.0f
+    val detailAmplitude = 3.0f
+    val petalCount = 7
+    val curveScale = 3.9f
+    val particleCount = 64
+    val trailSpan = 0.38f
 
-        val pulseAngle = pulse * TWO_PI + 0.55f
-        val detailScale = 0.52f + ((sin(pulseAngle) + 1f) / 2f) * 0.48f
+    val pulseAngle = pulse * TWO_PI + 0.55f
+    val detailScale = 0.52f + ((sin(pulseAngle) + 1f) / 2f) * 0.48f
 
-        // Draw trail path (faint)
-        val path = Path()
-        for (i in 0..480) {
-            val t = (i / 480f) * TWO_PI
-            val x =
-                center.x + (baseRadius * cos(t) - detailAmplitude * detailScale * cos(petalCount * t)) * curveScale * (size.width / 200f)
-            val y =
-                center.y + (baseRadius * sin(t) - detailAmplitude * detailScale * sin(petalCount * t)) * curveScale * (size.height / 200f)
-            if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-        }
-        drawPath(
-            path,
-            color = Color.White.copy(alpha = 0.1f),
-            style = Stroke(width = 5.5f.dp.toPx(), cap = StrokeCap.Round)
-        )
-
-        // Draw particles
-        for (i in 0 until particleCount) {
-            val tailOffset = i.toFloat() / (particleCount - 1)
-            val p = ((progress - tailOffset * trailSpan) % 1f + 1f) % 1f
-            val t = p * TWO_PI
-            val px =
-                center.x + (baseRadius * cos(t) - detailAmplitude * detailScale * cos(petalCount * t)) * curveScale * (size.width / 200f)
-            val py =
-                center.y + (baseRadius * sin(t) - detailAmplitude * detailScale * sin(petalCount * t)) * curveScale * (size.height / 200f)
-            val fade = (1f - tailOffset).pow(0.56f)
-            val radius = (0.9f + fade * 2.7f).dp.toPx()
-            drawCircle(
-                Color.White.copy(alpha = 0.04f + fade * 0.96f),
-                radius = radius,
-                center = Offset(px, py)
-            )
-        }
+    // Draw trail path (faint)
+    val path = Path()
+    for (i in 0..480) {
+      val t = (i / 480f) * TWO_PI
+      val x =
+        center.x +
+          (baseRadius * cos(t) - detailAmplitude * detailScale * cos(petalCount * t)) *
+            curveScale *
+            (size.width / 200f)
+      val y =
+        center.y +
+          (baseRadius * sin(t) - detailAmplitude * detailScale * sin(petalCount * t)) *
+            curveScale *
+            (size.height / 200f)
+      if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
     }
+    drawPath(
+      path,
+      color = Color.White.copy(alpha = 0.1f),
+      style = Stroke(width = 5.5f.dp.toPx(), cap = StrokeCap.Round),
+    )
+
+    // Draw particles
+    for (i in 0 until particleCount) {
+      val tailOffset = i.toFloat() / (particleCount - 1)
+      val p = ((progress - tailOffset * trailSpan) % 1f + 1f) % 1f
+      val t = p * TWO_PI
+      val px =
+        center.x +
+          (baseRadius * cos(t) - detailAmplitude * detailScale * cos(petalCount * t)) *
+            curveScale *
+            (size.width / 200f)
+      val py =
+        center.y +
+          (baseRadius * sin(t) - detailAmplitude * detailScale * sin(petalCount * t)) *
+            curveScale *
+            (size.height / 200f)
+      val fade = (1f - tailOffset).pow(0.56f)
+      val radius = (0.9f + fade * 2.7f).dp.toPx()
+      drawCircle(
+        Color.White.copy(alpha = 0.04f + fade * 0.96f),
+        radius = radius,
+        center = Offset(px, py),
+      )
+    }
+  }
 }
 
 private const val TWO_PI = 2f * Math.PI.toFloat()

@@ -6,5 +6,5 @@ import dev.zacsweers.metro.DependencyGraph
 
 @DependencyGraph(AppScope::class)
 interface AppGraph {
-    val counterStateMachineFactory: CounterStateMachineFactory
+  val counterStateMachineFactory: CounterStateMachineFactory
 }

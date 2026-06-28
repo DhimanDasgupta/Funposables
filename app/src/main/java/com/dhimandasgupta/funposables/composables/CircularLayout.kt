@@ -30,102 +30,98 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun CircularLayoutPane(
-    modifier: Modifier = Modifier
-) {
-    val infiniteTransition = rememberInfiniteTransition("rotation")
+fun CircularLayoutPane(modifier: Modifier = Modifier) {
+  val infiniteTransition = rememberInfiniteTransition("rotation")
 
-    val angle by infiniteTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = 360f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 10000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse
+  val angle by
+    infiniteTransition.animateFloat(
+      initialValue = 0f,
+      targetValue = 360f,
+      animationSpec =
+        infiniteRepeatable(
+          animation = tween(durationMillis = 10000, easing = FastOutSlowInEasing),
+          repeatMode = RepeatMode.Reverse,
         ),
-        label = "rotation"
+      label = "rotation",
     )
 
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularLayout(
-            modifier = modifier.graphicsLayer {
-                rotationZ = angle
-            }
-        ) {
-            repeat(10) { index ->
-                Box(
-                    modifier = Modifier
-                        .size(50.dp)
-                        .clip(CircleShape)
-                        .background(colorScheme.onPrimary)
-                        .graphicsLayer {
-                            alpha = 0.75f
-                        },
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = index.toString(),
-                        style = typography.bodySmall,
-                        modifier = Modifier.graphicsLayer {
-                            /**
-                             * 0 if the text also needs to rotate or -angle if the text always be straight
-                             * */
-                            rotationZ = -angle
-                        }
-                    )
-                }
-            }
+  Box(
+    modifier = modifier.fillMaxSize(),
+    contentAlignment = Alignment.Center,
+  ) {
+    CircularLayout(
+      modifier =
+        modifier.graphicsLayer {
+          rotationZ = angle
         }
+    ) {
+      repeat(10) { index ->
+        Box(
+          modifier =
+            Modifier.size(50.dp).clip(CircleShape).background(colorScheme.onPrimary).graphicsLayer {
+              alpha = 0.75f
+            },
+          contentAlignment = Alignment.Center,
+        ) {
+          Text(
+            text = index.toString(),
+            style = typography.bodySmall,
+            modifier =
+              Modifier.graphicsLayer {
+                /** 0 if the text also needs to rotate or -angle if the text always be straight */
+                rotationZ = -angle
+              },
+          )
+        }
+      }
     }
-
+  }
 }
 
 @Composable
 private fun CircularLayout(
-    modifier: Modifier = Modifier,
-    radius: Dp = 100.dp,
-    startAngle: Float = 0f,
-    content: @Composable () -> Unit
+  modifier: Modifier = Modifier,
+  radius: Dp = 100.dp,
+  startAngle: Float = 0f,
+  content: @Composable () -> Unit,
 ) {
-    val density = LocalDensity.current
-    Layout(
-        content = content,
-        modifier = modifier 
-    ) { messarables, constraints ->
-        val radiusInPixel = with(density) { radius.toPx() }
-        val placesables = messarables.map { messarable ->
-            messarable.measure(constraints.copy(minWidth = 0, minHeight = 0))
-        }
-
-        val maxChildWidth = placesables.maxOf { it.width }
-        val maxChildHeight = placesables.maxOf { it.height }
-
-        val desiredWith = (2 * radiusInPixel + maxChildWidth).toInt()
-        val desiredHeight = (2 * radiusInPixel + maxChildHeight).toInt()
-
-        val layoutWidth = constraints.constrainWidth(desiredWith)
-        val layoutHeight = constraints.constrainHeight(desiredHeight)
-
-        val centerX = layoutWidth / 2f
-        val centerY = layoutHeight / 2f
-
-        val angleBetween = 360f / placesables.size
-
-        layout(width = layoutWidth, height = layoutHeight) {
-            placesables.forEachIndexed { index, placeable ->
-                val angle = startAngle + (index * angleBetween)
-                val angleInRadians = Math.toRadians(angle.toDouble())
-
-                val x = centerX + (radiusInPixel * cos(angleInRadians)).toFloat() - placeable.width / 2
-                val y = centerY + (radiusInPixel * sin(angleInRadians)).toFloat() - placeable.height / 2
-
-                placeable.placeRelative(
-                    x = x.toInt(),
-                    y = y.toInt()
-                )
-            }
-        }
+  val density = LocalDensity.current
+  Layout(
+    content = content,
+    modifier = modifier,
+  ) { messarables, constraints ->
+    val radiusInPixel = with(density) { radius.toPx() }
+    val placesables = messarables.map { messarable ->
+      messarable.measure(constraints.copy(minWidth = 0, minHeight = 0))
     }
+
+    val maxChildWidth = placesables.maxOf { it.width }
+    val maxChildHeight = placesables.maxOf { it.height }
+
+    val desiredWith = (2 * radiusInPixel + maxChildWidth).toInt()
+    val desiredHeight = (2 * radiusInPixel + maxChildHeight).toInt()
+
+    val layoutWidth = constraints.constrainWidth(desiredWith)
+    val layoutHeight = constraints.constrainHeight(desiredHeight)
+
+    val centerX = layoutWidth / 2f
+    val centerY = layoutHeight / 2f
+
+    val angleBetween = 360f / placesables.size
+
+    layout(width = layoutWidth, height = layoutHeight) {
+      placesables.forEachIndexed { index, placeable ->
+        val angle = startAngle + (index * angleBetween)
+        val angleInRadians = Math.toRadians(angle.toDouble())
+
+        val x = centerX + (radiusInPixel * cos(angleInRadians)).toFloat() - placeable.width / 2
+        val y = centerY + (radiusInPixel * sin(angleInRadians)).toFloat() - placeable.height / 2
+
+        placeable.placeRelative(
+          x = x.toInt(),
+          y = y.toInt(),
+        )
+      }
+    }
+  }
 }

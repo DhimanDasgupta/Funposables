@@ -19,34 +19,33 @@ import com.dhimandasgupta.funposables.ui.common.getNormalizedColorForCurrentThem
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 class MainActivity : ComponentActivity() {
-    @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen()
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        val appGraph = (application as App).getAppComponent()
-        setContent {
-            FunposablesTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .animatedBackground(
-                                color1 = getNormalizedColorForCurrentTheme(colorResource(R.color.purple_200)),
-                                color2 = getNormalizedColorForCurrentTheme(colorResource(R.color.purple_700)),
-                                color3 = getNormalizedColorForCurrentTheme(colorResource(R.color.teal_700))
-                            )
-                            .consumeWindowInsets(paddingValues = innerPadding)
-                        ,
-                        contentAlignment = Alignment.Center
-                    ) {
-                        FunposablesRoot(
-                            modifier = Modifier.consumeWindowInsets(paddingValues = innerPadding),
-                            appGraph = appGraph
-                        )
-                    }
-                }
-            }
+  @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
+  override fun onCreate(savedInstanceState: Bundle?) {
+    installSplashScreen()
+    super.onCreate(savedInstanceState)
+    enableEdgeToEdge()
+    val appGraph = (application as App).getAppComponent()
+    setContent {
+      FunposablesTheme {
+        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+          Box(
+            modifier =
+              Modifier.fillMaxSize()
+                .animatedBackground(
+                  color1 = getNormalizedColorForCurrentTheme(colorResource(R.color.purple_200)),
+                  color2 = getNormalizedColorForCurrentTheme(colorResource(R.color.purple_700)),
+                  color3 = getNormalizedColorForCurrentTheme(colorResource(R.color.teal_700)),
+                )
+                .consumeWindowInsets(paddingValues = innerPadding),
+            contentAlignment = Alignment.Center,
+          ) {
+            FunposablesRoot(
+              modifier = Modifier.consumeWindowInsets(paddingValues = innerPadding),
+              appGraph = appGraph,
+            )
+          }
         }
+      }
     }
+  }
 }

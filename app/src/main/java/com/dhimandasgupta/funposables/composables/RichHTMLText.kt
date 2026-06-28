@@ -41,144 +41,156 @@ import com.dhimandasgupta.funposables.ui.utils.convertToAnnotatedString
 import kotlinx.coroutines.launch
 
 @Composable
-fun RichHTMLText(
-    modifier: Modifier
-) {
-    val context = LocalContext.current
-    val clipboardManager = LocalClipboard.current
+fun RichHTMLText(modifier: Modifier) {
+  val context = LocalContext.current
+  val clipboardManager = LocalClipboard.current
 
-    val html = """
-        This </br>is a sample<br /> HTML string with break tags within.<br>
-        Take my $500 for this.
-        <p>Hello there how are <sup>you</sup>. If you want to <sub><b><u><i>contact me</i></u></b></sub> then reach me via <i><a href='tel:+919916107291'>phone</a></i> or via <a href='https://www.anthropic.com'>website</a>.</p>
-        <ol>
-            <li>Name one</li>
-            <li>Item two item with https://gemini.google.com/</li>
-            <li><b>Third item</b></li>
-        </ol>
-        <p>
-        Visit https://www.jetbrains.com/junie or call 1-800-622-4357.
-        You can also use <a href='https://www.google.com'>this website</a>.
-        1-800-662-HELP and 1-800-662-HELP or 1—800—662—HELP or 1-800-622-HELP or 1-800-GO-FEDEX or 1-800-CONTACTS or 1-800-MATTRESS or 1-800-GOT-JUNK or 1-800-HURT-NOW or 1-800-DIAL-CASH or 1-800-USA-BANK or 1-800-HOMECARE or 1-800-DENTIST or 1-800-SOLAR-USA or 1-212-888-CATS or 1-888-2-HIRE-US
-        </p>
-        <p>Contact options:</p>
-        <ul>
-            <li>Call 1-800-662-HELP</li>
-            <li>Visit https://www.openai.com</li>
-            <li><b>Emergency:</b> use  <a href='tel:+910123456789'>phone</a> support</li>
-        </ul>
-        <ol>
-            <li>First item</li>
-            <li>Second item with https://www.kotlinlang.org</li>
-            <li><b>Third item</b></li>
-        </ol>
-        This is a plain and simple string. This dose not have any style what so ever. 
-        Now coming back to hyperlinked texts - here is a <strong>strong with <u>underlined</u></strong> text.
-        <ol>
-            <li>First item</li>
-            <li>Second <u>item</u></li>
-            <li><b>Third item</b></li>
-            <li>Fourth <sup>item</sup></li>
-            <li>Fifth <sub>item</sub></li>
-            <li>Sixth <i>item</i></li>
-        </ol>
-        Email support at mailto:support@example.com
-        Or use <strong><i><a href="mailto:support@example.com">email support</a></i>.</strong>
-        """.trimIndent()
+  val html =
+    """
+    This </br>is a sample<br /> HTML string with break tags within.<br>
+    Take my $500 for this.
+    <p>Hello there how are <sup>you</sup>. If you want to <sub><b><u><i>contact me</i></u></b></sub> then reach me via <i><a href='tel:+919916107291'>phone</a></i> or via <a href='https://www.anthropic.com'>website</a>.</p>
+    <ol>
+        <li>Name one</li>
+        <li>Item two item with https://gemini.google.com/</li>
+        <li><b>Third item</b></li>
+    </ol>
+    <p>
+    Visit https://www.jetbrains.com/junie or call 1-800-622-4357.
+    You can also use <a href='https://www.google.com'>this website</a>.
+    1-800-662-HELP and 1-800-662-HELP or 1—800—662—HELP or 1-800-622-HELP or 1-800-GO-FEDEX or 1-800-CONTACTS or 1-800-MATTRESS or 1-800-GOT-JUNK or 1-800-HURT-NOW or 1-800-DIAL-CASH or 1-800-USA-BANK or 1-800-HOMECARE or 1-800-DENTIST or 1-800-SOLAR-USA or 1-212-888-CATS or 1-888-2-HIRE-US
+    </p>
+    <p>Contact options:</p>
+    <ul>
+        <li>Call 1-800-662-HELP</li>
+        <li>Visit https://www.openai.com</li>
+        <li><b>Emergency:</b> use  <a href='tel:+910123456789'>phone</a> support</li>
+    </ul>
+    <ol>
+        <li>First item</li>
+        <li>Second item with https://www.kotlinlang.org</li>
+        <li><b>Third item</b></li>
+    </ol>
+    This is a plain and simple string. This dose not have any style what so ever.
+    Now coming back to hyperlinked texts - here is a <strong>strong with <u>underlined</u></strong> text.
+    <ol>
+        <li>First item</li>
+        <li>Second <u>item</u></li>
+        <li><b>Third item</b></li>
+        <li>Fourth <sup>item</sup></li>
+        <li>Fifth <sub>item</sub></li>
+        <li>Sixth <i>item</i></li>
+    </ol>
+    Email support at mailto:support@example.com
+    Or use <strong><i><a href="mailto:support@example.com">email support</a></i>.</strong>
+    """
+      .trimIndent()
 
-    val linkColor = colorScheme.primary
-    val customLinkColor = colorScheme.error
-    var annotatedString by remember { mutableStateOf(AnnotatedString("")) }
+  val linkColor = colorScheme.primary
+  val customLinkColor = colorScheme.error
+  var annotatedString by remember { mutableStateOf(AnnotatedString("")) }
 
-    val scope = rememberCoroutineScope()
+  val scope = rememberCoroutineScope()
 
-    LaunchedEffect(html) {
-        annotatedString = html.convertToAnnotatedString(
-            params = RichTextHelperParams(
-                linkColor = linkColor,
-                customLinkColor = customLinkColor,
-                customLinkShouldBeUnderlined = false,
-                clickListeners = mapOf(
-                    "Hello" to LinkInteractionListener {
-                        Toast.makeText(context, "You clicked on Hello", Toast.LENGTH_SHORT).show()
-                    },
-                    "$500" to LinkInteractionListener {
-                        scope.launch {
-                            clipboardManager.setClipEntry(
-                                ClipEntry(
-                                    ClipData.newPlainText(
-                                        "",
-                                        "$500"
-                                    )
-                                )
-                            )
-                        }
-                        Toast.makeText(context, "You have copied $500", Toast.LENGTH_SHORT).show()
-                    },
-                    "strong" to LinkInteractionListener {
-                        Toast.makeText(context, "You clicked on strong", Toast.LENGTH_SHORT).show()
-                    },
-                    "underlined" to LinkInteractionListener {
-                        Toast.makeText(context, "You clicked on underlined", Toast.LENGTH_SHORT)
-                            .show()
-                    },
-                )
-            ),
-            onException = { exception ->
-                scope.launch {
-                    Toast.makeText(context, "Error parsing HTML: ${exception.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
+  LaunchedEffect(html) {
+    annotatedString =
+      html.convertToAnnotatedString(
+        params =
+          RichTextHelperParams(
+            linkColor = linkColor,
+            customLinkColor = customLinkColor,
+            customLinkShouldBeUnderlined = false,
+            clickListeners =
+              mapOf(
+                "Hello" to
+                  LinkInteractionListener {
+                    Toast.makeText(context, "You clicked on Hello", Toast.LENGTH_SHORT).show()
+                  },
+                "$500" to
+                  LinkInteractionListener {
+                    scope.launch {
+                      clipboardManager.setClipEntry(
+                        ClipEntry(
+                          ClipData.newPlainText(
+                            "",
+                            "$500",
+                          )
+                        )
+                      )
+                    }
+                    Toast.makeText(context, "You have copied $500", Toast.LENGTH_SHORT).show()
+                  },
+                "strong" to
+                  LinkInteractionListener {
+                    Toast.makeText(context, "You clicked on strong", Toast.LENGTH_SHORT).show()
+                  },
+                "underlined" to
+                  LinkInteractionListener {
+                    Toast.makeText(context, "You clicked on underlined", Toast.LENGTH_SHORT).show()
+                  },
+              ),
+          ),
+        onException = { exception ->
+          scope.launch {
+            Toast.makeText(context, "Error parsing HTML: ${exception.message}", Toast.LENGTH_SHORT)
+              .show()
+          }
+        },
+      )
+  }
+
+  Column(
+    modifier =
+      modifier
+        .padding(
+          start =
+            WindowInsets.displayCutout
+              .union(insets = WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateStartPadding(LayoutDirection.Ltr) + 16.dp,
+          end =
+            WindowInsets.displayCutout
+              .union(insets = WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateEndPadding(LayoutDirection.Ltr) + 16.dp,
         )
-    }
+        .fillMaxSize()
+        .verticalScroll(rememberScrollState())
+  ) {
+    Box(
+      modifier =
+        Modifier.padding(
+            top =
+              WindowInsets.displayCutout
+                .union(insets = WindowInsets.statusBars)
+                .asPaddingValues()
+                .calculateTopPadding()
+          )
+          .fillMaxWidth()
+    )
 
-    Column(
-        modifier = modifier
-            .padding(
-                start = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateStartPadding(LayoutDirection.Ltr) + 16.dp,
-                end = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateEndPadding(LayoutDirection.Ltr) + 16.dp,
-            )
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
-    ) {
-        Box(
-            modifier = Modifier
-                .padding(
-                    top = WindowInsets
-                        .displayCutout.union(insets = WindowInsets.statusBars)
-                        .asPaddingValues()
-                        .calculateTopPadding()
-                )
-                .fillMaxWidth()
-        )
+    Text(
+      text = "HTML Content:",
+      style = typography.titleMedium,
+      color = colorScheme.onSurface,
+    )
+    Text(
+      text = annotatedString,
+      style = typography.labelMedium.copy(color = colorScheme.onSurface),
+    )
 
-        Text(
-            text = "HTML Content:",
-            style = typography.titleMedium,
-            color = colorScheme.onSurface
-        )
-        Text(
-            text = annotatedString,
-            style = typography.labelMedium.copy(color = colorScheme.onSurface),
-        )
+    Spacer(modifier = Modifier.padding(128.dp))
 
-        Spacer(modifier = Modifier.padding(128.dp))
-
-        Box(
-            modifier = Modifier
-                .padding(
-                    bottom = WindowInsets
-                        .displayCutout.union(insets = WindowInsets.navigationBars)
-                        .asPaddingValues()
-                        .calculateBottomPadding()
-                )
-                .fillMaxWidth()
-        )
-    }
+    Box(
+      modifier =
+        Modifier.padding(
+            bottom =
+              WindowInsets.displayCutout
+                .union(insets = WindowInsets.navigationBars)
+                .asPaddingValues()
+                .calculateBottomPadding()
+          )
+          .fillMaxWidth()
+    )
+  }
 }

@@ -50,205 +50,206 @@ import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 import kotlinx.collections.immutable.toPersistentList
 
 @Composable
-fun ExpandableCollapsableItems(
-    modifier: Modifier = Modifier
-) {
-    val accountItem = listOf(
-        Item.AccountItem("Dhiman Dasgupta", "$12,345.67"),
-        Item.AccountItem("Paramita Banerjee", "$12,345.67"),
-        Item.AccountItem("Nilanjan Sen", "$12,345.67"),
-        Item.AccountItem("Shraboni Basu Mallick", "$12,345.67"),
-        Item.AccountItem("Indranil Sen", "$12,345.67"),
-        Item.AccountItem("Sanhita Dasgupta", "$12,345.67")
+fun ExpandableCollapsableItems(modifier: Modifier = Modifier) {
+  val accountItem =
+    listOf(
+      Item.AccountItem("Dhiman Dasgupta", "$12,345.67"),
+      Item.AccountItem("Paramita Banerjee", "$12,345.67"),
+      Item.AccountItem("Nilanjan Sen", "$12,345.67"),
+      Item.AccountItem("Shraboni Basu Mallick", "$12,345.67"),
+      Item.AccountItem("Indranil Sen", "$12,345.67"),
+      Item.AccountItem("Sanhita Dasgupta", "$12,345.67"),
     )
 
-    val normalItems = buildList<Item> {
-        repeat(100) { index ->
-            add(Item.NormalItem("This is Item : $index"))
-        }
+  val normalItems =
+    buildList<Item> {
+      repeat(100) { index ->
+        add(Item.NormalItem("This is Item : $index"))
+      }
     }
 
-    val items = (accountItem + normalItems).toPersistentList()
+  val items = (accountItem + normalItems).toPersistentList()
 
-    ExpandableCardList(
-        items = items,
-        modifier = modifier
-            .fillMaxSize()
-            .padding(
-                start = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateStartPadding(
-                        LayoutDirection.Ltr
-                    ),
-                top = WindowInsets.displayCutout.union(WindowInsets.statusBars).asPaddingValues()
-                    .calculateTopPadding(),
-                end = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateEndPadding(
-                        LayoutDirection.Ltr
-                    ),
-                bottom = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateBottomPadding()
-            )
-    )
+  ExpandableCardList(
+    items = items,
+    modifier =
+      modifier
+        .fillMaxSize()
+        .padding(
+          start =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateStartPadding(LayoutDirection.Ltr),
+          top =
+            WindowInsets.displayCutout
+              .union(WindowInsets.statusBars)
+              .asPaddingValues()
+              .calculateTopPadding(),
+          end =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateEndPadding(LayoutDirection.Ltr),
+          bottom =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateBottomPadding(),
+        ),
+  )
 }
 
 @Composable
 private fun ExpandableCardList(
-    items: List<Item>, // list of items (ex: account names)
-    modifier: Modifier = Modifier
+  items: List<Item>, // list of items (ex: account names)
+  modifier: Modifier = Modifier,
 ) {
-    var expanded by remember { mutableStateOf(false) }
+  var expanded by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
+  Column(modifier = modifier.fillMaxWidth()) {
+
+    // Header row
+    Row(
+      modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(16.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically,
     ) {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        Icon(
+          imageVector =
+            if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+          contentDescription = null,
+        )
+        Spacer(Modifier.width(8.dp))
+        Text(
+          text = "Cash Accounts",
+          style = typography.titleMedium,
+        )
+      }
 
-        // Header row
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { expanded = !expanded }
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-                    contentDescription = null
-                )
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    text = "Cash Accounts",
-                    style = typography.titleMedium,
-                )
-            }
-
-            Column(horizontalAlignment = Alignment.End) {
-                Text(
-                    text = "$575,147.23", // replace it with dynamic data
-                    style = typography.titleMedium
-                )
-                Text(
-                    text = "Total available balance",
-                    style = typography.bodySmall
-                )
-            }
-        }
-
-        val scrollState = rememberLazyListState()
-
-        LazyColumn(
-            state = scrollState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScrollbarForLazyColumn(
-                    lazyListState = scrollState,
-                    width = 4.dp,
-                    thumbWidth = 8.dp,
-                    minThumbHeight = 32.dp,
-                    endPadding = 2.dp,
-                )
-                .bottomFadeForLazyColumn(
-                    lazyListState = scrollState,
-                    heightPercentage = 0.25f,
-                    color = colorScheme.primary,
-                    maxAlpha = 0.8f,
-                ),
-        ) {
-            itemsIndexed(items) { index, item ->
-                when (item) {
-                    is Item.AccountItem -> AccountCard(
-                        index = index,
-                        collapsed = expanded,
-                        accountName = item.name,
-                        accountBalance = item.amount
-                    )
-                    is Item.NormalItem -> NormalCard(item = item.name)
-                }
-            }
-        }
+      Column(horizontalAlignment = Alignment.End) {
+        Text(
+          text = "$575,147.23", // replace it with dynamic data
+          style = typography.titleMedium,
+        )
+        Text(
+          text = "Total available balance",
+          style = typography.bodySmall,
+        )
+      }
     }
+
+    val scrollState = rememberLazyListState()
+
+    LazyColumn(
+      state = scrollState,
+      modifier =
+        Modifier.fillMaxWidth()
+          .verticalScrollbarForLazyColumn(
+            lazyListState = scrollState,
+            width = 4.dp,
+            thumbWidth = 8.dp,
+            minThumbHeight = 32.dp,
+            endPadding = 2.dp,
+          )
+          .bottomFadeForLazyColumn(
+            lazyListState = scrollState,
+            heightPercentage = 0.25f,
+            color = colorScheme.primary,
+            maxAlpha = 0.8f,
+          ),
+    ) {
+      itemsIndexed(items) { index, item ->
+        when (item) {
+          is Item.AccountItem ->
+            AccountCard(
+              index = index,
+              collapsed = expanded,
+              accountName = item.name,
+              accountBalance = item.amount,
+            )
+          is Item.NormalItem -> NormalCard(item = item.name)
+        }
+      }
+    }
+  }
 }
 
 @Composable
 private fun AccountCard(
-    modifier: Modifier = Modifier,
-    index: Int = 0,
-    collapsed: Boolean = false,
-    accountName: String,
-    accountBalance: String
+  modifier: Modifier = Modifier,
+  index: Int = 0,
+  collapsed: Boolean = false,
+  accountName: String,
+  accountBalance: String,
 ) {
-    val density = LocalDensity.current
+  val density = LocalDensity.current
 
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 4.dp)
-            .graphicsLayer {
-                translationY = if (collapsed) 0f else with(density) {
-                    (-index * 96).toDp().roundToPx().toFloat()
-                }
-            }
-            .zIndex(index.toFloat() * -1f),
-        border = CardDefaults.outlinedCardBorder(
-            enabled = true
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 12.dp,
-            pressedElevation = 0.dp,
-            focusedElevation = 0.dp,
-            hoveredElevation = 0.dp,
-            draggedElevation = 0.dp,
-            disabledElevation = 0.dp,
-        ),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Row(
-            modifier = Modifier
-                .padding(16.dp)
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(
-                text = accountName,
-                style = typography.bodyLarge
-            )
-            Text(
-                text = accountBalance, // Example balance per account
-                style = typography.bodyLarge
-            )
+  Card(
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .padding(horizontal = 16.dp, vertical = 4.dp)
+        .graphicsLayer {
+          translationY =
+            if (collapsed) 0f
+            else
+              with(density) {
+                (-index * 96).toDp().roundToPx().toFloat()
+              }
         }
+        .zIndex(index.toFloat() * -1f),
+    border = CardDefaults.outlinedCardBorder(enabled = true),
+    elevation =
+      CardDefaults.cardElevation(
+        defaultElevation = 12.dp,
+        pressedElevation = 0.dp,
+        focusedElevation = 0.dp,
+        hoveredElevation = 0.dp,
+        draggedElevation = 0.dp,
+        disabledElevation = 0.dp,
+      ),
+    shape = RoundedCornerShape(12.dp),
+  ) {
+    Row(
+      modifier = Modifier.padding(16.dp).fillMaxWidth(),
+      horizontalArrangement = Arrangement.SpaceBetween,
+    ) {
+      Text(
+        text = accountName,
+        style = typography.bodyLarge,
+      )
+      Text(
+        text = accountBalance, // Example balance per account
+        style = typography.bodyLarge,
+      )
     }
+  }
 }
 
 @Composable
 private fun NormalCard(
-    modifier: Modifier = Modifier,
-    item: String
+  modifier: Modifier = Modifier,
+  item: String,
 ) {
-    Text(
-        text = "This is Item : $item",
-        modifier = modifier
-            .padding(16.dp)
-            .fillMaxWidth()
-    )
+  Text(
+    text = "This is Item : $item",
+    modifier = modifier.padding(16.dp).fillMaxWidth(),
+  )
 }
 
 sealed interface Item {
-    data class AccountItem(val name: String, val amount: String): Item
-    data class NormalItem(val name: String): Item
-}
+  data class AccountItem(val name: String, val amount: String) : Item
 
+  data class NormalItem(val name: String) : Item
+}
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 private fun ExpandableCollapsableItemsPreView() {
-    FunposablesTheme {
-        ExpandableCollapsableItems()
-    }
+  FunposablesTheme {
+    ExpandableCollapsableItems()
+  }
 }

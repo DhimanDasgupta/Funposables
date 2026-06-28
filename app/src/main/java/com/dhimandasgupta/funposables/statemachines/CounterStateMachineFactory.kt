@@ -11,40 +11,41 @@ import kotlinx.coroutines.delay
 interface CounterBaseState
 
 data class CounterState(
-    val enabled: Boolean = true,
-    val counter: Int = 0
+  val enabled: Boolean = true,
+  val counter: Int = 0,
 ) : CounterBaseState
 
 interface CounterBaseAction
 
 object IncrementAction : CounterBaseAction
+
 object DecrementAction : CounterBaseAction
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @SingleIn(AppScope::class)
 @Inject
-class CounterStateMachineFactory
-    : FlowReduxStateMachineFactory<CounterBaseState, CounterBaseAction>() {
-    init {
-        initializeWith(reuseLastEmittedStateOnLaunch = true) { initialState() }
+class CounterStateMachineFactory :
+  FlowReduxStateMachineFactory<CounterBaseState, CounterBaseAction>() {
+  init {
+    initializeWith(reuseLastEmittedStateOnLaunch = true) { initialState() }
 
-        spec {
-            inState<CounterState> {
-                on<IncrementAction> {
-                    mutate { copy(enabled = false) }
-                    delay(1000)
-                    override { copy(counter = counter + 1) }
-                }
-                on<DecrementAction> {
-                    mutate { copy(enabled = false) }
-                    delay(1000)
-                    override { copy(counter = counter - 1) }
-                }
-            }
+    spec {
+      inState<CounterState> {
+        on<IncrementAction> {
+          mutate { copy(enabled = false) }
+          delay(1000)
+          override { copy(counter = counter + 1) }
         }
+        on<DecrementAction> {
+          mutate { copy(enabled = false) }
+          delay(1000)
+          override { copy(counter = counter - 1) }
+        }
+      }
     }
+  }
 
-    companion object {
-        fun initialState(): CounterBaseState = CounterState()
-    }
+  companion object {
+    fun initialState(): CounterBaseState = CounterState()
+  }
 }

@@ -3,48 +3,32 @@ package com.dhimandasgupta.funposables.navigation
 import androidx.navigation3.runtime.NavKey
 import kotlinx.serialization.Serializable
 
-@Serializable
-data object LauncherNavKey: NavKey
+@Serializable data object LauncherNavKey : NavKey
 
-@Serializable
-data object ExpandableCollapsableItemsNavKey: NavKey
+@Serializable data object ExpandableCollapsableItemsNavKey : NavKey
 
-@Serializable
-data object FirstLineAlignedCheckBoxNavKey: NavKey
+@Serializable data object FirstLineAlignedCheckBoxNavKey : NavKey
 
-@Serializable
-data object DragOrTransformBoxNavKey: NavKey
+@Serializable data object DragOrTransformBoxNavKey : NavKey
 
-@Serializable
-data object KenBurnsEffectNavKey: NavKey
+@Serializable data object KenBurnsEffectNavKey : NavKey
 
-@Serializable
-data object SearchExpanderNavKey: NavKey
+@Serializable data object SearchExpanderNavKey : NavKey
 
-@Serializable
-data object CurvedLayoutNavKey: NavKey
+@Serializable data object CurvedLayoutNavKey : NavKey
 
-@Serializable
-data object CounterNavKey: NavKey
+@Serializable data object CounterNavKey : NavKey
 
-@Serializable
-data object InteractiveJuliaNavKey: NavKey
+@Serializable data object InteractiveJuliaNavKey : NavKey
 
-@Serializable
-data object MandelbrotNavKey: NavKey
+@Serializable data object MandelbrotNavKey : NavKey
 
-@Serializable
-data object CircularLayoutNavKey: NavKey
+@Serializable data object CircularLayoutNavKey : NavKey
 
-@Serializable
-data object OrbitalLoaderNavKey: NavKey
+@Serializable data object OrbitalLoaderNavKey : NavKey
 
-@Serializable
-data object BackgroundGridNavKey: NavKey
+@Serializable data object BackgroundGridNavKey : NavKey
 
-@Serializable
-data object RichTextHTMLNavKey: NavKey
+@Serializable data object RichTextHTMLNavKey : NavKey
 
-@Serializable
-data object RichTextMarkdownNavKey: NavKey
-
+@Serializable data object RichTextMarkdownNavKey : NavKey

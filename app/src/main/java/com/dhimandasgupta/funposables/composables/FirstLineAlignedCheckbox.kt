@@ -41,159 +41,155 @@ import androidx.compose.ui.unit.dp
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 @Composable
-fun FirstLineAlignedCheckbox(
-    modifier: Modifier = Modifier
-) {
-    var text by remember { mutableStateOf("Hello\nWorld\nHi\nThere") }
+fun FirstLineAlignedCheckbox(modifier: Modifier = Modifier) {
+  var text by remember { mutableStateOf("Hello\nWorld\nHi\nThere") }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(
-                start = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateStartPadding(
-                        LayoutDirection.Ltr
-                    ),
-                top = WindowInsets.displayCutout.union(WindowInsets.statusBars).asPaddingValues()
-                    .calculateTopPadding(),
-                end = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateEndPadding(
-                        LayoutDirection.Ltr
-                    ),
-                bottom = WindowInsets.displayCutout.union(WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateBottomPadding()
-            ),
-        verticalArrangement = Arrangement.spacedBy(space = 16.dp)
-    ) {
-        TextField(
-            value = text,
-            onValueChange = { text = it },
-            modifier = modifier
-                .padding(horizontal = 16.dp)
-                .fillMaxWidth()
-        )
+  Column(
+    modifier =
+      Modifier.fillMaxSize()
+        .padding(
+          start =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateStartPadding(LayoutDirection.Ltr),
+          top =
+            WindowInsets.displayCutout
+              .union(WindowInsets.statusBars)
+              .asPaddingValues()
+              .calculateTopPadding(),
+          end =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateEndPadding(LayoutDirection.Ltr),
+          bottom =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateBottomPadding(),
+        ),
+    verticalArrangement = Arrangement.spacedBy(space = 16.dp),
+  ) {
+    TextField(
+      value = text,
+      onValueChange = { text = it },
+      modifier = modifier.padding(horizontal = 16.dp).fillMaxWidth(),
+    )
 
-        TextAndCheckAlignment(
-            text = text,
-            modifier = Modifier
-        )
-    }
-
+    TextAndCheckAlignment(
+      text = text,
+      modifier = Modifier,
+    )
+  }
 }
 
 @Composable
 private fun TextAndCheckAlignment(
-    text: String,
-    modifier: Modifier = Modifier
+  text: String,
+  modifier: Modifier = Modifier,
 ) {
-    Box(
-        modifier = modifier
+  Box(modifier = modifier) {
+    var checked by remember { mutableStateOf(false) }
+    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+    var checkBoxSize by remember { mutableStateOf(IntSize.Zero) }
+
+    Row(
+      modifier = Modifier.padding(horizontal = 16.dp).clickable(onClick = { checked = !checked })
     ) {
-        var checked by remember { mutableStateOf(false) }
-        var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-        var checkBoxSize by remember { mutableStateOf(IntSize.Zero) }
+      Checkbox(
+        checked = checked,
+        onCheckedChange = null,
+        modifier =
+          Modifier.padding(horizontal = 4.dp).alignBy {
+            textLayoutResult?.let { nonNullTextLayoutResult ->
+              checkBoxSize = IntSize(it.measuredWidth, it.measuredHeight)
+              val checkBoxHeight = it.measuredHeight
+              val lineHeight =
+                nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount
+              println("Text Height: ${nonNullTextLayoutResult.size.height}")
+              println("Line Height: $lineHeight")
+              println("Check Box Height: $checkBoxHeight")
+              if (lineHeight >= checkBoxHeight) {
+                checkBoxHeight / 2 - lineHeight / 2
+              } else {
+                0
+              }
+            } ?: 0
+          },
+      )
 
-        Row(
-            modifier = Modifier
-                .padding(horizontal = 16.dp)
-                .clickable(
-                    onClick = { checked = !checked }
-                )
-        ) {
-            Checkbox(
-                checked = checked,
-                onCheckedChange = null,
-                modifier = Modifier
-                    .padding(horizontal = 4.dp)
-                    .alignBy {
-                        textLayoutResult?.let { nonNullTextLayoutResult ->
-                            checkBoxSize = IntSize(it.measuredWidth, it.measuredHeight)
-                            val checkBoxHeight = it.measuredHeight
-                            val lineHeight =
-                                nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount
-                            println("Text Height: ${nonNullTextLayoutResult.size.height}")
-                            println("Line Height: $lineHeight")
-                            println("Check Box Height: $checkBoxHeight")
-                            if (lineHeight >= checkBoxHeight) {
-                                checkBoxHeight / 2 - lineHeight / 2
-                            } else {
-                                0
-                            }
-                        } ?: 0
-                    }
-            )
+      Text(
+        text = text,
+        style = typography.displaySmall,
+        onTextLayout = { textLayoutResultComputed ->
+          textLayoutResult = textLayoutResultComputed
+        },
+        modifier = Modifier,
+      )
 
-            Text(
-                text = text,
-                style = typography.displaySmall,
-                onTextLayout = { textLayoutResultComputed ->
-                    textLayoutResult = textLayoutResultComputed
-                },
-                modifier = Modifier
-            )
+      Spacer(modifier = Modifier.width(24.dp))
 
-            Spacer(modifier = Modifier.width(24.dp))
-
-            Text(
-                text = "Size: ${checkBoxSize.width} x ${checkBoxSize.height}",
-            )
-        }
-
-        textLayoutResult?.let { nonNullTextLayoutResult ->
-            val lineColor = colorScheme.error
-            val baseLineColor = colorScheme.onBackground
-
-            Canvas(modifier = Modifier.matchParentSize()) {
-                drawLine(
-                    color = baseLineColor,
-                    start = Offset(x = 0f, y = nonNullTextLayoutResult.firstBaseline),
-                    end = Offset(x = size.width, y = nonNullTextLayoutResult.firstBaseline),
-                    strokeWidth = 0.5.dp.toPx()
-                )
-
-                drawLine(
-                    color = baseLineColor,
-                    start = Offset(x = 0f, y = nonNullTextLayoutResult.lastBaseline),
-                    end = Offset(x = size.width, y = nonNullTextLayoutResult.lastBaseline),
-                    strokeWidth = 0.5.dp.toPx()
-                )
-
-                drawLine(
-                    color = Color.Green,
-                    start = Offset(
-                        x = 0f,
-                        y = (nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount / 2).toFloat()
-                    ),
-                    end = Offset(
-                        x = size.width,
-                        y = (nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount / 2).toFloat()
-                    ),
-                    strokeWidth = 0.5.dp.toPx()
-                )
-
-                for (i in 0 until nonNullTextLayoutResult.lineCount + 1) {
-                    val y =
-                        i * nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount
-                    drawLine(
-                        color = lineColor,
-                        start = Offset(x = 0f, y = y.toFloat()),
-                        end = Offset(x = size.width, y = y.toFloat()),
-                        strokeWidth = 0.5.dp.toPx()
-                    )
-                }
-            }
-        }
+      Text(text = "Size: ${checkBoxSize.width} x ${checkBoxSize.height}")
     }
+
+    textLayoutResult?.let { nonNullTextLayoutResult ->
+      val lineColor = colorScheme.error
+      val baseLineColor = colorScheme.onBackground
+
+      Canvas(modifier = Modifier.matchParentSize()) {
+        drawLine(
+          color = baseLineColor,
+          start = Offset(x = 0f, y = nonNullTextLayoutResult.firstBaseline),
+          end = Offset(x = size.width, y = nonNullTextLayoutResult.firstBaseline),
+          strokeWidth = 0.5.dp.toPx(),
+        )
+
+        drawLine(
+          color = baseLineColor,
+          start = Offset(x = 0f, y = nonNullTextLayoutResult.lastBaseline),
+          end = Offset(x = size.width, y = nonNullTextLayoutResult.lastBaseline),
+          strokeWidth = 0.5.dp.toPx(),
+        )
+
+        drawLine(
+          color = Color.Green,
+          start =
+            Offset(
+              x = 0f,
+              y =
+                (nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount / 2)
+                  .toFloat(),
+            ),
+          end =
+            Offset(
+              x = size.width,
+              y =
+                (nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount / 2)
+                  .toFloat(),
+            ),
+          strokeWidth = 0.5.dp.toPx(),
+        )
+
+        for (i in 0 until nonNullTextLayoutResult.lineCount + 1) {
+          val y = i * nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount
+          drawLine(
+            color = lineColor,
+            start = Offset(x = 0f, y = y.toFloat()),
+            end = Offset(x = size.width, y = y.toFloat()),
+            strokeWidth = 0.5.dp.toPx(),
+          )
+        }
+      }
+    }
+  }
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 private fun FirstLineAlignedCheckboxPreview() {
-    FunposablesTheme {
-        FirstLineAlignedCheckbox()
-    }
+  FunposablesTheme {
+    FirstLineAlignedCheckbox()
+  }
 }

@@ -40,85 +40,87 @@ import androidx.compose.ui.unit.LayoutDirection
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 @Composable
-fun SearchExpander(
-    modifier: Modifier = Modifier
-) {
-    ExpandableTextFieldVisibility(
-        modifier = modifier
-            .padding(
-                start = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateStartPadding(LayoutDirection.Ltr),
-                top = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.statusBars)
-                    .asPaddingValues()
-                    .calculateTopPadding(),
-                end = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateEndPadding(LayoutDirection.Ltr),
-                bottom = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateBottomPadding()
-            ),
-    )
+fun SearchExpander(modifier: Modifier = Modifier) {
+  ExpandableTextFieldVisibility(
+    modifier =
+      modifier.padding(
+        start =
+          WindowInsets.displayCutout
+            .union(insets = WindowInsets.navigationBars)
+            .asPaddingValues()
+            .calculateStartPadding(LayoutDirection.Ltr),
+        top =
+          WindowInsets.displayCutout
+            .union(insets = WindowInsets.statusBars)
+            .asPaddingValues()
+            .calculateTopPadding(),
+        end =
+          WindowInsets.displayCutout
+            .union(insets = WindowInsets.navigationBars)
+            .asPaddingValues()
+            .calculateEndPadding(LayoutDirection.Ltr),
+        bottom =
+          WindowInsets.displayCutout
+            .union(insets = WindowInsets.navigationBars)
+            .asPaddingValues()
+            .calculateBottomPadding(),
+      )
+  )
 }
 
 @Composable
-private fun ExpandableTextFieldVisibility(
-    modifier: Modifier,
-) {
-    val searchTextState = rememberTextFieldState()
-    var isExpanded by remember { mutableStateOf(false) }
+private fun ExpandableTextFieldVisibility(modifier: Modifier) {
+  val searchTextState = rememberTextFieldState()
+  var isExpanded by remember { mutableStateOf(false) }
 
-    // Container Row
-    Row(
-        modifier = modifier
-            .fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.End // Pushes content to right initially
-    ) {
-        // The Search/Close Button
-        IconButton(onClick = { isExpanded = !isExpanded }) {
-            Icon(
-                imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Search,
-                contentDescription = "Toggle Search"
-            )
-        }
-
-        // The Animation Container
-        AnimatedVisibility(
-            visible = isExpanded,
-            // Animation for entering (Expand)
-            enter = expandHorizontally(
-                animationSpec = tween(durationMillis = 300),
-                expandFrom = Alignment.End // Expands from right to left
-            ) + fadeIn(),
-            // Animation for exiting (Shrink)
-            exit = shrinkHorizontally(
-                animationSpec = tween(durationMillis = 300),
-                shrinkTowards = Alignment.End
-            ) + fadeOut()
-        ) {
-            TextField(
-                state = searchTextState,
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = Color.Transparent,
-                    unfocusedContainerColor = Color.Transparent
-                ),
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+  // Container Row
+  Row(
+    modifier = modifier.fillMaxWidth(),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.End, // Pushes content to right initially
+  ) {
+    // The Search/Close Button
+    IconButton(onClick = { isExpanded = !isExpanded }) {
+      Icon(
+        imageVector = if (isExpanded) Icons.Default.Close else Icons.Default.Search,
+        contentDescription = "Toggle Search",
+      )
     }
+
+    // The Animation Container
+    AnimatedVisibility(
+      visible = isExpanded,
+      // Animation for entering (Expand)
+      enter =
+        expandHorizontally(
+          animationSpec = tween(durationMillis = 300),
+          expandFrom = Alignment.End, // Expands from right to left
+        ) + fadeIn(),
+      // Animation for exiting (Shrink)
+      exit =
+        shrinkHorizontally(
+          animationSpec = tween(durationMillis = 300),
+          shrinkTowards = Alignment.End,
+        ) + fadeOut(),
+    ) {
+      TextField(
+        state = searchTextState,
+        colors =
+          TextFieldDefaults.colors(
+            focusedContainerColor = Color.Transparent,
+            unfocusedContainerColor = Color.Transparent,
+          ),
+        modifier = Modifier.fillMaxWidth(),
+      )
+    }
+  }
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 private fun SearchExpanderPreview() {
-    FunposablesTheme {
-        SearchExpander()
-    }
+  FunposablesTheme {
+    SearchExpander()
+  }
 }

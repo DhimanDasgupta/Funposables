@@ -25,86 +25,84 @@ import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 @Composable
 fun Counter(
-    modifier: Modifier = Modifier,
-    counterBaseState: () -> CounterBaseState,
-    dispatch: (CounterBaseAction) -> Unit
+  modifier: Modifier = Modifier,
+  counterBaseState: () -> CounterBaseState,
+  dispatch: (CounterBaseAction) -> Unit,
 ) {
-    CounterImplementation(
-        modifier = modifier,
-        counterBaseState = counterBaseState,
-        dispatch = dispatch
-    )
+  CounterImplementation(
+    modifier = modifier,
+    counterBaseState = counterBaseState,
+    dispatch = dispatch,
+  )
 }
 
 @Composable
 private fun CounterImplementation(
-    modifier: Modifier = Modifier,
-    counterBaseState: () -> CounterBaseState,
-    dispatch: (CounterBaseAction) -> Unit
+  modifier: Modifier = Modifier,
+  counterBaseState: () -> CounterBaseState,
+  dispatch: (CounterBaseAction) -> Unit,
 ) {
-    Box(
-        modifier = modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        when (counterBaseState()) {
-            is CounterState -> ValidCounter(
-                counterState = counterBaseState() as CounterState,
-                dispatch = dispatch
-            )
+  Box(
+    modifier = modifier.fillMaxSize(),
+    contentAlignment = Alignment.Center,
+  ) {
+    when (counterBaseState()) {
+      is CounterState ->
+        ValidCounter(
+          counterState = counterBaseState() as CounterState,
+          dispatch = dispatch,
+        )
 
-            else -> error("Unknow state: $counterBaseState")
-        }
+      else -> error("Unknow state: $counterBaseState")
     }
+  }
 }
 
 @Composable
 private fun ValidCounter(
-    modifier: Modifier = Modifier,
-    counterState: CounterState,
-    dispatch: (CounterBaseAction) -> Unit
+  modifier: Modifier = Modifier,
+  counterState: CounterState,
+  dispatch: (CounterBaseAction) -> Unit,
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+  Column(
+    modifier = modifier,
+    horizontalAlignment = Alignment.CenterHorizontally,
+    verticalArrangement = Arrangement.Center,
+  ) {
+    Text(
+      modifier = Modifier.padding(all = 16.dp),
+      text = "${counterState.counter}",
+      style = typography.displayLarge,
+    )
+    Row(
+      modifier = Modifier.fillMaxWidth().padding(all = 32.dp),
+      horizontalArrangement = Arrangement.SpaceAround,
+      verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            modifier = Modifier
-                .padding(all = 16.dp),
-            text = "${counterState.counter}",
-            style = typography.displayLarge
-        )
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(all = 32.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Button(
-                onClick = { dispatch(IncrementAction) },
-                enabled = counterState.enabled
-            ) {
-                Text(text = "Increment")
-            }
-            Button(
-                onClick = { dispatch(DecrementAction) },
-                enabled = counterState.enabled
-            ) {
-                Text(text = "Decrement")
-            }
-        }
+      Button(
+        onClick = { dispatch(IncrementAction) },
+        enabled = counterState.enabled,
+      ) {
+        Text(text = "Increment")
+      }
+      Button(
+        onClick = { dispatch(DecrementAction) },
+        enabled = counterState.enabled,
+      ) {
+        Text(text = "Decrement")
+      }
     }
+  }
 }
 
 @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 private fun CounterPreview() {
-    FunposablesTheme {
-        Counter(
-            counterBaseState = { CounterState() },
-            dispatch = {}
-        )
-    }
+  FunposablesTheme {
+    Counter(
+      counterBaseState = { CounterState() },
+      dispatch = {},
+    )
+  }
 }

@@ -7,11 +7,6 @@ import androidx.compose.ui.Modifier
 import com.dhimandasgupta.funposables.ui.common.drawBackgroundGrid
 
 @Composable
-fun BackgroundGrid(
-    modifier: Modifier = Modifier
-) {
-    Box(modifier = modifier
-        .fillMaxSize()
-        .drawBackgroundGrid()
-    )
+fun BackgroundGrid(modifier: Modifier = Modifier) {
+  Box(modifier = modifier.fillMaxSize().drawBackgroundGrid())
 }

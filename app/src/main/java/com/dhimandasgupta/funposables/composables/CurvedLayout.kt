@@ -71,149 +71,148 @@ val ContentPadding = 24.dp
 
 // --- Custom Shape for the Curved Top Container ---
 class ConcaveTopShape(private val dipDepthDp: Dp) : Shape {
-    override fun createOutline(
-        size: Size,
-        layoutDirection: LayoutDirection,
-        density: Density
-    ): Outline {
-        val dipDepthPx = with(density) { dipDepthDp.toPx() }
-        val path = Path().apply {
-            // Start at top-left corner
-            moveTo(0f, 0f)
-            // Quadratic bezier curve dipping down in the middle
-            // Control point is below the center, end point is top-right
-            quadraticTo(size.width / 2f, -dipDepthPx, size.width, 0f)
-            // Line to bottom-right
-            lineTo(size.width, size.height)
-            // Line to bottom-left
-            lineTo(0f, size.height)
-            // Close back to top-left
-            close()
-        }
-        return Outline.Generic(path)
-    }
+  override fun createOutline(
+    size: Size,
+    layoutDirection: LayoutDirection,
+    density: Density,
+  ): Outline {
+    val dipDepthPx = with(density) { dipDepthDp.toPx() }
+    val path =
+      Path().apply {
+        // Start at top-left corner
+        moveTo(0f, 0f)
+        // Quadratic bezier curve dipping down in the middle
+        // Control point is below the center, end point is top-right
+        quadraticTo(size.width / 2f, -dipDepthPx, size.width, 0f)
+        // Line to bottom-right
+        lineTo(size.width, size.height)
+        // Line to bottom-left
+        lineTo(0f, size.height)
+        // Close back to top-left
+        close()
+      }
+    return Outline.Generic(path)
+  }
 }
 
 @Composable
-fun CurvedLayout(
-    modifier: Modifier = Modifier
-) {
-    ResponsiveCurvedLayoutScreen(modifier)
+fun CurvedLayout(modifier: Modifier = Modifier) {
+  ResponsiveCurvedLayoutScreen(modifier)
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
-fun ResponsiveCurvedLayoutScreen(
-    modifier: Modifier = Modifier
-) {
-    val configuration = LocalConfiguration.current
-    val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
-    val scrollState = rememberScrollState()
+fun ResponsiveCurvedLayoutScreen(modifier: Modifier = Modifier) {
+  val configuration = LocalConfiguration.current
+  val isPortrait = configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+  val scrollState = rememberScrollState()
 
-    // Outer container with gray background
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .padding(
-                start = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateStartPadding(LayoutDirection.Ltr),
-                end = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateEndPadding(LayoutDirection.Ltr),
-                bottom = WindowInsets
-                    .displayCutout.union(insets = WindowInsets.navigationBars)
-                    .asPaddingValues()
-                    .calculateBottomPadding()
-            )
-            .verticalScroll(scrollState)
+  // Outer container with gray background
+  Column(
+    modifier =
+      modifier
+        .fillMaxSize()
+        .padding(
+          start =
+            WindowInsets.displayCutout
+              .union(insets = WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateStartPadding(LayoutDirection.Ltr),
+          end =
+            WindowInsets.displayCutout
+              .union(insets = WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateEndPadding(LayoutDirection.Ltr),
+          bottom =
+            WindowInsets.displayCutout
+              .union(insets = WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateBottomPadding(),
+        )
+        .verticalScroll(scrollState)
+  ) {
+    // "Open" text visible in portrait mock
+    Box(
+      modifier = Modifier.fillMaxWidth().weight(1f),
+      contentAlignment = Alignment.Center,
     ) {
-        // "Open" text visible in portrait mock
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = "Open / Close",
-                style = typography.headlineLarge,
-                color = TextDark
-            )
-        }
-
-        // Main overlapping container structure
-        Box(
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            // 1. The White Content Container with Curved Top
-            Surface(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    // Important: Add padding to the top of the surface so the content
-                    // starts below where the icon will sit.
-                    .padding(top = IconSize / 2),
-                shape = ConcaveTopShape(CurveDipDepth),
-                color = ContainerWhite,
-                shadowElevation = 4.dp
-            ) {
-                // Content inside the white card
-                Box(
-                    modifier = Modifier.padding(
-                        top = (IconSize / 2), // Extra padding below icon area
-                        start = ContentPadding,
-                        end = ContentPadding,
-                        bottom = ContentPadding
-                    )
-                ) {
-                    SharedTransitionLayout {
-                        AnimatedContent(
-                            targetState = isPortrait,
-                            label = "layout_change"
-                        ) { target ->
-                            if (target) {
-                                PortraitContent(
-                                    sharedTransitionScope = this@SharedTransitionLayout,
-                                    animatedVisibilityScope = this
-                                )
-                            } else {
-                                LandscapeContent(
-                                    sharedTransitionScope = this@SharedTransitionLayout,
-                                    animatedVisibilityScope = this
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            // 2. The FPO Icon sitting on top
-            // Aligned TopCenter of the Box. Because the white container below has
-            // top padding = IconSize/2, this icon will sit exactly half-in, half-out.
-            FPOIcon(modifier = Modifier.align(Alignment.TopCenter))
-        }
+      Text(
+        text = "Open / Close",
+        style = typography.headlineLarge,
+        color = TextDark,
+      )
     }
+
+    // Main overlapping container structure
+    Box(modifier = Modifier.fillMaxWidth()) {
+      // 1. The White Content Container with Curved Top
+      Surface(
+        modifier =
+          Modifier.fillMaxWidth()
+            // Important: Add padding to the top of the surface so the content
+            // starts below where the icon will sit.
+            .padding(top = IconSize / 2),
+        shape = ConcaveTopShape(CurveDipDepth),
+        color = ContainerWhite,
+        shadowElevation = 4.dp,
+      ) {
+        // Content inside the white card
+        Box(
+          modifier =
+            Modifier.padding(
+              top = (IconSize / 2), // Extra padding below icon area
+              start = ContentPadding,
+              end = ContentPadding,
+              bottom = ContentPadding,
+            )
+        ) {
+          SharedTransitionLayout {
+            AnimatedContent(
+              targetState = isPortrait,
+              label = "layout_change",
+            ) { target ->
+              if (target) {
+                PortraitContent(
+                  sharedTransitionScope = this@SharedTransitionLayout,
+                  animatedVisibilityScope = this,
+                )
+              } else {
+                LandscapeContent(
+                  sharedTransitionScope = this@SharedTransitionLayout,
+                  animatedVisibilityScope = this,
+                )
+              }
+            }
+          }
+        }
+      }
+
+      // 2. The FPO Icon sitting on top
+      // Aligned TopCenter of the Box. Because the white container below has
+      // top padding = IconSize/2, this icon will sit exactly half-in, half-out.
+      FPOIcon(modifier = Modifier.align(Alignment.TopCenter))
+    }
+  }
 }
 
 // --- Icon Composable ---
 @Composable
 fun FPOIcon(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .size(IconSize)
-            .clip(CircleShape)
-            .background(IconPink)
-            .border(1.dp, IconPink.copy(alpha = 0.5f), CircleShape),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "FPO",
-            fontWeight = FontWeight.Bold,
-            color = TextDark
-        )
-    }
+  Box(
+    modifier =
+      modifier
+        .size(IconSize)
+        .clip(CircleShape)
+        .background(IconPink)
+        .border(1.dp, IconPink.copy(alpha = 0.5f), CircleShape),
+    contentAlignment = Alignment.Center,
+  ) {
+    Text(
+      text = "FPO",
+      fontWeight = FontWeight.Bold,
+      color = TextDark,
+    )
+  }
 }
 
 // --- Content Layouts ---
@@ -221,245 +220,255 @@ fun FPOIcon(modifier: Modifier = Modifier) {
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun PortraitContent(
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope
+  sharedTransitionScope: SharedTransitionScope,
+  animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
-    with(sharedTransitionScope) {
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            HeaderText(
-                modifier = Modifier.sharedElement(
-                    sharedContentState = rememberSharedContentState(key = "header"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                ),
-                center = true
-            )
-            SubheaderText(
-                modifier = Modifier.sharedElement(
-                    sharedContentState = rememberSharedContentState(key = "subHeaderText"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                ),
-                center = true
-            )
-            BodyText(
-                modifier = Modifier.sharedElement(
-                    sharedContentState = rememberSharedContentState(key = "bodyText"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                ),
-                center = true
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            MainButton(
-                modifier = Modifier.sharedElement(
-                    sharedContentState = rememberSharedContentState(key = "mainButton"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                ),
-            )
-            SecondaryButton(
-                modifier = Modifier.sharedElement(
-                    sharedContentState = rememberSharedContentState(key = "secondaryButton"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                ),
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            DisclosureSection(
-                modifier = Modifier.sharedElement(
-                    sharedContentState = rememberSharedContentState(key = "disclosureSection"),
-                    animatedVisibilityScope = animatedVisibilityScope
-                ),
-                center = true
-            )
-        }
+  with(sharedTransitionScope) {
+    Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+      HeaderText(
+        modifier =
+          Modifier.sharedElement(
+            sharedContentState = rememberSharedContentState(key = "header"),
+            animatedVisibilityScope = animatedVisibilityScope,
+          ),
+        center = true,
+      )
+      SubheaderText(
+        modifier =
+          Modifier.sharedElement(
+            sharedContentState = rememberSharedContentState(key = "subHeaderText"),
+            animatedVisibilityScope = animatedVisibilityScope,
+          ),
+        center = true,
+      )
+      BodyText(
+        modifier =
+          Modifier.sharedElement(
+            sharedContentState = rememberSharedContentState(key = "bodyText"),
+            animatedVisibilityScope = animatedVisibilityScope,
+          ),
+        center = true,
+      )
+      Spacer(modifier = Modifier.height(8.dp))
+      MainButton(
+        modifier =
+          Modifier.sharedElement(
+            sharedContentState = rememberSharedContentState(key = "mainButton"),
+            animatedVisibilityScope = animatedVisibilityScope,
+          )
+      )
+      SecondaryButton(
+        modifier =
+          Modifier.sharedElement(
+            sharedContentState = rememberSharedContentState(key = "secondaryButton"),
+            animatedVisibilityScope = animatedVisibilityScope,
+          )
+      )
+      Spacer(modifier = Modifier.height(16.dp))
+      DisclosureSection(
+        modifier =
+          Modifier.sharedElement(
+            sharedContentState = rememberSharedContentState(key = "disclosureSection"),
+            animatedVisibilityScope = animatedVisibilityScope,
+          ),
+        center = true,
+      )
     }
+  }
 }
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun LandscapeContent(
-    sharedTransitionScope: SharedTransitionScope,
-    animatedVisibilityScope: AnimatedVisibilityScope
+  sharedTransitionScope: SharedTransitionScope,
+  animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
-    with(sharedTransitionScope) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(32.dp)
-        ) {
-            // Left Column (Header & Buttons)
-            Column(
-                modifier = Modifier.weight(2f), // Takes 2/5 space
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
-            ) {
-                HeaderText(
-                    modifier = Modifier.sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "header"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    ),
-                    center = false
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                MainButton(
-                    modifier = Modifier.sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "mainButton"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    ),
-                )
-                SecondaryButton(
-                    modifier = Modifier.sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "secondaryButton"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    ),
-                )
-            }
+  with(sharedTransitionScope) {
+    Row(
+      modifier = Modifier.fillMaxWidth(),
+      horizontalArrangement = Arrangement.spacedBy(32.dp),
+    ) {
+      // Left Column (Header & Buttons)
+      Column(
+        modifier = Modifier.weight(2f), // Takes 2/5 space
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(20.dp),
+      ) {
+        HeaderText(
+          modifier =
+            Modifier.sharedElement(
+              sharedContentState = rememberSharedContentState(key = "header"),
+              animatedVisibilityScope = animatedVisibilityScope,
+            ),
+          center = false,
+        )
+        Spacer(modifier = Modifier.height(4.dp))
+        MainButton(
+          modifier =
+            Modifier.sharedElement(
+              sharedContentState = rememberSharedContentState(key = "mainButton"),
+              animatedVisibilityScope = animatedVisibilityScope,
+            )
+        )
+        SecondaryButton(
+          modifier =
+            Modifier.sharedElement(
+              sharedContentState = rememberSharedContentState(key = "secondaryButton"),
+              animatedVisibilityScope = animatedVisibilityScope,
+            )
+        )
+      }
 
-            // Right Column (Subheader, Body, Disclosures)
-            Column(
-                modifier = Modifier.weight(3f), // Takes 3/5 space
-                horizontalAlignment = Alignment.Start,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                SubheaderText(
-                    modifier = Modifier.sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "subHeaderText"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    ),
-                    center = false
-                )
-                BodyText(
-                    modifier = Modifier.sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "bodyText"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    ),
-                    center = false
-                )
-                Spacer(modifier = Modifier.weight(1f)) // Push disclosure to bottom if space allows
-                DisclosureSection(
-                    modifier = Modifier.sharedElement(
-                        sharedContentState = rememberSharedContentState(key = "disclosureSection"),
-                        animatedVisibilityScope = animatedVisibilityScope
-                    ),
-                    center = false
-                )
-            }
-        }
+      // Right Column (Subheader, Body, Disclosures)
+      Column(
+        modifier = Modifier.weight(3f), // Takes 3/5 space
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+      ) {
+        SubheaderText(
+          modifier =
+            Modifier.sharedElement(
+              sharedContentState = rememberSharedContentState(key = "subHeaderText"),
+              animatedVisibilityScope = animatedVisibilityScope,
+            ),
+          center = false,
+        )
+        BodyText(
+          modifier =
+            Modifier.sharedElement(
+              sharedContentState = rememberSharedContentState(key = "bodyText"),
+              animatedVisibilityScope = animatedVisibilityScope,
+            ),
+          center = false,
+        )
+        Spacer(modifier = Modifier.weight(1f)) // Push disclosure to bottom if space allows
+        DisclosureSection(
+          modifier =
+            Modifier.sharedElement(
+              sharedContentState = rememberSharedContentState(key = "disclosureSection"),
+              animatedVisibilityScope = animatedVisibilityScope,
+            ),
+          center = false,
+        )
+      }
     }
+  }
 }
 
 // --- Reusable Text & Button Components ---
 
 @Composable
 fun HeaderText(
-    modifier: Modifier = Modifier,
-    center: Boolean
+  modifier: Modifier = Modifier,
+  center: Boolean,
 ) {
-    Text(
-        text = "Header",
-        fontSize = 34.sp,
-        lineHeight = 40.sp,
-        color = TextDark,
-        textAlign = if (center) TextAlign.Center else TextAlign.Start,
-        modifier = modifier
-    )
+  Text(
+    text = "Header",
+    fontSize = 34.sp,
+    lineHeight = 40.sp,
+    color = TextDark,
+    textAlign = if (center) TextAlign.Center else TextAlign.Start,
+    modifier = modifier,
+  )
 }
 
 @Composable
 fun SubheaderText(
-    modifier: Modifier = Modifier,
-    center: Boolean
+  modifier: Modifier = Modifier,
+  center: Boolean,
 ) {
-    Text(
-        text = "Subheader text",
-        fontSize = 18.sp,
-        fontWeight = FontWeight.Bold,
-        color = TextDark,
-        textAlign = if (center) TextAlign.Center else TextAlign.Start,
-        modifier = modifier
-    )
+  Text(
+    text = "Subheader text",
+    fontSize = 18.sp,
+    fontWeight = FontWeight.Bold,
+    color = TextDark,
+    textAlign = if (center) TextAlign.Center else TextAlign.Start,
+    modifier = modifier,
+  )
 }
 
 @Composable
 fun BodyText(
-    modifier: Modifier = Modifier,
-    center: Boolean
+  modifier: Modifier = Modifier,
+  center: Boolean,
 ) {
+  Text(
+    text = "Body text lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod.",
+    fontSize = 16.sp,
+    color = TextDark.copy(alpha = 0.8f),
+    textAlign = if (center) TextAlign.Center else TextAlign.Start,
+    modifier = modifier,
+  )
+}
+
+@Composable
+fun MainButton(modifier: Modifier = Modifier) {
+  Button(
+    onClick = { /* TODO */ },
+    colors =
+      ButtonDefaults.buttonColors(
+        containerColor = ButtonDark,
+        contentColor = ContainerWhite,
+      ),
+    shape = CircleShape,
+    modifier = modifier.height(48.dp),
+  ) {
     Text(
-        text = "Body text lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod.",
-        fontSize = 16.sp,
-        color = TextDark.copy(alpha = 0.8f),
-        textAlign = if (center) TextAlign.Center else TextAlign.Start,
-        modifier = modifier
+      text = "Button label",
+      fontWeight = FontWeight.Bold,
+      modifier = Modifier.padding(horizontal = 24.dp),
     )
+  }
 }
 
 @Composable
-fun MainButton(
-    modifier: Modifier = Modifier,
-) {
-    Button(
-        onClick = { /* TODO */ },
-        colors = ButtonDefaults.buttonColors(
-            containerColor = ButtonDark,
-            contentColor = ContainerWhite
-        ),
-        shape = CircleShape,
-        modifier = modifier.height(48.dp)
-    ) {
-        Text(
-            text = "Button label",
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(horizontal = 24.dp)
-        )
-    }
-}
-
-@Composable
-fun SecondaryButton(
-    modifier: Modifier = Modifier,
-) {
-    TextButton(
-        onClick = { /* TODO */ },
-        modifier = modifier
-    ) {
-        Text(
-            text = "Dismiss CTA",
-            color = AccentPurple,
-            fontWeight = FontWeight.Bold,
-            fontSize = 16.sp
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-            contentDescription = null,
-            tint = AccentPurple
-        )
-    }
+fun SecondaryButton(modifier: Modifier = Modifier) {
+  TextButton(
+    onClick = { /* TODO */ },
+    modifier = modifier,
+  ) {
+    Text(
+      text = "Dismiss CTA",
+      color = AccentPurple,
+      fontWeight = FontWeight.Bold,
+      fontSize = 16.sp,
+    )
+    Spacer(modifier = Modifier.width(4.dp))
+    Icon(
+      imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+      contentDescription = null,
+      tint = AccentPurple,
+    )
+  }
 }
 
 @Composable
 fun DisclosureSection(
-    modifier: Modifier = Modifier,
-    center: Boolean
+  modifier: Modifier = Modifier,
+  center: Boolean,
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = if (center) Alignment.CenterHorizontally else Alignment.Start
-    ) {
-        Text(
-            text = "Disclosures",
-            fontWeight = FontWeight.Bold,
-            fontSize = 12.sp,
-            color = TextDark
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "Terms and conditions apply. For more information, view Wells Fargo's Online Access Agreement.",
-            fontSize = 12.sp,
-            color = DisclosureGray,
-            textAlign = if (center) TextAlign.Center else TextAlign.Start
-        )
-    }
+  Column(
+    modifier = modifier,
+    horizontalAlignment = if (center) Alignment.CenterHorizontally else Alignment.Start,
+  ) {
+    Text(
+      text = "Disclosures",
+      fontWeight = FontWeight.Bold,
+      fontSize = 12.sp,
+      color = TextDark,
+    )
+    Spacer(modifier = Modifier.height(4.dp))
+    Text(
+      text =
+        "Terms and conditions apply. For more information, view Wells Fargo's Online Access Agreement.",
+      fontSize = 12.sp,
+      color = DisclosureGray,
+      textAlign = if (center) TextAlign.Center else TextAlign.Start,
+    )
+  }
 }
 
 // --- Previews ---
@@ -467,15 +476,18 @@ fun DisclosureSection(
 @Preview(name = "Portrait Mode", device = "spec:width=411dp,height=891dp,dpi=420")
 @Composable
 fun PreviewPortrait() {
-    MaterialTheme {
-        ResponsiveCurvedLayoutScreen()
-    }
+  MaterialTheme {
+    ResponsiveCurvedLayoutScreen()
+  }
 }
 
-@Preview(name = "Landscape Mode", device = "spec:width=891dp,height=411dp,dpi=420,orientation=landscape")
+@Preview(
+  name = "Landscape Mode",
+  device = "spec:width=891dp,height=411dp,dpi=420,orientation=landscape",
+)
 @Composable
 fun PreviewLandscape() {
-    MaterialTheme {
-        ResponsiveCurvedLayoutScreen()
-    }
+  MaterialTheme {
+    ResponsiveCurvedLayoutScreen()
+  }
 }

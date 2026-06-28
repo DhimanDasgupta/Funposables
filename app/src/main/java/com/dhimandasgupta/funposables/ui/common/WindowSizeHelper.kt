@@ -8,9 +8,9 @@ import androidx.compose.runtime.remember
 
 // Enum to represent the different layout types
 enum class DeviceLayoutType {
-    PHONE_PORTRAIT,
-    PHONE_LANDSCAPE,
-    TABLET_LAYOUT
+  PHONE_PORTRAIT,
+  PHONE_LANDSCAPE,
+  TABLET_LAYOUT,
 }
 
 /**
@@ -20,40 +20,48 @@ enum class DeviceLayoutType {
  * @return The DeviceLayoutType (PHONE_PORTRAIT, PHONE_LANDSCAPE, or TABLET_LAYOUT).
  */
 @Composable
-fun getDeviceLayoutType(
-    windowSizeClass: WindowSizeClass
-): DeviceLayoutType {
-    // Remember the calculation to avoid re-computation on every recomposition
-    // if windowSizeClass itself is stable.
-    return remember(key1 = windowSizeClass) {
-        val widthSizeClass = windowSizeClass.widthSizeClass
-        val heightSizeClass = windowSizeClass.heightSizeClass
+fun getDeviceLayoutType(windowSizeClass: WindowSizeClass): DeviceLayoutType {
+  // Remember the calculation to avoid re-computation on every recomposition
+  // if windowSizeClass itself is stable.
+  return remember(key1 = windowSizeClass) {
+    val widthSizeClass = windowSizeClass.widthSizeClass
+    val heightSizeClass = windowSizeClass.heightSizeClass
 
-        when {
-            // Typical tablet heuristic: Medium or Expanded width AND Medium or Expanded height
-            (widthSizeClass == WindowWidthSizeClass.Medium || widthSizeClass == WindowWidthSizeClass.Expanded) &&
-                    (heightSizeClass == WindowHeightSizeClass.Medium || heightSizeClass == WindowHeightSizeClass.Expanded) -> {
-                DeviceLayoutType.TABLET_LAYOUT
-            }
-            // Typical phone landscape heuristic: Expanded width AND Compact height
-            widthSizeClass == WindowWidthSizeClass.Expanded && heightSizeClass == WindowHeightSizeClass.Compact -> {
-                DeviceLayoutType.PHONE_LANDSCAPE
-            }
-            // Typical phone portrait or other compact layouts
-            // (Compact width OR Compact height for non-tablets, primarily targeting phone portrait)
-            else -> {
-                // More refined phone portrait check:
-                if (widthSizeClass == WindowWidthSizeClass.Compact && heightSizeClass != WindowHeightSizeClass.Compact) {
-                    DeviceLayoutType.PHONE_PORTRAIT
-                } else if (widthSizeClass != WindowWidthSizeClass.Compact && heightSizeClass == WindowHeightSizeClass.Compact) {
-                    // This could also be phone landscape, but the above case is more specific.
-                    // If not caught by tablet or specific phone landscape, could be a wider phone in landscape.
-                    DeviceLayoutType.PHONE_LANDSCAPE // Or a more generic phone category if needed
-                } else {
-                    // Default to phone portrait for other compact scenarios
-                    DeviceLayoutType.PHONE_PORTRAIT
-                }
-            }
+    when {
+      // Typical tablet heuristic: Medium or Expanded width AND Medium or Expanded height
+      (widthSizeClass == WindowWidthSizeClass.Medium ||
+        widthSizeClass == WindowWidthSizeClass.Expanded) &&
+        (heightSizeClass == WindowHeightSizeClass.Medium ||
+          heightSizeClass == WindowHeightSizeClass.Expanded) -> {
+        DeviceLayoutType.TABLET_LAYOUT
+      }
+      // Typical phone landscape heuristic: Expanded width AND Compact height
+      widthSizeClass == WindowWidthSizeClass.Expanded &&
+        heightSizeClass == WindowHeightSizeClass.Compact -> {
+        DeviceLayoutType.PHONE_LANDSCAPE
+      }
+      // Typical phone portrait or other compact layouts
+      // (Compact width OR Compact height for non-tablets, primarily targeting phone portrait)
+      else -> {
+        // More refined phone portrait check:
+        if (
+          widthSizeClass == WindowWidthSizeClass.Compact &&
+            heightSizeClass != WindowHeightSizeClass.Compact
+        ) {
+          DeviceLayoutType.PHONE_PORTRAIT
+        } else if (
+          widthSizeClass != WindowWidthSizeClass.Compact &&
+            heightSizeClass == WindowHeightSizeClass.Compact
+        ) {
+          // This could also be phone landscape, but the above case is more specific.
+          // If not caught by tablet or specific phone landscape, could be a wider phone in
+          // landscape.
+          DeviceLayoutType.PHONE_LANDSCAPE // Or a more generic phone category if needed
+        } else {
+          // Default to phone portrait for other compact scenarios
+          DeviceLayoutType.PHONE_PORTRAIT
         }
+      }
     }
+  }
 }

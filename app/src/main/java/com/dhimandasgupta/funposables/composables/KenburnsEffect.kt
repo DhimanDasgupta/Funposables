@@ -111,7 +111,6 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
       )
     }
 
-    // if (carousalState.currentItem == itemIndex)
     FlowRow(
       modifier =
         Modifier.padding(

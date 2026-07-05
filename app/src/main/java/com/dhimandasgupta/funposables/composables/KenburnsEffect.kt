@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -25,6 +26,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
@@ -41,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -94,18 +95,15 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
   ) {
+    val carousalState = rememberCarouselState(initialItem = 0, itemCount = { items.size })
     HorizontalCenteredHeroCarousel(
-      state =
-        rememberCarouselState(
-          initialItem = 0,
-          itemCount = { items.size },
-        ),
+      state = carousalState,
       itemSpacing = 8.dp,
       modifier = carousalModifier,
-      contentPadding = PaddingValues(horizontal = 32.dp),
+      contentPadding = PaddingValues(horizontal = 0.dp),
     ) { itemIndex ->
       ApplyKenBurnsEffect(
-        modifier = Modifier,
+        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
         drawableResourceId = items[itemIndex],
         updatePalette = { newPalette ->
           palette = newPalette
@@ -113,6 +111,7 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
       )
     }
 
+    // if (carousalState.currentItem == itemIndex)
     FlowRow(
       modifier =
         Modifier.padding(
@@ -210,38 +209,44 @@ fun ApplyKenBurnsEffect(
         label = "panningY",
       )
 
-    Box(
-      modifier = modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)).clipToBounds(),
-      contentAlignment = Alignment.Center,
+    Card(
+      modifier = modifier.size(200.dp).clip(RoundedCornerShape(16.dp)),
+      shape = RoundedCornerShape(16.dp),
     ) {
-      AsyncImage(
-        model = imageRequest,
-        contentDescription = "kenburns image",
-        contentScale = ContentScale.Crop,
-        modifier =
-          Modifier.size(200.dp)
-            .onSizeChanged { intSize -> containerSize = intSize }
-            .graphicsLayer {
-              this.transformOrigin = TransformOrigin.Center
+      Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center,
+      ) {
+        AsyncImage(
+          model = imageRequest,
+          contentDescription = "kenburns image",
+          contentScale = ContentScale.Crop,
+          modifier =
+            Modifier.matchParentSize()
+              .aspectRatio(1f)
+              .onSizeChanged { intSize -> containerSize = intSize }
+              .graphicsLayer {
+                this.transformOrigin = TransformOrigin.Center
 
-              if (containerSize != IntSize.Zero) {
-                this.clip = false
-                this.scaleX = scale
-                this.scaleY = scale
+                if (containerSize != IntSize.Zero) {
+                  this.clip = false
+                  this.scaleX = scale
+                  this.scaleY = scale
 
-                val scaledImageWidth = imageSize.width * scale
-                val scaledImageHeight = imageSize.height * scale
+                  val scaledImageWidth = imageSize.width * scale
+                  val scaledImageHeight = imageSize.height * scale
 
-                val maxTranslationX =
-                  (scaledImageWidth - containerSize.width).coerceAtLeast(0f) / 2f
-                val maxTranslationY =
-                  (scaledImageHeight - containerSize.height).coerceAtLeast(0f) / 2f
+                  val maxTranslationX =
+                    (scaledImageWidth - containerSize.width).coerceAtLeast(0f) / 2f
+                  val maxTranslationY =
+                    (scaledImageHeight - containerSize.height).coerceAtLeast(0f) / 2f
 
-                this.translationX = panningX * maxTranslationX
-                this.translationY = panningY * maxTranslationY
-              }
-            },
-      )
+                  this.translationX = panningX * maxTranslationX
+                  this.translationY = panningY * maxTranslationY
+                }
+              },
+        )
+      }
     }
   }
 }

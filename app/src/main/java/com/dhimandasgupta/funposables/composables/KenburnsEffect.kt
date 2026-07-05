@@ -121,17 +121,15 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
       verticalArrangement = Arrangement.spacedBy(4.dp),
       maxItemsInEachRow = Int.MAX_VALUE,
     ) {
-      palette?.swatches?.forEach { swatch ->
-        swatch?.let { swatch ->
-          Box(
-            modifier =
-              Modifier.size(36.dp)
-                .background(
-                  color = Color(swatch.rgb),
-                  shape = RoundedCornerShape(8.dp),
-                )
-          )
-        }
+      palette?.swatches?.asSequence()?.filterNotNull()?.forEach { swatch ->
+        Box(
+          modifier =
+            Modifier.size(36.dp)
+              .background(
+                color = Color(swatch.rgb),
+                shape = RoundedCornerShape(8.dp),
+              )
+        )
       }
     }
   }

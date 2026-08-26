@@ -38,8 +38,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -47,6 +46,7 @@ import androidx.compose.ui.zIndex
 import com.dhimandasgupta.funposables.ui.common.bottomFadeForLazyColumn
 import com.dhimandasgupta.funposables.ui.common.verticalScrollbarForLazyColumn
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
+import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toPersistentList
 
 @Composable
@@ -102,75 +102,74 @@ fun ExpandableCollapsableItems(modifier: Modifier = Modifier) {
 
 @Composable
 private fun ExpandableCardList(
-  items: List<Item>, // list of items (ex: account names)
+  items: ImmutableList<Item>, // list of items (ex: account names)
   modifier: Modifier = Modifier,
 ) {
   var expanded by remember { mutableStateOf(false) }
+  val scrollState = rememberLazyListState()
 
-  Column(modifier = modifier.fillMaxWidth()) {
-
+  LazyColumn(
+    state = scrollState,
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .verticalScrollbarForLazyColumn(
+          lazyListState = scrollState,
+          width = 4.dp,
+          thumbWidth = 8.dp,
+          minThumbHeight = 32.dp,
+          endPadding = 2.dp,
+        )
+        .bottomFadeForLazyColumn(
+          lazyListState = scrollState,
+          heightPercentage = 0.25f,
+          color = colorScheme.primary,
+          maxAlpha = 0.8f,
+        ),
+  ) {
     // Header row
-    Row(
-      modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(16.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(
-          imageVector =
-            if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-          contentDescription = null,
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-          text = "Cash Accounts",
-          style = typography.titleMedium,
-        )
-      }
+    item {
+      Row(
+        modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(16.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+      ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Icon(
+            imageVector =
+              if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+            contentDescription = null,
+          )
+          Spacer(Modifier.width(8.dp))
+          Text(
+            text = "Cash Accounts",
+            style = typography.titleMedium,
+          )
+        }
 
-      Column(horizontalAlignment = Alignment.End) {
-        Text(
-          text = "$575,147.23", // replace it with dynamic data
-          style = typography.titleMedium,
-        )
-        Text(
-          text = "Total available balance",
-          style = typography.bodySmall,
-        )
+        Column(horizontalAlignment = Alignment.End) {
+          Text(
+            text = "$575,147.23", // replace it with dynamic data
+            style = typography.titleMedium,
+          )
+          Text(
+            text = "Total available balance",
+            style = typography.bodySmall,
+          )
+        }
       }
     }
 
-    val scrollState = rememberLazyListState()
-
-    LazyColumn(
-      state = scrollState,
-      modifier =
-        Modifier.fillMaxWidth()
-          .verticalScrollbarForLazyColumn(
-            lazyListState = scrollState,
-            width = 4.dp,
-            thumbWidth = 8.dp,
-            minThumbHeight = 32.dp,
-            endPadding = 2.dp,
+    itemsIndexed(items) { index, item ->
+      when (item) {
+        is Item.AccountItem ->
+          AccountCard(
+            index = index,
+            expanded = expanded,
+            accountName = item.name,
+            accountBalance = item.amount,
           )
-          .bottomFadeForLazyColumn(
-            lazyListState = scrollState,
-            heightPercentage = 0.25f,
-            color = colorScheme.primary,
-            maxAlpha = 0.8f,
-          ),
-    ) {
-      itemsIndexed(items) { index, item ->
-        when (item) {
-          is Item.AccountItem ->
-            AccountCard(
-              index = index,
-              collapsed = expanded,
-              accountName = item.name,
-              accountBalance = item.amount,
-            )
-          is Item.NormalItem -> NormalCard(item = item.name)
-        }
+        is Item.NormalItem -> NormalCard(item = item.name)
       }
     }
   }
@@ -180,26 +179,27 @@ private fun ExpandableCardList(
 private fun AccountCard(
   modifier: Modifier = Modifier,
   index: Int = 0,
-  collapsed: Boolean = false,
+  expanded: Boolean = false,
   accountName: String,
   accountBalance: String,
 ) {
-  val density = LocalDensity.current
-
   Card(
     modifier =
       modifier
         .fillMaxWidth()
         .padding(horizontal = 16.dp, vertical = 4.dp)
-        .graphicsLayer {
-          translationY =
-            if (collapsed) 0f
-            else
-              with(density) {
-                (-index * 96).toDp().roundToPx().toFloat()
-              }
-        }
-        .zIndex(index.toFloat() * -1f),
+        .zIndex(index.toFloat() * -1f)
+        .layout { measurable, constraints ->
+          val placeable = measurable.measure(constraints)
+          val height = if (expanded || index == 0) placeable.height else 0
+          layout(placeable.width, height) {
+            if (expanded || index == 0) {
+              placeable.placeRelative(0, 0)
+            } else {
+              placeable.placeRelative(0, -placeable.height)
+            }
+          }
+        },
     border = CardDefaults.outlinedCardBorder(enabled = true),
     elevation =
       CardDefaults.cardElevation(

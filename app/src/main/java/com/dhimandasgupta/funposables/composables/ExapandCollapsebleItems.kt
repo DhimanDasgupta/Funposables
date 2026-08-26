@@ -129,35 +129,11 @@ private fun ExpandableCardList(
   ) {
     // Header row
     item {
-      Row(
+      HeaderItem(
         modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-      ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-          Icon(
-            imageVector =
-              if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
-            contentDescription = null,
-          )
-          Spacer(Modifier.width(8.dp))
-          Text(
-            text = "Cash Accounts",
-            style = typography.titleMedium,
-          )
-        }
-
-        Column(horizontalAlignment = Alignment.End) {
-          Text(
-            text = "$575,147.23", // replace it with dynamic data
-            style = typography.titleMedium,
-          )
-          Text(
-            text = "Total available balance",
-            style = typography.bodySmall,
-          )
-        }
-      }
+        expanded = expanded,
+        onExpandChanged = { expanded = it },
+      )
     }
 
     itemsIndexed(items) { index, item ->
@@ -171,6 +147,43 @@ private fun ExpandableCardList(
           )
         is Item.NormalItem -> NormalCard(item = item.name)
       }
+    }
+  }
+}
+
+@Composable
+private fun HeaderItem(
+  modifier: Modifier = Modifier,
+  expanded: Boolean,
+  onExpandChanged: (Boolean) -> Unit,
+) {
+  Row(
+    modifier = modifier.clickable { onExpandChanged(!expanded) },
+    horizontalArrangement = Arrangement.SpaceBetween,
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Icon(
+        imageVector =
+          if (expanded) Icons.Default.KeyboardArrowUp else Icons.Default.KeyboardArrowDown,
+        contentDescription = null,
+      )
+      Spacer(Modifier.width(8.dp))
+      Text(
+        text = "Cash Accounts",
+        style = typography.titleMedium,
+      )
+    }
+
+    Column(horizontalAlignment = Alignment.End) {
+      Text(
+        text = "$575,147.23", // replace it with dynamic data
+        style = typography.titleMedium,
+      )
+      Text(
+        text = "Total available balance",
+        style = typography.bodySmall,
+      )
     }
   }
 }

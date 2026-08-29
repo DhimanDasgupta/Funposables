@@ -116,19 +116,22 @@ private fun ExpandableCardList(
         .verticalScrollbarForLazyColumn(
           lazyListState = scrollState,
           width = 4.dp,
-          thumbWidth = 8.dp,
+          thumbWidth = 2.dp,
           minThumbHeight = 32.dp,
           endPadding = 2.dp,
         )
         .bottomFadeForLazyColumn(
           lazyListState = scrollState,
-          heightPercentage = 0.25f,
+          heightPercentage = 1f,
           color = colorScheme.primary,
-          maxAlpha = 0.8f,
+          maxAlpha = 0.75f,
         ),
   ) {
     // Header row
-    item {
+    item(
+      key = "header",
+      contentType = "header",
+    ) {
       HeaderItem(
         modifier = Modifier.fillMaxWidth().clickable { expanded = !expanded }.padding(16.dp),
         expanded = expanded,
@@ -136,7 +139,11 @@ private fun ExpandableCardList(
       )
     }
 
-    itemsIndexed(items) { index, item ->
+    itemsIndexed(
+      items = items,
+      key = { index, item -> item.hashCode() + index },
+      contentType = { _, item -> item.javaClass.name },
+    ) { index, item ->
       when (item) {
         is Item.AccountItem ->
           AccountCard(
@@ -209,7 +216,7 @@ private fun AccountCard(
             if (expanded || index == 0) {
               placeable.placeRelative(0, 0)
             } else {
-              placeable.placeRelative(0, -placeable.height)
+              placeable.placeRelative(0, -1 * placeable.height)
             }
           }
         },

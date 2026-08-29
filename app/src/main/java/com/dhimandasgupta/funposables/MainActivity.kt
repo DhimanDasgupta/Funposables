@@ -22,8 +22,8 @@ class MainActivity : ComponentActivity() {
   @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
   override fun onCreate(savedInstanceState: Bundle?) {
     installSplashScreen()
-    super.onCreate(savedInstanceState)
     enableEdgeToEdge()
+    super.onCreate(savedInstanceState)
     val appGraph = (application as App).getAppComponent()
     setContent {
       FunposablesTheme {

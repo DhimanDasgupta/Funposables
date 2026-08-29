@@ -1,5 +1,6 @@
 package com.dhimandasgupta.funposables.composables
 
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -255,7 +256,12 @@ private fun NormalCard(
 ) {
   Text(
     text = "This is Item : $item",
-    modifier = modifier.padding(16.dp).fillMaxWidth(),
+    modifier =
+      modifier
+        .fillMaxWidth()
+        .padding(16.dp)
+        .border(1.dp, colorScheme.primary, RoundedCornerShape(12.dp))
+        .padding(horizontal = 12.dp, vertical = 8.dp),
   )
 }
 

@@ -50,6 +50,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 import kotlin.math.max
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.toImmutableList
 
 enum class SubwayOrientation {
   Horizontal,
@@ -119,7 +121,7 @@ object SubwayDefaults {
  */
 @Composable
 fun Subway(
-  steps: List<SubwayStep>,
+  steps: ImmutableList<SubwayStep>,
   modifier: Modifier = Modifier,
   orientation: SubwayOrientation = SubwayOrientation.Horizontal,
   colors: SubwayColors = SubwayDefaults.colors(),
@@ -172,7 +174,7 @@ private fun SubwayDot(
 
 @Composable
 private fun HorizontalSubway(
-  steps: List<SubwayStep>,
+  steps: ImmutableList<SubwayStep>,
   modifier: Modifier = Modifier,
   colors: SubwayColors,
 ) {
@@ -270,7 +272,7 @@ private fun HorizontalSubway(
 
 @Composable
 private fun VerticalSubway(
-  steps: List<SubwayStep>,
+  steps: ImmutableList<SubwayStep>,
   modifier: Modifier = Modifier,
   colors: SubwayColors,
 ) {
@@ -321,7 +323,7 @@ private fun VerticalSubway(
 private fun VerticalSubwayStepItem(
   index: Int,
   step: SubwayStep,
-  steps: List<SubwayStep>,
+  steps: ImmutableList<SubwayStep>,
   colors: SubwayColors,
   modifier: Modifier = Modifier,
 ) {
@@ -422,15 +424,24 @@ private fun HorizontalSubwayPreview() {
   FunposablesTheme {
     val steps =
       listOf(
-        SubwayStep(
-          label = "Label",
-          supportText = "Support text",
-          state = SubwayStepState.Completed,
-        ),
-        SubwayStep(label = "Label", supportText = "Support text", state = SubwayStepState.Active),
-        SubwayStep(label = "Label", supportText = "Support text", state = SubwayStepState.Inactive),
-        SubwayStep(label = "Label", supportText = "Support text", state = SubwayStepState.Inactive),
-      )
+          SubwayStep(
+            label = "Label",
+            supportText = "Support text",
+            state = SubwayStepState.Completed,
+          ),
+          SubwayStep(label = "Label", supportText = "Support text", state = SubwayStepState.Active),
+          SubwayStep(
+            label = "Label",
+            supportText = "Support text",
+            state = SubwayStepState.Inactive,
+          ),
+          SubwayStep(
+            label = "Label",
+            supportText = "Support text",
+            state = SubwayStepState.Inactive,
+          ),
+        )
+        .toImmutableList()
     Subway(
       steps = steps,
       orientation = SubwayOrientation.Horizontal,
@@ -446,31 +457,32 @@ private fun VerticalSubwayPreview() {
   FunposablesTheme {
     val steps =
       listOf(
-        SubwayStep(
-          label = "Long label that wraps\nto a second line",
-          supportText = "Support text",
-          trailingLabel = "Trailing label",
-          state = SubwayStepState.Completed,
-        ),
-        SubwayStep(
-          label = "Label",
-          supportText = "Support text",
-          trailingLabel = "Trailing label",
-          state = SubwayStepState.Active,
-        ),
-        SubwayStep(
-          label = "Label",
-          supportText = "Support text",
-          trailingLabel = "Trailing label",
-          state = SubwayStepState.Inactive,
-        ),
-        SubwayStep(
-          label = "Label",
-          supportText = "Support text",
-          trailingLabel = "Trailing label",
-          state = SubwayStepState.Inactive,
-        ),
-      )
+          SubwayStep(
+            label = "Long label that wraps\nto a second line",
+            supportText = "Support text",
+            trailingLabel = "Trailing label",
+            state = SubwayStepState.Completed,
+          ),
+          SubwayStep(
+            label = "Label",
+            supportText = "Support text",
+            trailingLabel = "Trailing label",
+            state = SubwayStepState.Active,
+          ),
+          SubwayStep(
+            label = "Label",
+            supportText = "Support text",
+            trailingLabel = "Trailing label",
+            state = SubwayStepState.Inactive,
+          ),
+          SubwayStep(
+            label = "Label",
+            supportText = "Support text",
+            trailingLabel = "Trailing label",
+            state = SubwayStepState.Inactive,
+          ),
+        )
+        .toImmutableList()
     Subway(
       steps = steps,
       orientation = SubwayOrientation.Vertical,
@@ -489,27 +501,28 @@ fun SubwayPane(modifier: Modifier = Modifier) {
 
   val steps =
     remember(stepCount, activeStepIndex, hasMultilineLabel) {
-      (0 until stepCount).map { i ->
-        val label =
-          if (i == 0 && hasMultilineLabel) {
-            "Long label that wraps\nto a second line"
-          } else {
-            "Label"
-          }
-        val state =
-          when {
-            i < activeStepIndex -> SubwayStepState.Completed
-            i == activeStepIndex -> SubwayStepState.Active
-            else -> SubwayStepState.Inactive
-          }
-        SubwayStep(
-          label = label,
-          supportText = "Support text",
-          trailingLabel = "Trailing label",
-          state = state,
-        )
+        (0 until stepCount).map { i ->
+          val label =
+            if (i == 0 && hasMultilineLabel) {
+              "Long label that wraps\nto a second line"
+            } else {
+              "Label"
+            }
+          val state =
+            when {
+              i < activeStepIndex -> SubwayStepState.Completed
+              i == activeStepIndex -> SubwayStepState.Active
+              else -> SubwayStepState.Inactive
+            }
+          SubwayStep(
+            label = label,
+            supportText = "Support text",
+            trailingLabel = "Trailing label",
+            state = state,
+          )
+        }
       }
-    }
+      .toImmutableList()
 
   val scrollState = rememberScrollState()
 

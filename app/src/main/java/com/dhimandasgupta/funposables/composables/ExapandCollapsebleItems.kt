@@ -48,12 +48,13 @@ import com.dhimandasgupta.funposables.ui.common.bottomFadeForLazyColumn
 import com.dhimandasgupta.funposables.ui.common.verticalScrollbarForLazyColumn
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toPersistentList
 
 @Composable
 fun ExpandableCollapsableItems(modifier: Modifier = Modifier) {
   val accountItem =
-    listOf(
+    persistentListOf(
       Item.AccountItem("Dhiman Dasgupta", "$12,345.67"),
       Item.AccountItem("Paramita Banerjee", "$12,345.67"),
       Item.AccountItem("Nilanjan Sen", "$12,345.67"),
@@ -64,10 +65,11 @@ fun ExpandableCollapsableItems(modifier: Modifier = Modifier) {
 
   val normalItems =
     buildList<Item> {
-      repeat(100) { index ->
-        add(Item.NormalItem("This is Item : $index"))
+        repeat(100) { index ->
+          add(Item.NormalItem("This is Item : $index"))
+        }
       }
-    }
+      .toPersistentList()
 
   val items = (accountItem + normalItems).toPersistentList()
 

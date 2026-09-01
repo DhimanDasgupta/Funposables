@@ -31,6 +31,7 @@ import com.dhimandasgupta.funposables.composables.OrbitalLoader
 import com.dhimandasgupta.funposables.composables.RichHTMLText
 import com.dhimandasgupta.funposables.composables.RichTextMarkdownText
 import com.dhimandasgupta.funposables.composables.SearchExpander
+import com.dhimandasgupta.funposables.composables.SubwayPane
 import com.dhimandasgupta.funposables.di.AppGraph
 import com.freeletics.flowredux2.produceStateMachine
 
@@ -127,6 +128,9 @@ fun FunposablesRoot(
               navigateToRichTextMarkdown = {
                 backStack.add(RichTextMarkdownNavKey)
               },
+              navigateToSubway = {
+                backStack.add(SubwayNavKey)
+              },
             )
           }
           entry<ExpandableCollapsableItemsNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
@@ -179,6 +183,9 @@ fun FunposablesRoot(
           }
           entry<RichTextMarkdownNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
             RichTextMarkdownText(modifier = modifier)
+          }
+          entry<SubwayNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+            SubwayPane(modifier = modifier)
           }
         },
     )

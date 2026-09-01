@@ -49,6 +49,7 @@ fun Launcher(
   navigateToBackgroundGrid: () -> Unit,
   navigateToRichTextHTML: () -> Unit,
   navigateToRichTextMarkdown: () -> Unit,
+  navigateToSubway: () -> Unit,
 ) {
   val cardModifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(56.dp)
 
@@ -263,6 +264,17 @@ fun Launcher(
       )
     }
 
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToSubway,
+    ) {
+      Text(
+        "Subway",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
     Spacer(
       modifier =
         Modifier.fillMaxWidth()
@@ -297,6 +309,7 @@ private fun LauncherPreview() {
       navigateToBackgroundGrid = {},
       navigateToRichTextHTML = {},
       navigateToRichTextMarkdown = {},
+      navigateToSubway = {},
     )
   }
 }

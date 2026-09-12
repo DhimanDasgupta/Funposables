@@ -43,7 +43,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
@@ -182,13 +181,19 @@ fun ApplyKenBurnsEffect(
     // Rolled once: animateFloat re-targets the animation whenever these values change, so
     // evaluating Random in the composable body would re-roll them on every recomposition.
     val scaleRange = remember {
-      Random.nextDouble(2.05, 2.95).toFloat() to Random.nextDouble(3.0, 5.0).toFloat()
+      val start = Random.nextDouble(1.15, 1.35).toFloat()
+      val end = Random.nextDouble(1.45, 1.75).toFloat()
+      if (Random.nextBoolean()) start to end else end to start
     }
     val panningXRange = remember {
-      Random.nextDouble(-0.01, 0.0).toFloat() to Random.nextDouble(0.0, 0.01).toFloat()
+      val start = Random.nextDouble(-0.8, -0.2).toFloat()
+      val end = Random.nextDouble(0.2, 0.8).toFloat()
+      if (Random.nextBoolean()) start to end else end to start
     }
     val panningYRange = remember {
-      Random.nextDouble(-0.01, 0.0).toFloat() to Random.nextDouble(0.0, 0.01).toFloat()
+      val start = Random.nextDouble(-0.8, -0.2).toFloat()
+      val end = Random.nextDouble(0.2, 0.8).toFloat()
+      if (Random.nextBoolean()) start to end else end to start
     }
 
     val scale by
@@ -228,7 +233,7 @@ fun ApplyKenBurnsEffect(
       )
 
     Card(
-      modifier = modifier.size(200.dp).clip(RoundedCornerShape(16.dp)),
+      modifier = modifier,
       shape = RoundedCornerShape(16.dp),
     ) {
       Box(
@@ -240,27 +245,30 @@ fun ApplyKenBurnsEffect(
           contentDescription = "kenburns image",
           contentScale = ContentScale.Crop,
           modifier =
-            Modifier.matchParentSize()
-              .aspectRatio(1f)
+            Modifier.fillMaxSize()
               .onSizeChanged { intSize -> containerSize = intSize }
               .graphicsLayer {
-                this.transformOrigin = TransformOrigin.Center
+                transformOrigin = TransformOrigin.Center
 
-                if (containerSize != IntSize.Zero) {
-                  this.clip = false
-                  this.scaleX = scale
-                  this.scaleY = scale
-
-                  val scaledImageWidth = imageSize.width * scale
-                  val scaledImageHeight = imageSize.height * scale
+                if (
+                  containerSize != IntSize.Zero &&
+                    containerSize.width > 0 &&
+                    containerSize.height > 0
+                ) {
+                  clip = false
+                  val currentScale = scale.coerceAtLeast(1f)
+                  scaleX = currentScale
+                  scaleY = currentScale
 
                   val maxTranslationX =
-                    (scaledImageWidth - containerSize.width).coerceAtLeast(0f) / 2f
+                    (containerSize.width * (currentScale - 1f)).coerceAtLeast(0f) / 2f
                   val maxTranslationY =
-                    (scaledImageHeight - containerSize.height).coerceAtLeast(0f) / 2f
+                    (containerSize.height * (currentScale - 1f)).coerceAtLeast(0f) / 2f
 
-                  this.translationX = panningX * maxTranslationX
-                  this.translationY = panningY * maxTranslationY
+                  translationX =
+                    (panningX * maxTranslationX).coerceIn(-maxTranslationX, maxTranslationX)
+                  translationY =
+                    (panningY * maxTranslationY).coerceIn(-maxTranslationY, maxTranslationY)
                 }
               },
         )

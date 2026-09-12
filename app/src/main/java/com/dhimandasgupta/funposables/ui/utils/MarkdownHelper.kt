@@ -51,6 +51,8 @@ import kotlin.time.Clock
 import kotlin.uuid.ExperimentalUuidApi
 import kotlin.uuid.Uuid
 import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.ImmutableMap
+import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -94,7 +96,7 @@ data class WFMarkdownStyle(
   val dividerColor: Color = Color.Unspecified,
   val linkColor: Color = Color.Unspecified,
   val urlLinkStyles: TextLinkStyles? = null,
-  val linkClickListeners: Map<String, LinkInteractionListener> = emptyMap(),
+  val linkClickListeners: ImmutableMap<String, LinkInteractionListener> = persistentMapOf(),
   val tableBorderColor: Color = Color.Unspecified,
   val tableHeaderBackgroundColor: Color = Color.Unspecified,
   val tableHeaderStyle: TextStyle = TextStyle.Default.copy(fontWeight = FontWeight.Bold),
@@ -584,6 +586,7 @@ private fun tokenizeInline(input: String): List<InlineToken> {
 
 // region Block-level Parser
 
+@Immutable
 @OptIn(ExperimentalUuidApi::class)
 sealed class MarkdownBlock {
   abstract val key: String

@@ -46,9 +46,9 @@ fun GlowingButton(
         label = "TimeAngle",
       )
 
-    // Compile the shader once
+    // Compile the shader once, and wrap it once
     val shader = remember { RuntimeShader(GLOW_SHADER_CODE) }
-    val brush = ShaderBrush(shader)
+    val brush = remember(shader) { ShaderBrush(shader) }
 
     Button(
       onClick = onClick,
@@ -62,7 +62,6 @@ fun GlowingButton(
             maxHeight = 96.dp,
           )
           .drawWithCache {
-            println("Size: ${size.width}, ${size.height}")
             shader.setFloatUniform("size", size.width, size.height)
             shader.setColorUniform("color", glowColor.toArgb())
 

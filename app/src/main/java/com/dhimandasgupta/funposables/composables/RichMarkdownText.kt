@@ -115,6 +115,8 @@ fun RichTextMarkdownText(modifier: Modifier = Modifier) {
   }
 
   val lazyListState = rememberLazyListState()
+  // One style instance for the whole list rather than a fresh 20-field object per visible item.
+  val style = remember { WFMarkdownStyle() }
 
   LazyColumn(
     state = lazyListState,
@@ -144,10 +146,13 @@ fun RichTextMarkdownText(modifier: Modifier = Modifier) {
       )
     }
 
-    itemsIndexed(list) { index, item ->
+    itemsIndexed(
+      items = list,
+      key = { index, block -> block.key + index },
+    ) { _, item ->
       RenderBlock(
         block = item,
-        style = WFMarkdownStyle(),
+        style = style,
       )
     }
 

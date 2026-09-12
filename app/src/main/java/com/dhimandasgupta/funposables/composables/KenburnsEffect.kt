@@ -40,6 +40,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -148,32 +149,52 @@ fun ApplyKenBurnsEffect(
     val imageSize = painter.intrinsicSize
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
 
+    // Remembered so recomposition does not hand AsyncImage a new (non-equal) request and restart
+    // the load, crossfade, and palette generation.
+    val context = LocalContext.current
     val imageRequest =
-      ImageRequest.Builder(LocalContext.current)
-        .memoryCacheKey(drawableResourceId.toString())
-        .diskCacheKey(drawableResourceId.toString())
-        .data(drawableResourceId)
-        .allowHardware(false) // Required for the Palette API
-        .crossfade(true)
-        .listener { _, result ->
-          scope.launch(Dispatchers.Default) {
-            val bitmap = (result.drawable as? BitmapDrawable)?.bitmap ?: return@launch
-            updatePalette(Palette.from(bitmap).generate())
+      remember(drawableResourceId) {
+        ImageRequest.Builder(context)
+          .memoryCacheKey(drawableResourceId.toString())
+          .diskCacheKey(drawableResourceId.toString())
+          .data(drawableResourceId)
+          .allowHardware(false) // Required for the Palette API
+          .crossfade(true)
+          .listener { _, result ->
+            scope.launch(Dispatchers.Default) {
+              val bitmap = (result.drawable as? BitmapDrawable)?.bitmap ?: return@launch
+              updatePalette(Palette.from(bitmap).generate())
+            }
           }
-        }
-        .build()
+          .build()
+      }
 
-    LaunchedEffect(key1 = imageSize, key2 = containerSize) {
+    // Observe the layout-phase size write here instead of keying an effect on it, so the measured
+    // size never feeds back into composition.
+    LaunchedEffect(imageSize) {
       Timber.tag("KenBurnsEffectPane").d("Image size: $imageSize")
-      Timber.tag("KenBurnsEffectPane").d("Container size: $containerSize")
+      snapshotFlow { containerSize }
+        .collect { Timber.tag("KenBurnsEffectPane").d("Container size: $it") }
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "KenBurns")
 
+    // Rolled once: animateFloat re-targets the animation whenever these values change, so
+    // evaluating Random in the composable body would re-roll them on every recomposition.
+    val scaleRange = remember {
+      Random.nextDouble(2.05, 2.95).toFloat() to Random.nextDouble(3.0, 5.0).toFloat()
+    }
+    val panningXRange = remember {
+      Random.nextDouble(-0.01, 0.0).toFloat() to Random.nextDouble(0.0, 0.01).toFloat()
+    }
+    val panningYRange = remember {
+      Random.nextDouble(-0.01, 0.0).toFloat() to Random.nextDouble(0.0, 0.01).toFloat()
+    }
+
     val scale by
       infiniteTransition.animateFloat(
-        initialValue = Random.nextDouble(2.05, 2.95).toFloat(),
-        targetValue = Random.nextDouble(3.0, 5.0).toFloat(),
+        initialValue = scaleRange.first,
+        targetValue = scaleRange.second,
         animationSpec =
           infiniteRepeatable(
             animation = tween(durationMillis = 10000, easing = FastOutSlowInEasing),
@@ -184,8 +205,8 @@ fun ApplyKenBurnsEffect(
 
     val panningX by
       infiniteTransition.animateFloat(
-        initialValue = Random.nextDouble(-0.01, 0.0).toFloat(),
-        targetValue = Random.nextDouble(0.0, 0.01).toFloat(),
+        initialValue = panningXRange.first,
+        targetValue = panningXRange.second,
         animationSpec =
           infiniteRepeatable(
             animation = tween(durationMillis = 12000, easing = LinearOutSlowInEasing),
@@ -196,8 +217,8 @@ fun ApplyKenBurnsEffect(
 
     val panningY by
       infiniteTransition.animateFloat(
-        initialValue = Random.nextDouble(-0.01, 0.0).toFloat(),
-        targetValue = Random.nextDouble(0.0, 0.01).toFloat(),
+        initialValue = panningYRange.first,
+        targetValue = panningYRange.second,
         animationSpec =
           infiniteRepeatable(
             animation = tween(durationMillis = 8000, easing = FastOutLinearInEasing),

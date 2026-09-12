@@ -92,11 +92,11 @@ fun DragOrTransformBox(modifier: Modifier = Modifier) {
       Box(
         modifier =
           Modifier.offset { IntOffset(offset.x.roundToInt(), offset.y.roundToInt()) }
-            .graphicsLayer(
-              scaleX = scale,
-              scaleY = scale,
-              rotationZ = rotation,
-            )
+            .graphicsLayer {
+              scaleX = scale
+              scaleY = scale
+              rotationZ = rotation
+            }
             .size(150.dp)
             .background(Color.Red, RoundedCornerShape(12.dp))
       )

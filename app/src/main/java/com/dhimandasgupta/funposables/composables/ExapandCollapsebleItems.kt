@@ -53,25 +53,29 @@ import kotlinx.collections.immutable.toPersistentList
 
 @Composable
 fun ExpandableCollapsableItems(modifier: Modifier = Modifier) {
-  val accountItem =
-    persistentListOf(
-      Item.AccountItem("Dhiman Dasgupta", "$12,345.67"),
-      Item.AccountItem("Paramita Banerjee", "$12,345.67"),
-      Item.AccountItem("Nilanjan Sen", "$12,345.67"),
-      Item.AccountItem("Shraboni Basu Mallick", "$12,345.67"),
-      Item.AccountItem("Indranil Sen", "$12,345.67"),
-      Item.AccountItem("Sanhita Dasgupta", "$12,345.67"),
-    )
+  // Built once: rebuilding the list on every recomposition forces an O(n) equals check before
+  // ExpandableCardList can skip.
+  val items = remember {
+    val accountItem =
+      persistentListOf(
+        Item.AccountItem("Dhiman Dasgupta", "$12,345.67"),
+        Item.AccountItem("Paramita Banerjee", "$12,345.67"),
+        Item.AccountItem("Nilanjan Sen", "$12,345.67"),
+        Item.AccountItem("Shraboni Basu Mallick", "$12,345.67"),
+        Item.AccountItem("Indranil Sen", "$12,345.67"),
+        Item.AccountItem("Sanhita Dasgupta", "$12,345.67"),
+      )
 
-  val normalItems =
-    buildList<Item> {
-        repeat(100) { index ->
-          add(Item.NormalItem("This is Item : $index"))
+    val normalItems =
+      buildList<Item> {
+          repeat(100) { index ->
+            add(Item.NormalItem("This is Item : $index"))
+          }
         }
-      }
-      .toPersistentList()
+        .toPersistentList()
 
-  val items = (accountItem + normalItems).toPersistentList()
+    (accountItem + normalItems).toPersistentList()
+  }
 
   ExpandableCardList(
     items = items,

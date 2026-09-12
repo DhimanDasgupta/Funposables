@@ -1,0 +1,646 @@
+# Compose compiler stability report — :app (debug)
+# Generated 2026-09-12T10:18:05Z via ./gradlew :app:compileDebugKotlin -PcomposeReports=true --rerun
+# Kotlin 2.4.20, Compose BOM 2026.09.00
+
+## Module metrics (app-module.json)
+{
+  "skippableComposables": 161,
+  "restartableComposables": 222,
+  "readonlyComposables": 0,
+  "totalComposables": 229,
+  "restartGroups": 222,
+  "totalGroups": 300,
+  "staticArguments": 722,
+  "certainArguments": 83,
+  "knownStableArguments": 2825,
+  "knownUnstableArguments": 3,
+  "unknownStableArguments": 149,
+  "totalArguments": 2977,
+  "markedStableClasses": 4,
+  "inferredStableClasses": 43,
+  "inferredUnstableClasses": 2,
+  "inferredUncertainClasses": 5,
+  "effectivelyStableClasses": 47,
+  "totalClasses": 54,
+  "memoizedLambdas": 205,
+  "singletonLambdas": 0,
+  "singletonComposableLambdas": 22,
+  "composableLambdas": 74,
+  "totalLambdas": 205,
+  "featureFlags": {
+    "StrongSkipping": true,
+    "IntrinsicRemember": true,
+    "OptimizeNonSkippingGroups": true,
+    "PausableComposition": true
+  }
+}
+
+## Summary
+restartable composables listed : 87
+  of which skippable            : 87
+  NOT skippable                 : 0
+stable classes                 : 47
+runtime-stability classes      : 5
+unstable classes               : 2
+unstable parameters            : 0
+runtime-stability parameters   : 5
+
+## Classes (app-classes.txt)
+unstable class com.dhimandasgupta.funposables.App {
+  runtime var appGraph: AppGraph
+  <runtime stability> = Unstable
+}
+unstable class com.dhimandasgupta.funposables.MainActivity {
+  <runtime stability> = Unstable
+}
+stable class com.dhimandasgupta.funposables.composables.ConcaveTopShape {
+  stable val dipDepthDp: Dp
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.composables.Item.AccountItem {
+  stable val name: String
+  stable val amount: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.composables.Item.NormalItem {
+  stable val name: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.composables.SubwayStep {
+  stable val label: String
+  stable val supportText: String?
+  stable val trailingLabel: String?
+  stable val state: SubwayStepState
+}
+stable class com.dhimandasgupta.funposables.composables.SubwayColors {
+  stable val activeColor: Color
+  stable val activeDotInnerColor: Color
+  stable val inactiveColor: Color
+  stable val activeLabelColor: Color
+  stable val inactiveLabelColor: Color
+  stable val supportTextColor: Color
+  stable val trailingLabelColor: Color
+}
+stable class com.dhimandasgupta.funposables.composables.SubwayDefaults {
+  stable val Indigo400: Color
+  stable val InactiveGray: Color
+  <runtime stability> = Stable
+}
+runtime class com.dhimandasgupta.funposables.di.AppGraph.Impl {
+  runtime val counterStateMachineFactoryProvider: Provider<CounterStateMachineFactory>
+  <runtime stability> = Uncertain(Provider)
+}
+stable class com.dhimandasgupta.funposables.navigation.LauncherNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.ExpandableCollapsableItemsNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.FirstLineAlignedCheckBoxNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.DragOrTransformBoxNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.KenBurnsEffectNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.SearchExpanderNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.CurvedLayoutNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.CounterNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.InteractiveJuliaNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.MandelbrotNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.CircularLayoutNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.OrbitalLoaderNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.BackgroundGridNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.RichTextHTMLNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.RichTextMarkdownNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.navigation.SubwayNavKey {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.statemachines.CounterState {
+  stable val enabled: Boolean
+  stable val counter: Int
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.statemachines.IncrementAction {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.statemachines.DecrementAction {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.statemachines.CounterStateMachineFactory.MetroFactory {
+  <runtime stability> = Stable
+}
+runtime class com.dhimandasgupta.funposables.statemachines.CounterStateMachineFactory {
+  <runtime stability> = Parameter(A),Parameter(S),Runtime(FlowReduxStateMachineFactory)
+}
+stable class com.dhimandasgupta.funposables.ui.utils.HtmlListContext.Unordered {
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.HtmlListContext.Ordered {
+  stable val nextIndex: Int
+  <runtime stability> = Stable
+}
+runtime class com.dhimandasgupta.funposables.ui.utils.RichTextHelperParams {
+  stable val linkColor: Color
+  stable val customLinkColor: Color
+  stable val customLinkShouldBeUnderlined: Boolean
+  stable val superScriptFontSize: Float
+  runtime val clickListeners: Map<String, LinkInteractionListener>
+  stable val h1Style: SpanStyle
+  stable val h2Style: SpanStyle
+  stable val h3Style: SpanStyle
+  stable val h4Style: SpanStyle
+  stable val h5Style: SpanStyle
+  stable val h6Style: SpanStyle
+  <runtime stability> = Uncertain(Map)
+}
+stable class com.dhimandasgupta.funposables.ui.utils.WFMarkdownStyle {
+  stable val bodyStyle: TextStyle
+  stable val h1Style: TextStyle
+  stable val h2Style: TextStyle
+  stable val h3Style: TextStyle
+  stable val h4Style: TextStyle
+  stable val h5Style: TextStyle
+  stable val h6Style: TextStyle
+  stable val codeTextStyle: TextStyle
+  stable val codeBackgroundColor: Color
+  stable val codeBlockBackgroundColor: Color
+  stable val blockquoteBorderColor: Color
+  stable val blockquoteTextColor: Color
+  stable val dividerColor: Color
+  stable val linkColor: Color
+  stable val urlLinkStyles: TextLinkStyles?
+  runtime val linkClickListeners: ImmutableMap<String, LinkInteractionListener>
+  stable val tableBorderColor: Color
+  stable val tableHeaderBackgroundColor: Color
+  stable val tableHeaderStyle: TextStyle
+}
+stable class com.dhimandasgupta.funposables.ui.utils.InlineToken.Plain {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.InlineToken.Bold {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.InlineToken.Italic {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.InlineToken.BoldItalic {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.InlineToken.Strikethrough {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.InlineToken.InlineCode {
+  stable val text: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.InlineToken.Link {
+  stable val text: String
+  stable val url: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock.Heading {
+  stable val level: Int
+  stable val text: String
+  stable val key: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock.Paragraph {
+  stable val text: String
+  stable val key: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock.CodeBlock {
+  stable val language: String
+  stable val code: String
+  stable val key: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock.Blockquote {
+  stable val text: String
+  stable val key: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock.UnorderedList {
+  stable val items: ImmutableList<String>
+  stable val key: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock.OrderedList {
+  stable val items: ImmutableList<String>
+  stable val key: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock.HorizontalRule {
+  stable val key: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock.Image {
+  stable val altText: String
+  stable val url: String
+  stable val key: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock.Table {
+  stable val headers: ImmutableList<String>
+  stable val alignments: ImmutableList<TableAlignment>
+  stable val rows: ImmutableList<ImmutableList<String>>
+  stable val key: String
+  <runtime stability> = Stable
+}
+stable class com.dhimandasgupta.funposables.ui.utils.MarkdownBlock {
+}
+runtime class com.dhimandasgupta.funposables.ui.utils.TextLinkMatch.Custom {
+  stable val start: Int
+  stable val endExclusive: Int
+  stable val text: String
+  runtime val listener: LinkInteractionListener
+  <runtime stability> = Uncertain(LinkInteractionListener)
+}
+stable class com.dhimandasgupta.funposables.ui.utils.TextLinkMatch.Auto {
+  stable val start: Int
+  stable val endExclusive: Int
+  stable val text: String
+  stable val url: String
+  <runtime stability> = Stable
+}
+runtime class com.dhimandasgupta.funposables.ui.utils.TextLinkMatch {
+  <runtime stability> = Uncertain(TextLinkMatch)
+}
+
+## Composables (app-composables.txt)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.BackgroundGrid(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.CircularLayoutPane(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable, [androidx.compose.ui.UiComposable]]") fun com.dhimandasgupta.funposables.composables.CircularLayout(
+  stable modifier: Modifier? = @static <expression>
+  stable radius: Dp = @static <expression>
+  stable startAngle: Float = @static 0.0f
+  stable content: Function2<Composer, Int, Unit>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.GlowingButton(
+  stable text: String
+  stable glowColor: Color = @static <expression>
+  stable enabled: Boolean = @static true
+  stable onClick: Function0<Unit>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.Counter(
+  stable modifier: Modifier? = @static <expression>
+  stable counterBaseState: Function0<CounterBaseState>
+  stable dispatch: Function1<CounterBaseAction, Unit>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.CounterImplementation(
+  stable modifier: Modifier? = @static <expression>
+  stable counterBaseState: Function0<CounterBaseState>
+  stable dispatch: Function1<CounterBaseAction, Unit>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.ValidCounter(
+  stable modifier: Modifier? = @static <expression>
+  counterState: CounterState
+  stable dispatch: Function1<CounterBaseAction, Unit>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.CounterPreview()
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.CurvedLayout(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.ResponsiveCurvedLayoutScreen(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.FPOIcon(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.PortraitContent(
+  stable sharedTransitionScope: SharedTransitionScope
+  animatedVisibilityScope: AnimatedVisibilityScope
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.LandscapeContent(
+  stable sharedTransitionScope: SharedTransitionScope
+  animatedVisibilityScope: AnimatedVisibilityScope
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.HeaderText(
+  stable modifier: Modifier? = @static <expression>
+  stable center: Boolean
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.SubheaderText(
+  stable modifier: Modifier? = @static <expression>
+  stable center: Boolean
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.BodyText(
+  stable modifier: Modifier? = @static <expression>
+  stable center: Boolean
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.MainButton(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.SecondaryButton(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.DisclosureSection(
+  stable modifier: Modifier? = @static <expression>
+  stable center: Boolean
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.PreviewPortrait()
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.PreviewLandscape()
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.DragOrTransformBox(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable, [androidx.compose.ui.UiComposable]]") fun com.dhimandasgupta.funposables.composables.DragOrTransformBox(
+  stable modifier: Modifier? = @static <expression>
+  stable onDrag: Function1<Offset, Unit>? = @static <expression>
+  stable onTransform: Function3<@[ParameterName(name = 'zoom')] Float, @[ParameterName(name = 'rotation')] Float, @[ParameterName(name = 'pan')] Offset, Unit>? = @static <expression>
+  stable content: @[ExtensionFunctionType] Function3<BoxScope, Composer, Int, Unit>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.DragOrTransformBoxPreview()
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.ExpandableCollapsableItems(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.ExpandableCardList(
+  items: ImmutableList<Item>
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.HeaderItem(
+  stable modifier: Modifier? = @static <expression>
+  stable expanded: Boolean
+  stable onExpandChanged: Function1<Boolean, Unit>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.AccountCard(
+  stable modifier: Modifier? = @static <expression>
+  stable index: Int = @static 0
+  stable expanded: Boolean = @static false
+  stable accountName: String
+  stable accountBalance: String
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.NormalCard(
+  stable modifier: Modifier? = @static <expression>
+  stable item: String
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.ExpandableCollapsableItemsPreView()
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.FirstLineAlignedCheckbox(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.TextAndCheckAlignment(
+  stable text: String
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.FirstLineAlignedCheckboxPreview()
+fun com.dhimandasgupta.funposables.composables.animatedBackground(
+  stable <this>: Modifier
+  stable color1: Color
+  stable color2: Color
+  stable color3: Color
+): Modifier
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.InteractiveJulia(
+  stable modifier: Modifier
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.KenBurnsEffectPane(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.ApplyKenBurnsEffect(
+  stable modifier: Modifier? = @static <expression>
+  stable drawableResourceId: Int
+  stable updatePalette: Function1<Palette, Unit>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.Launcher(
+  stable modifier: Modifier? = @static <expression>
+  stable navigateToExpandableCollapsableItems: Function0<Unit>
+  stable navigateToFirstLineAlignedCheckBox: Function0<Unit>
+  stable navigateToDragOrTransformBox: Function0<Unit>
+  stable navigateToKenBurnsEffect: Function0<Unit>
+  stable navigateToSearchExpander: Function0<Unit>
+  stable navigateToCurvedScreen: Function0<Unit>
+  stable navigateToCounter: Function0<Unit>
+  stable navigateToToJulia: Function0<Unit>
+  stable navigateToMandelbrot: Function0<Unit>
+  stable navigateToCircularLayout: Function0<Unit>
+  stable navigateToOrbitalLoader: Function0<Unit>
+  stable navigateToBackgroundGrid: Function0<Unit>
+  stable navigateToRichTextHTML: Function0<Unit>
+  stable navigateToRichTextMarkdown: Function0<Unit>
+  stable navigateToSubway: Function0<Unit>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.LauncherPreview()
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.Mandelbrot(
+  stable modifier: Modifier
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.OrbitalLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.RichHTMLText(
+  stable modifier: Modifier
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.RichTextMarkdownText(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.SearchExpander(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.ExpandableTextFieldVisibility(
+  stable modifier: Modifier
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.SearchExpanderPreview()
+fun com.dhimandasgupta.funposables.composables.SubwayDefaults.colors(
+  stable activeColor: Color = @dynamic <expression>
+  stable activeDotInnerColor: Color = @static <expression>
+  stable inactiveColor: Color = @dynamic <expression>
+  stable activeLabelColor: Color = @dynamic <expression>
+  stable inactiveLabelColor: Color = @dynamic <expression>
+  stable supportTextColor: Color = @dynamic <expression>
+  stable trailingLabelColor: Color = @dynamic <expression>
+  stable <this>: SubwayDefaults
+): SubwayColors
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.Subway(
+  stable steps: ImmutableList<SubwayStep>
+  stable modifier: Modifier? = @static <expression>
+  stable orientation: SubwayOrientation? = @static <expression>
+  stable colors: SubwayColors? = @dynamic <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.SubwayDot(
+  stable state: SubwayStepState
+  stable colors: SubwayColors
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.HorizontalSubway(
+  stable steps: ImmutableList<SubwayStep>
+  stable modifier: Modifier? = @static <expression>
+  stable colors: SubwayColors
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.VerticalSubway(
+  stable steps: ImmutableList<SubwayStep>
+  stable modifier: Modifier? = @static <expression>
+  stable colors: SubwayColors
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.VerticalSubwayStepItem(
+  stable index: Int
+  stable step: SubwayStep
+  stable steps: ImmutableList<SubwayStep>
+  stable colors: SubwayColors
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.HorizontalSubwayPreview()
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.VerticalSubwayPreview()
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.composables.SubwayPane(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.ButterflyPhaseLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.CardioidGlowLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.CardioidHeartLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.FivePetalSpiralLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.FourPetalSpiralLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.FourierFlowLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.HeartWaveLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.HypotrochoidLoopLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.LemniscateBloomLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.LissajousDriftLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.OriginalThinkingLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.RoseCurveLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.RoseFourLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.RoseOrbitLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.RoseThreeLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.RoseTwoLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.SixPetalSpiralLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.SpiralSearchLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.ThinkingFiveLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.ThinkingNineLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.loaders.ThreePetalSpiralLoader(
+  stable modifier: Modifier? = @static <expression>
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.navigation.FunposablesRoot(
+  stable modifier: Modifier
+  appGraph: AppGraph
+)
+fun com.dhimandasgupta.funposables.ui.common.getNormalizedColorForCurrentTheme(
+  stable color: Color
+): Color
+fun com.dhimandasgupta.funposables.ui.common.drawBackgroundGrid(
+  stable <this>: Modifier
+  stable gridColor: Color = @static <expression>
+  stable gridSize: Int = @static 10
+): Modifier
+fun com.dhimandasgupta.funposables.ui.common.getDeviceLayoutType(
+  stable windowSizeClass: WindowSizeClass
+): DeviceLayoutType
+restartable skippable scheme("[0, [0]]") fun com.dhimandasgupta.funposables.ui.theme.FunposablesTheme(
+  stable darkTheme: Boolean = @dynamic <expression>
+  stable dynamicColor: Boolean = @static true
+  stable content: Function2<Composer, Int, Unit>
+)
+fun com.dhimandasgupta.funposables.ui.utils.rememberDefaultMarkdownStyle()
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.RenderBlock(
+  stable block: MarkdownBlock
+  stable style: WFMarkdownStyle
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.RenderHeading(
+  stable heading: Heading
+  stable style: WFMarkdownStyle
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.RenderParagraph(
+  stable paragraph: Paragraph
+  stable style: WFMarkdownStyle
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.RenderCodeBlock(
+  stable codeBlock: CodeBlock
+  stable style: WFMarkdownStyle
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.RenderBlockquote(
+  stable blockquote: Blockquote
+  stable style: WFMarkdownStyle
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.RenderUnorderedList(
+  stable list: UnorderedList
+  stable style: WFMarkdownStyle
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.RenderOrderedList(
+  stable list: OrderedList
+  stable style: WFMarkdownStyle
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.RenderHorizontalRule(
+  stable style: WFMarkdownStyle
+)
+restartable skippable fun com.dhimandasgupta.funposables.ui.utils.RenderImage(
+  stable image: Image
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.RenderTable(
+  stable table: Table
+  stable style: WFMarkdownStyle
+)
+restartable skippable scheme("[androidx.compose.ui.UiComposable]") fun com.dhimandasgupta.funposables.ui.utils.TableCell(
+  unused stable <this>: RowScope
+  stable text: String
+  stable style: WFMarkdownStyle
+  stable textStyle: TextStyle
+  stable borderColor: Color
+)
+fun com.dhimandasgupta.funposables.ui.utils.rememberParsedMarkdown(
+  stable text: String
+  stable style: WFMarkdownStyle
+): AnnotatedString

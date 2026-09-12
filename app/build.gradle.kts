@@ -14,6 +14,13 @@ kotlin {
   }
 }
 
+composeCompiler {
+  if (providers.gradleProperty("composeReports").orNull == "true") {
+    reportsDestination = layout.buildDirectory.dir("compose_compiler")
+    metricsDestination = layout.buildDirectory.dir("compose_compiler")
+  }
+}
+
 android {
   namespace = "com.dhimandasgupta.funposables"
   compileSdk = 37

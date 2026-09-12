@@ -46,14 +46,14 @@ private fun CounterImplementation(
     modifier = modifier.fillMaxSize(),
     contentAlignment = Alignment.Center,
   ) {
-    when (counterBaseState()) {
+    when (val state = counterBaseState()) {
       is CounterState ->
         ValidCounter(
-          counterState = counterBaseState() as CounterState,
+          counterState = state,
           dispatch = dispatch,
         )
 
-      else -> error("Unknow state: $counterBaseState")
+      else -> error("Unknown state: $state")
     }
   }
 }

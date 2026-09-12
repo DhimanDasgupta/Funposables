@@ -3,24 +3,24 @@ package com.dhimandasgupta.funposables.composables
 import android.app.Activity
 import android.graphics.drawable.BitmapDrawable
 import androidx.activity.compose.LocalActivity
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutLinearInEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -28,6 +28,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme.typography
+import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -36,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -49,7 +52,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.palette.graphics.Palette
@@ -59,15 +64,26 @@ import com.dhimandasgupta.funposables.R
 import com.dhimandasgupta.funposables.ui.common.DeviceLayoutType
 import com.dhimandasgupta.funposables.ui.common.getDeviceLayoutType
 import kotlin.random.Random
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import timber.log.Timber
+
+enum class AnimationSpeed(val durationType: Float) {
+  VERY_FAST(durationType = 0.25f),
+  FAST(durationType = 0.5f),
+  NORMAL(durationType = 1f),
+  SLOW(durationType = 1.5f),
+  VERY_SLOW(durationType = 2f),
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
 fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
   val items =
-    listOf(
+    persistentListOf(
       R.drawable.wallpaper_01,
       R.drawable.wallpaper_02,
       R.drawable.wallpaper_03,
@@ -88,14 +104,48 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
       else -> Modifier.fillMaxSize(0.75f)
     }
 
-  var palette by remember { mutableStateOf<Palette?>(null) }
+  val carousalState = rememberCarouselState(initialItem = 0, itemCount = { items.size })
+
+  val palettes = remember { mutableStateMapOf<Int, Palette>() }
+  var currentPalette by remember { mutableStateOf<Palette?>(null) }
+  var animationSpeed by remember { mutableStateOf(AnimationSpeed.NORMAL) }
 
   Column(
     modifier = modifier.fillMaxSize().verticalScroll(state = rememberScrollState()),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
   ) {
-    val carousalState = rememberCarouselState(initialItem = 0, itemCount = { items.size })
+    FlowRow(
+      modifier =
+        Modifier.padding(
+          horizontal = 16.dp,
+          vertical = 32.dp,
+        ),
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalArrangement = Arrangement.Center,
+      maxItemsInEachRow = Int.MAX_VALUE,
+    ) {
+      AnimationSpeed.entries.forEach { animationSpeedEntry ->
+        Text(
+          text = animationSpeedEntry.name.toUpperCase(LocalLocale.current).replace("_", " "),
+          style =
+            if (animationSpeed.durationType != animationSpeedEntry.durationType)
+              typography.titleSmall
+            else typography.titleLarge,
+          modifier =
+            Modifier.padding(horizontal = 8.dp)
+              .clickable(
+                onClick = {
+                  if (animationSpeed.durationType != animationSpeedEntry.durationType)
+                    animationSpeed = animationSpeedEntry
+                }
+              ),
+        )
+      }
+    }
+
+    Spacer(modifier = Modifier.height(16.dp))
+
     HorizontalCenteredHeroCarousel(
       state = carousalState,
       itemSpacing = 8.dp,
@@ -103,14 +153,24 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
       contentPadding = PaddingValues(horizontal = 0.dp),
     ) { itemIndex ->
       ApplyKenBurnsEffect(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1f),
+        modifier = Modifier.fillMaxWidth().aspectRatio(1f).maskClip(RoundedCornerShape(16.dp)),
         drawableResourceId = items[itemIndex],
-        updatePalette = { newPalette ->
-          palette = newPalette
+        animationSpeed = animationSpeed,
+        indexForPallet = itemIndex,
+        updatePalette = { index, newPalette ->
+          Timber.tag("KenBurnsEffectPane").d("Item received: $index")
+          palettes[itemIndex] = newPalette
         },
       )
     }
 
+    LaunchedEffect(key1 = carousalState.currentItem, key2 = palettes.size) {
+      snapshotFlow { carousalState.currentItem }
+        .collectLatest { index ->
+          Timber.tag("KenBurnsEffectPane").d("Item current: $index")
+          currentPalette = if (palettes.containsKey(index)) palettes[index] else null
+        }
+    }
     FlowRow(
       modifier =
         Modifier.padding(
@@ -121,7 +181,7 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
       verticalArrangement = Arrangement.spacedBy(4.dp),
       maxItemsInEachRow = Int.MAX_VALUE,
     ) {
-      palette?.swatches?.asSequence()?.filterNotNull()?.forEach { swatch ->
+      currentPalette?.swatches?.asSequence()?.filterNotNull()?.forEach { swatch ->
         Box(
           modifier =
             Modifier.size(36.dp)
@@ -139,9 +199,11 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
 fun ApplyKenBurnsEffect(
   modifier: Modifier = Modifier,
   drawableResourceId: Int,
-  updatePalette: (Palette) -> Unit,
+  animationSpeed: AnimationSpeed,
+  indexForPallet: Int,
+  updatePalette: (Int, Palette) -> Unit,
 ) {
-  key(drawableResourceId) {
+  key(drawableResourceId, indexForPallet) {
     val scope = rememberCoroutineScope()
 
     val painter = painterResource(id = drawableResourceId)
@@ -162,7 +224,8 @@ fun ApplyKenBurnsEffect(
           .listener { _, result ->
             scope.launch(Dispatchers.Default) {
               val bitmap = (result.drawable as? BitmapDrawable)?.bitmap ?: return@launch
-              updatePalette(Palette.from(bitmap).generate())
+              Timber.tag("KenBurnsEffectPane").d("Item produce: $indexForPallet")
+              updatePalette(indexForPallet, Palette.from(bitmap).generate())
             }
           }
           .build()
@@ -176,10 +239,7 @@ fun ApplyKenBurnsEffect(
         .collect { Timber.tag("KenBurnsEffectPane").d("Container size: $it") }
     }
 
-    val infiniteTransition = rememberInfiniteTransition(label = "KenBurns")
-
-    // Rolled once: animateFloat re-targets the animation whenever these values change, so
-    // evaluating Random in the composable body would re-roll them on every recomposition.
+    // Rolled once per drawable: Animatable re-targets the animation smoothly.
     val scaleRange = remember {
       val start = Random.nextDouble(1.15, 1.35).toFloat()
       val end = Random.nextDouble(1.45, 1.75).toFloat()
@@ -196,41 +256,62 @@ fun ApplyKenBurnsEffect(
       if (Random.nextBoolean()) start to end else end to start
     }
 
-    val scale by
-      infiniteTransition.animateFloat(
-        initialValue = scaleRange.first,
-        targetValue = scaleRange.second,
-        animationSpec =
-          infiniteRepeatable(
-            animation = tween(durationMillis = 10000, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-          ),
-        label = "scale",
-      )
+    val scale = remember { Animatable(scaleRange.first) }
+    val panningX = remember { Animatable(panningXRange.first) }
+    val panningY = remember { Animatable(panningYRange.first) }
 
-    val panningX by
-      infiniteTransition.animateFloat(
-        initialValue = panningXRange.first,
-        targetValue = panningXRange.second,
-        animationSpec =
-          infiniteRepeatable(
-            animation = tween(durationMillis = 12000, easing = LinearOutSlowInEasing),
-            repeatMode = RepeatMode.Reverse,
-          ),
-        label = "panningX",
-      )
-
-    val panningY by
-      infiniteTransition.animateFloat(
-        initialValue = panningYRange.first,
-        targetValue = panningYRange.second,
-        animationSpec =
-          infiniteRepeatable(
-            animation = tween(durationMillis = 8000, easing = FastOutLinearInEasing),
-            repeatMode = RepeatMode.Reverse,
-          ),
-        label = "panningY",
-      )
+    LaunchedEffect(key1 = drawableResourceId, key2 = animationSpeed) {
+      while (isActive) {
+        scale.animateTo(
+          targetValue = scaleRange.second,
+          animationSpec =
+            tween(
+              durationMillis = (10000 * animationSpeed.durationType).toInt(),
+              easing = FastOutSlowInEasing,
+            ),
+        )
+        panningX.animateTo(
+          targetValue = panningXRange.second,
+          animationSpec =
+            tween(
+              durationMillis = (12000 * animationSpeed.durationType).toInt(),
+              easing = LinearOutSlowInEasing,
+            ),
+        )
+        panningY.animateTo(
+          targetValue = panningYRange.second,
+          animationSpec =
+            tween(
+              durationMillis = (8000 * animationSpeed.durationType).toInt(),
+              easing = FastOutLinearInEasing,
+            ),
+        )
+        panningY.animateTo(
+          targetValue = panningYRange.first,
+          animationSpec =
+            tween(
+              durationMillis = (8000 * animationSpeed.durationType).toInt(),
+              easing = FastOutLinearInEasing,
+            ),
+        )
+        panningX.animateTo(
+          targetValue = panningXRange.first,
+          animationSpec =
+            tween(
+              durationMillis = (12000 * animationSpeed.durationType).toInt(),
+              easing = LinearOutSlowInEasing,
+            ),
+        )
+        scale.animateTo(
+          targetValue = scaleRange.first,
+          animationSpec =
+            tween(
+              durationMillis = (10000 * animationSpeed.durationType).toInt(),
+              easing = FastOutSlowInEasing,
+            ),
+        )
+      }
+    }
 
     Card(
       modifier = modifier,
@@ -255,8 +336,8 @@ fun ApplyKenBurnsEffect(
                     containerSize.width > 0 &&
                     containerSize.height > 0
                 ) {
-                  clip = false
-                  val currentScale = scale.coerceAtLeast(1f)
+                  clip = true
+                  val currentScale = scale.value.coerceAtLeast(1f)
                   scaleX = currentScale
                   scaleY = currentScale
 
@@ -266,9 +347,9 @@ fun ApplyKenBurnsEffect(
                     (containerSize.height * (currentScale - 1f)).coerceAtLeast(0f) / 2f
 
                   translationX =
-                    (panningX * maxTranslationX).coerceIn(-maxTranslationX, maxTranslationX)
+                    (panningX.value * maxTranslationX).coerceIn(-maxTranslationX, maxTranslationX)
                   translationY =
-                    (panningY * maxTranslationY).coerceIn(-maxTranslationY, maxTranslationY)
+                    (panningY.value * maxTranslationY).coerceIn(-maxTranslationY, maxTranslationY)
                 }
               },
         )

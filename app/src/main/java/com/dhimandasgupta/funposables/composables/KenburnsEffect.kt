@@ -149,7 +149,7 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
     HorizontalCenteredHeroCarousel(
       state = carousalState,
       itemSpacing = 8.dp,
-      modifier = carousalModifier,
+      modifier = carousalModifier.padding(horizontal = 16.dp),
       contentPadding = PaddingValues(horizontal = 0.dp),
     ) { itemIndex ->
       ApplyKenBurnsEffect(
@@ -196,7 +196,7 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun ApplyKenBurnsEffect(
+private fun ApplyKenBurnsEffect(
   modifier: Modifier = Modifier,
   drawableResourceId: Int,
   animationSpeed: AnimationSpeed,

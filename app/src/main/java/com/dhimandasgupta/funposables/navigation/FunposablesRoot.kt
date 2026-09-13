@@ -32,15 +32,12 @@ import com.dhimandasgupta.funposables.composables.RichHTMLText
 import com.dhimandasgupta.funposables.composables.RichTextMarkdownText
 import com.dhimandasgupta.funposables.composables.SearchExpander
 import com.dhimandasgupta.funposables.composables.SubwayPane
-import com.dhimandasgupta.funposables.di.AppGraph
+import com.dhimandasgupta.funposables.di.LocalFunposablesGraph
 import com.freeletics.flowredux2.produceStateMachine
 
 @OptIn(ExperimentalMaterial3AdaptiveApi::class)
 @Composable
-fun FunposablesRoot(
-  modifier: Modifier,
-  appGraph: AppGraph,
-) {
+fun FunposablesRoot(modifier: Modifier) {
   val backStack = rememberNavBackStack(LauncherNavKey)
   val sceneStrategy = rememberListDetailSceneStrategy<NavKey>()
 
@@ -152,8 +149,8 @@ fun FunposablesRoot(
             CurvedLayout(modifier = modifier)
           }
           entry<CounterNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-            println("AppGraph: $appGraph")
-            val counterStateMachineFactory = remember { appGraph.counterStateMachineFactory }
+            val graph = LocalFunposablesGraph.current
+            val counterStateMachineFactory = remember { graph.counterStateMachineFactory }
             println("CounterStateMachineFactory: $counterStateMachineFactory")
             val counterStateMachine = counterStateMachineFactory.produceStateMachine()
 

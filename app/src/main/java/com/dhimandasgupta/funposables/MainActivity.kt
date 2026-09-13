@@ -14,7 +14,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.colorResource
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import com.dhimandasgupta.funposables.composables.animatedBackground
+import com.dhimandasgupta.funposables.composables.interactiveanimatedbg.animatedBackground
 import com.dhimandasgupta.funposables.di.LocalFunposablesGraph
 import com.dhimandasgupta.funposables.navigation.FunposablesRoot
 import com.dhimandasgupta.funposables.ui.common.getNormalizedColorForCurrentTheme

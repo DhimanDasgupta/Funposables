@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.richhtml
 
 import android.content.ClipData
 import android.widget.Toast

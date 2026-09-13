@@ -34,3 +34,5 @@ import kotlinx.serialization.Serializable
 @Serializable data object RichTextMarkdownNavKey : NavKey
 
 @Serializable data object SubwayNavKey : NavKey
+
+@Serializable data object StaryNightNavKey : NavKey

@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.checkbox
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable

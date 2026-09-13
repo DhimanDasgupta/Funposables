@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables.others
+package com.dhimandasgupta.funposables.composables.starynight
 
 /*
  * Copyright 2026 Kyriakos Georgiopoulos
@@ -3022,8 +3022,6 @@ private const val OVERSCAN = 1.035f
 
 @Composable
 fun StarryNightCanvas(modifier: Modifier = Modifier) {
-  // MatchStatusBarToPage(nightFill)
-
   val scope = rememberCoroutineScope()
   val haptic = LocalHapticFeedback.current
 

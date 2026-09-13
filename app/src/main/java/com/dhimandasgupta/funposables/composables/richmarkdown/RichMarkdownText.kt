@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.richmarkdown
 
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets

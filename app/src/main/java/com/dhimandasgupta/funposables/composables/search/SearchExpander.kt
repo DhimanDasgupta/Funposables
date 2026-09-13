@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.search
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween

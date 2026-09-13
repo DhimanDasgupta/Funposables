@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.expandable
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable

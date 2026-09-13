@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.mandelbrot
 
 import android.graphics.RuntimeShader
 import android.os.Build

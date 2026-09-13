@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.kenburns
 
 import android.app.Activity
 import android.graphics.drawable.BitmapDrawable

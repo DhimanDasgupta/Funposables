@@ -1,8 +1,8 @@
 package com.dhimandasgupta.funposables
 
-import com.dhimandasgupta.funposables.composables.SubwayOrientation
-import com.dhimandasgupta.funposables.composables.SubwayStep
-import com.dhimandasgupta.funposables.composables.SubwayStepState
+import com.dhimandasgupta.funposables.composables.subway.SubwayOrientation
+import com.dhimandasgupta.funposables.composables.subway.SubwayStep
+import com.dhimandasgupta.funposables.composables.subway.SubwayStepState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test

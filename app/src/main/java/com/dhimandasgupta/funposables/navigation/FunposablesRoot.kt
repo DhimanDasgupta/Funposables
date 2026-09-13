@@ -16,22 +16,23 @@ import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.ui.NavDisplay
-import com.dhimandasgupta.funposables.composables.BackgroundGrid
-import com.dhimandasgupta.funposables.composables.CircularLayoutPane
-import com.dhimandasgupta.funposables.composables.Counter
-import com.dhimandasgupta.funposables.composables.CurvedLayout
-import com.dhimandasgupta.funposables.composables.DragOrTransformBox
-import com.dhimandasgupta.funposables.composables.ExpandableCollapsableItems
-import com.dhimandasgupta.funposables.composables.FirstLineAlignedCheckbox
-import com.dhimandasgupta.funposables.composables.InteractiveJulia
-import com.dhimandasgupta.funposables.composables.KenBurnsEffectPane
-import com.dhimandasgupta.funposables.composables.Launcher
-import com.dhimandasgupta.funposables.composables.Mandelbrot
-import com.dhimandasgupta.funposables.composables.OrbitalLoader
-import com.dhimandasgupta.funposables.composables.RichHTMLText
-import com.dhimandasgupta.funposables.composables.RichTextMarkdownText
-import com.dhimandasgupta.funposables.composables.SearchExpander
-import com.dhimandasgupta.funposables.composables.SubwayPane
+import com.dhimandasgupta.funposables.composables.bggrid.BackgroundGrid
+import com.dhimandasgupta.funposables.composables.checkbox.FirstLineAlignedCheckbox
+import com.dhimandasgupta.funposables.composables.circularlayout.CircularLayoutPane
+import com.dhimandasgupta.funposables.composables.counter.Counter
+import com.dhimandasgupta.funposables.composables.curvedlayout.CurvedLayout
+import com.dhimandasgupta.funposables.composables.drag.DragOrTransformBox
+import com.dhimandasgupta.funposables.composables.expandable.ExpandableCollapsableItems
+import com.dhimandasgupta.funposables.composables.interactivejulia.InteractiveJulia
+import com.dhimandasgupta.funposables.composables.kenburns.KenBurnsEffectPane
+import com.dhimandasgupta.funposables.composables.launcher.Launcher
+import com.dhimandasgupta.funposables.composables.mandelbrot.Mandelbrot
+import com.dhimandasgupta.funposables.composables.orbitalloader.OrbitalLoader
+import com.dhimandasgupta.funposables.composables.richhtml.RichHTMLText
+import com.dhimandasgupta.funposables.composables.richmarkdown.RichTextMarkdownText
+import com.dhimandasgupta.funposables.composables.search.SearchExpander
+import com.dhimandasgupta.funposables.composables.starynight.StarryNightCanvas
+import com.dhimandasgupta.funposables.composables.subway.SubwayPane
 import com.dhimandasgupta.funposables.di.LocalFunposablesGraph
 import com.freeletics.flowredux2.produceStateMachine
 
@@ -128,6 +129,9 @@ fun FunposablesRoot(modifier: Modifier) {
               navigateToSubway = {
                 backStack.add(SubwayNavKey)
               },
+              navigateToStaryNight = {
+                backStack.add(StaryNightNavKey)
+              },
             )
           }
           entry<ExpandableCollapsableItemsNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
@@ -183,6 +187,9 @@ fun FunposablesRoot(modifier: Modifier) {
           }
           entry<SubwayNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
             SubwayPane(modifier = modifier)
+          }
+          entry<StaryNightNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+            StarryNightCanvas(modifier = modifier)
           }
         },
     )

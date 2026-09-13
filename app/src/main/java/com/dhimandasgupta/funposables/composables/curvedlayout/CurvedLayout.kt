@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.curvedlayout
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent

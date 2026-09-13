@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.launcher
 
 import android.os.Build
 import androidx.compose.foundation.layout.Arrangement
@@ -50,6 +50,7 @@ fun Launcher(
   navigateToRichTextHTML: () -> Unit,
   navigateToRichTextMarkdown: () -> Unit,
   navigateToSubway: () -> Unit,
+  navigateToStaryNight: () -> Unit,
 ) {
   val cardModifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(56.dp)
 
@@ -275,6 +276,17 @@ fun Launcher(
       )
     }
 
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToStaryNight,
+    ) {
+      Text(
+        "Stary Night",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
     Spacer(
       modifier =
         Modifier.fillMaxWidth()
@@ -310,6 +322,7 @@ private fun LauncherPreview() {
       navigateToRichTextHTML = {},
       navigateToRichTextMarkdown = {},
       navigateToSubway = {},
+      navigateToStaryNight = {},
     )
   }
 }

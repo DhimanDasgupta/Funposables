@@ -1,4 +1,4 @@
-package com.dhimandasgupta.funposables.composables
+package com.dhimandasgupta.funposables.composables.drag
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture

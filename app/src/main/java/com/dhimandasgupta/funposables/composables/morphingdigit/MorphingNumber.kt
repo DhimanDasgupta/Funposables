@@ -85,7 +85,7 @@ fun MorphingNumber(
 private fun MorphingNumberPreview() {
   var count by remember { mutableLongStateOf(1000) }
   LaunchedEffect(true) {
-    (0 until 10).forEach { i ->
+    (0 until 10).forEach { _ ->
       count += 1
       delay(1000.milliseconds)
     }

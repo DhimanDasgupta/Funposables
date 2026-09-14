@@ -2,6 +2,7 @@ package com.dhimandasgupta.funposables.ui.common
 
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.ColorUtils
@@ -19,5 +20,6 @@ fun Color.toDarkModeSuitable(): Color {
 }
 
 @Composable
+@ReadOnlyComposable
 fun getNormalizedColorForCurrentTheme(color: Color) =
   if (isSystemInDarkTheme()) color.toDarkModeSuitable() else color

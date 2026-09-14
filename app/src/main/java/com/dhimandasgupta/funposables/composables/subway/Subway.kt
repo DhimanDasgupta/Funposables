@@ -38,6 +38,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -95,6 +96,7 @@ object SubwayDefaults {
   val InactiveGray = Color(0xFFE5E7EB)
 
   @Composable
+  @ReadOnlyComposable
   fun colors(
     activeColor: Color = Indigo400,
     activeDotInnerColor: Color = Color.White,

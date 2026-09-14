@@ -38,20 +38,27 @@ fun MorphingNumber(
   color: Color = colorScheme.onSurface,
   style: DrawStyle = Stroke(5f),
 ) {
+  // Keyed on the number so the digit list is not rebuilt (twice, counting the
+  // reversal) on every recomposition. asReversed() is a view, not a copy.
   val digits =
-    number.absoluteValue.toString(10).map { c ->
-      when (c) {
-        '1' -> Digit.ONE
-        '2' -> Digit.TWO
-        '3' -> Digit.THREE
-        '4' -> Digit.FOUR
-        '5' -> Digit.FIVE
-        '6' -> Digit.SIX
-        '7' -> Digit.SEVEN
-        '8' -> Digit.EIGHT
-        '9' -> Digit.NINE
-        else -> Digit.ZERO
-      }
+    remember(number) {
+      number.absoluteValue
+        .toString(10)
+        .map { c ->
+          when (c) {
+            '1' -> Digit.ONE
+            '2' -> Digit.TWO
+            '3' -> Digit.THREE
+            '4' -> Digit.FOUR
+            '5' -> Digit.FIVE
+            '6' -> Digit.SIX
+            '7' -> Digit.SEVEN
+            '8' -> Digit.EIGHT
+            '9' -> Digit.NINE
+            else -> Digit.ZERO
+          }
+        }
+        .asReversed()
     }
 
   Row(verticalAlignment = Alignment.CenterVertically) {
@@ -67,7 +74,7 @@ fun MorphingNumber(
     }
 
     LazyRow(reverseLayout = true) {
-      itemsIndexed(items = digits.reversed()) { _, item ->
+      itemsIndexed(items = digits) { _, item ->
         MorphingDigit(
           digit = item,
           modifier = Modifier.animateItem(),

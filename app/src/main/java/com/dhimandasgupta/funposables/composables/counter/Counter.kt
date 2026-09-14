@@ -8,12 +8,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.dhimandasgupta.funposables.composables.morphingdigit.MorphingNumber
 import com.dhimandasgupta.funposables.statemachines.CounterBaseAction
 import com.dhimandasgupta.funposables.statemachines.CounterBaseState
 import com.dhimandasgupta.funposables.statemachines.CounterState
@@ -66,11 +66,8 @@ private fun ValidCounter(
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
   ) {
-    Text(
-      modifier = Modifier.padding(all = 16.dp),
-      text = "${counterState.counter}",
-      style = typography.displayLarge,
-    )
+    MorphingNumber(number = counterState.counter.toLong())
+
     Row(
       modifier = Modifier.fillMaxWidth().padding(all = 32.dp),
       horizontalArrangement = Arrangement.SpaceAround,

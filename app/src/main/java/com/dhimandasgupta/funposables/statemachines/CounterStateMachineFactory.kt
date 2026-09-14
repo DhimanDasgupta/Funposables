@@ -5,6 +5,7 @@ import com.freeletics.flowredux2.initializeWith
 import dev.zacsweers.metro.AppScope
 import dev.zacsweers.metro.Inject
 import dev.zacsweers.metro.SingleIn
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 
@@ -33,12 +34,12 @@ class CounterStateMachineFactory :
       inState<CounterState> {
         on<IncrementAction> {
           mutate { copy(enabled = false) }
-          delay(1000)
+          delay(1000.milliseconds)
           override { copy(counter = counter + 1) }
         }
         on<DecrementAction> {
           mutate { copy(enabled = false) }
-          delay(1000)
+          delay(1000.milliseconds)
           override { copy(counter = counter - 1) }
         }
       }

@@ -3,6 +3,9 @@ package com.dhimandasgupta.funposables
 import android.app.ActivityManager
 import android.app.Application
 import android.content.Context
+import android.os.StrictMode
+import androidx.compose.runtime.Composer
+import androidx.compose.runtime.tooling.ComposeStackTraceMode
 import coil.Coil
 import coil.ImageLoader
 import coil.disk.DiskCache
@@ -14,7 +17,7 @@ import com.dhimandasgupta.funposables.di.AppGraph
 import dev.zacsweers.metro.createGraph
 import timber.log.Timber
 
-class App : Application() {
+class FunposablesApp : Application() {
   private lateinit var appGraph: AppGraph
 
   override fun onCreate() {
@@ -22,6 +25,14 @@ class App : Application() {
     appGraph = createGraph<AppGraph>()
     Timber.plant(Timber.DebugTree())
     initCoil()
+
+    if (BuildConfig.DEBUG) {
+      Timber.plant(tree = Timber.DebugTree())
+      enableStrictMode()
+      Composer.setDiagnosticStackTraceMode(ComposeStackTraceMode.SourceInformation)
+    } else {
+      Composer.setDiagnosticStackTraceMode(ComposeStackTraceMode.None)
+    }
   }
 
   private fun initCoil() {
@@ -72,4 +83,13 @@ private fun isLowRamDevice(context: Context): Boolean {
     }
 
   return memoryInfo.lowMemory
+}
+
+private fun enableStrictMode() {
+  StrictMode.setVmPolicy(
+    StrictMode.VmPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build()
+  )
+  StrictMode.setThreadPolicy(
+    StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build()
+  )
 }

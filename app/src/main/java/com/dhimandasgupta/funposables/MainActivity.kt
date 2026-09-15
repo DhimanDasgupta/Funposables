@@ -27,7 +27,7 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge()
     super.onCreate(savedInstanceState)
     setContent {
-      val graph = (application as App).getAppComponent()
+      val graph = (application as FunposablesApp).getAppComponent()
       FunposablesTheme {
         CompositionLocalProvider(LocalFunposablesGraph provides graph) {
           Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->

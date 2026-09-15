@@ -1,6 +1,8 @@
 package com.dhimandasgupta.funposables.composables.morphingdigit
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -24,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import kotlin.math.absoluteValue
@@ -64,12 +67,12 @@ fun MorphingNumber(
   Row(verticalAlignment = Alignment.CenterVertically) {
     AnimatedVisibility(
       visible = number < 0,
-      enter = slideInHorizontally { it },
-      exit = slideOutHorizontally { it },
+      enter = slideInHorizontally { it } + scaleIn(),
+      exit = slideOutHorizontally { it } + scaleOut(),
     ) {
       Text(
-        text = "-",
-        style = typography.displayLarge,
+        text = AnnotatedString("—"),
+        style = typography.displayMedium,
       )
     }
 

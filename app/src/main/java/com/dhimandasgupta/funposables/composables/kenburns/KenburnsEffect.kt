@@ -15,14 +15,20 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.calculateEndPadding
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -56,6 +62,7 @@ import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.toUpperCase
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.palette.graphics.Palette
 import coil.compose.AsyncImage
@@ -110,41 +117,50 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
   var currentPalette by remember { mutableStateOf<Palette?>(null) }
   var animationSpeed by remember { mutableStateOf(AnimationSpeed.NORMAL) }
 
+  LaunchedEffect(key1 = carousalState.currentItem, key2 = palettes.size) {
+    snapshotFlow { carousalState.currentItem }
+      .collectLatest { index ->
+        Timber.tag("KenBurnsEffectPane").d("Item current: $index")
+        currentPalette = if (palettes.containsKey(index)) palettes[index] else null
+      }
+  }
+
   Column(
-    modifier = modifier.fillMaxSize().verticalScroll(state = rememberScrollState()),
+    modifier =
+      modifier
+        .fillMaxSize()
+        .padding(
+          start =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateStartPadding(LayoutDirection.Ltr),
+          top =
+            WindowInsets.displayCutout
+              .union(WindowInsets.statusBars)
+              .asPaddingValues()
+              .calculateTopPadding(),
+          end =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateEndPadding(LayoutDirection.Ltr),
+          bottom =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateBottomPadding(),
+        )
+        .verticalScroll(state = rememberScrollState()),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
   ) {
-    FlowRow(
-      modifier =
-        Modifier.padding(
-          horizontal = 16.dp,
-          vertical = 32.dp,
-        ),
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
-      verticalArrangement = Arrangement.Center,
-      maxItemsInEachRow = Int.MAX_VALUE,
-    ) {
-      AnimationSpeed.entries.forEach { animationSpeedEntry ->
-        Text(
-          text = animationSpeedEntry.name.toUpperCase(LocalLocale.current).replace("_", " "),
-          style =
-            if (animationSpeed.durationType != animationSpeedEntry.durationType)
-              typography.titleSmall
-            else typography.titleLarge,
-          modifier =
-            Modifier.padding(horizontal = 8.dp)
-              .clickable(
-                onClick = {
-                  if (animationSpeed.durationType != animationSpeedEntry.durationType)
-                    animationSpeed = animationSpeedEntry
-                }
-              ),
-        )
-      }
-    }
-
-    Spacer(modifier = Modifier.height(16.dp))
+    AnimationSpeedSelectorSection(
+      animationSpeed = animationSpeed,
+      onAnimationSpeedChange = { selectedAnimationSpeed ->
+        animationSpeed = selectedAnimationSpeed
+      },
+    )
 
     HorizontalCenteredHeroCarousel(
       state = carousalState,
@@ -156,6 +172,7 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
         modifier = Modifier.fillMaxWidth().aspectRatio(1f).maskClip(RoundedCornerShape(16.dp)),
         drawableResourceId = items[itemIndex],
         animationSpeed = animationSpeed,
+        isSelected = carousalState.currentItem == itemIndex,
         indexForPallet = itemIndex,
         updatePalette = { index, newPalette ->
           Timber.tag("KenBurnsEffectPane").d("Item received: $index")
@@ -164,33 +181,40 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
       )
     }
 
-    LaunchedEffect(key1 = carousalState.currentItem, key2 = palettes.size) {
-      snapshotFlow { carousalState.currentItem }
-        .collectLatest { index ->
-          Timber.tag("KenBurnsEffectPane").d("Item current: $index")
-          currentPalette = if (palettes.containsKey(index)) palettes[index] else null
-        }
-    }
-    FlowRow(
-      modifier =
-        Modifier.padding(
-          horizontal = 16.dp,
-          vertical = 32.dp,
-        ),
-      horizontalArrangement = Arrangement.spacedBy(8.dp),
-      verticalArrangement = Arrangement.spacedBy(4.dp),
-      maxItemsInEachRow = Int.MAX_VALUE,
-    ) {
-      currentPalette?.swatches?.asSequence()?.filterNotNull()?.forEach { swatch ->
-        Box(
-          modifier =
-            Modifier.size(36.dp)
-              .background(
-                color = Color(swatch.rgb),
-                shape = RoundedCornerShape(8.dp),
-              )
-        )
-      }
+    CurrentImagePalettePane(currentPalette)
+  }
+}
+
+@Composable
+private fun AnimationSpeedSelectorSection(
+  animationSpeed: AnimationSpeed,
+  onAnimationSpeedChange: (AnimationSpeed) -> Unit,
+) {
+  FlowRow(
+    modifier =
+      Modifier.padding(
+        horizontal = 16.dp,
+        vertical = 32.dp,
+      ),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    verticalArrangement = Arrangement.Center,
+    maxItemsInEachRow = Int.MAX_VALUE,
+  ) {
+    AnimationSpeed.entries.forEach { animationSpeedEntry ->
+      Text(
+        text = animationSpeedEntry.name.toUpperCase(LocalLocale.current).replace("_", " "),
+        style =
+          if (animationSpeed.durationType != animationSpeedEntry.durationType) typography.titleSmall
+          else typography.titleLarge,
+        modifier =
+          Modifier.padding(horizontal = 8.dp)
+            .clickable(
+              onClick = {
+                if (animationSpeed.durationType != animationSpeedEntry.durationType)
+                  onAnimationSpeedChange(animationSpeedEntry)
+              }
+            ),
+      )
     }
   }
 }
@@ -200,6 +224,7 @@ private fun ApplyKenBurnsEffect(
   modifier: Modifier = Modifier,
   drawableResourceId: Int,
   animationSpeed: AnimationSpeed,
+  isSelected: Boolean,
   indexForPallet: Int,
   updatePalette: (Int, Palette) -> Unit,
 ) {
@@ -260,7 +285,10 @@ private fun ApplyKenBurnsEffect(
     val panningX = remember { Animatable(panningXRange.first) }
     val panningY = remember { Animatable(panningYRange.first) }
 
-    LaunchedEffect(key1 = drawableResourceId, key2 = animationSpeed) {
+    // Only the carousel's current item animates. Deselecting cancels the in-flight animateTo and
+    // freezes the Anima tables where they are; reelecting resumes from that position.
+    LaunchedEffect(key1 = drawableResourceId, key2 = animationSpeed, key3 = isSelected) {
+      if (!isSelected) return@LaunchedEffect
       while (isActive) {
         scale.animateTo(
           targetValue = scaleRange.second,
@@ -354,6 +382,32 @@ private fun ApplyKenBurnsEffect(
               },
         )
       }
+    }
+  }
+}
+
+@Suppress("ParamsComparedByRef")
+@Composable
+private fun CurrentImagePalettePane(currentPalette: Palette?) {
+  FlowRow(
+    modifier =
+      Modifier.padding(
+        horizontal = 16.dp,
+        vertical = 32.dp,
+      ),
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
+    verticalArrangement = Arrangement.spacedBy(4.dp),
+    maxItemsInEachRow = Int.MAX_VALUE,
+  ) {
+    currentPalette?.swatches?.asSequence()?.filterNotNull()?.forEach { swatch ->
+      Box(
+        modifier =
+          Modifier.size(36.dp)
+            .background(
+              color = Color(swatch.rgb),
+              shape = RoundedCornerShape(8.dp),
+            )
+      )
     }
   }
 }

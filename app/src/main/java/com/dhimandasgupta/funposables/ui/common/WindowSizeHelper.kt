@@ -1,10 +1,10 @@
 package com.dhimandasgupta.funposables.ui.common
 
-import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
-import androidx.compose.material3.windowsizeclass.WindowSizeClass
-import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.compose.material3.adaptive.currentWindowAdaptiveInfoV2
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_EXPANDED_LOWER_BOUND
+import androidx.window.core.layout.WindowSizeClass.Companion.WIDTH_DP_MEDIUM_LOWER_BOUND
 
 // Enum to represent the different layout types
 enum class DeviceLayoutType {
@@ -16,50 +16,41 @@ enum class DeviceLayoutType {
 /**
  * Determines the device layout type based on the window size class.
  *
- * @param windowSizeClass The WindowSizeClass calculated for the current window.
  * @return The DeviceLayoutType (PHONE_PORTRAIT, PHONE_LANDSCAPE, or TABLET_LAYOUT).
  */
 @Composable
-fun getDeviceLayoutType(windowSizeClass: WindowSizeClass): DeviceLayoutType {
-  // Remember the calculation to avoid re-computation on every recomposition
-  // if windowSizeClass itself is stable.
-  return remember(key1 = windowSizeClass) {
-    val widthSizeClass = windowSizeClass.widthSizeClass
-    val heightSizeClass = windowSizeClass.heightSizeClass
+fun getDeviceLayoutType(): DeviceLayoutType {
+  val windowAdaptiveInfo = currentWindowAdaptiveInfoV2()
+
+  return remember(key1 = windowAdaptiveInfo) {
+    val isExpandedWidth =
+      windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
+        widthDpBreakpoint = WIDTH_DP_EXPANDED_LOWER_BOUND
+      )
+    val isMediumWidth =
+      windowAdaptiveInfo.windowSizeClass.isWidthAtLeastBreakpoint(
+        widthDpBreakpoint = WIDTH_DP_MEDIUM_LOWER_BOUND
+      )
+    val isCompactWidth = !isMediumWidth && !isExpandedWidth
+
+    val isExpandedHeight =
+      windowAdaptiveInfo.windowSizeClass.isHeightAtLeastBreakpoint(
+        heightDpBreakpoint = WIDTH_DP_EXPANDED_LOWER_BOUND
+      )
+    val isMediumHeight =
+      windowAdaptiveInfo.windowSizeClass.isHeightAtLeastBreakpoint(
+        heightDpBreakpoint = WIDTH_DP_MEDIUM_LOWER_BOUND
+      )
 
     when {
-      // Typical tablet heuristic: Medium or Expanded width AND Medium or Expanded height
-      (widthSizeClass == WindowWidthSizeClass.Medium ||
-        widthSizeClass == WindowWidthSizeClass.Expanded) &&
-        (heightSizeClass == WindowHeightSizeClass.Medium ||
-          heightSizeClass == WindowHeightSizeClass.Expanded) -> {
+      ((isMediumWidth || isExpandedWidth) && (isMediumHeight || isExpandedHeight)) -> {
         DeviceLayoutType.TABLET_LAYOUT
       }
-      // Typical phone landscape heuristic: Expanded width AND Compact height
-      widthSizeClass == WindowWidthSizeClass.Expanded &&
-        heightSizeClass == WindowHeightSizeClass.Compact -> {
-        DeviceLayoutType.PHONE_LANDSCAPE
-      }
-      // Typical phone portrait or other compact layouts
-      // (Compact width OR Compact height for non-tablets, primarily targeting phone portrait)
       else -> {
-        // More refined phone portrait check:
-        if (
-          widthSizeClass == WindowWidthSizeClass.Compact &&
-            heightSizeClass != WindowHeightSizeClass.Compact
-        ) {
+        if (isCompactWidth) {
           DeviceLayoutType.PHONE_PORTRAIT
-        } else if (
-          widthSizeClass != WindowWidthSizeClass.Compact &&
-            heightSizeClass == WindowHeightSizeClass.Compact
-        ) {
-          // This could also be phone landscape, but the above case is more specific.
-          // If not caught by tablet or specific phone landscape, could be a wider phone in
-          // landscape.
-          DeviceLayoutType.PHONE_LANDSCAPE // Or a more generic phone category if needed
         } else {
-          // Default to phone portrait for other compact scenarios
-          DeviceLayoutType.PHONE_PORTRAIT
+          DeviceLayoutType.PHONE_LANDSCAPE
         }
       }
     }

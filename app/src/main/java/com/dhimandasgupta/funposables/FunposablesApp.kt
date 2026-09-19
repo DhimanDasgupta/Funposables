@@ -23,7 +23,6 @@ class FunposablesApp : Application() {
   override fun onCreate() {
     super.onCreate()
     appGraph = createGraph<AppGraph>()
-    Timber.plant(Timber.DebugTree())
     initCoil()
 
     if (BuildConfig.DEBUG) {

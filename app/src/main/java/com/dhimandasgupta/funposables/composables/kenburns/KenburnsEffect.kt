@@ -50,18 +50,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.geometry.isSpecified
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.toUpperCase
-import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
@@ -72,9 +68,6 @@ import coil.request.ImageRequest
 import com.dhimandasgupta.funposables.R
 import com.dhimandasgupta.funposables.ui.common.DeviceLayoutType
 import com.dhimandasgupta.funposables.ui.common.getDeviceLayoutType
-import kotlin.math.ceil
-import kotlin.math.max
-import kotlin.math.roundToInt
 import kotlin.random.Random
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.Dispatchers
@@ -229,16 +222,9 @@ private fun ApplyKenBurnsEffect(
   key(drawableResourceId, indexForPallet) {
     val scope = rememberCoroutineScope()
 
-    val painter = painterResource(id = drawableResourceId)
-    val imageSize = painter.intrinsicSize
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
-    // Derived so the layout-phase size write is only ever read from the effect and the layer
-    // below, never from composition.
-    val geometry by
-      remember(imageSize) { derivedStateOf { KenBurnsGeometry.of(imageSize, containerSize) } }
+    val geometry by remember { derivedStateOf { KenBurnsGeometry.of(containerSize) } }
 
-    // Remembered so recomposition does not hand AsyncImage a new (non-equal) request and restart
-    // the load, crossfade, and palette generation.
     val context = LocalContext.current
     val imageRequest =
       remember(drawableResourceId) {
@@ -258,13 +244,10 @@ private fun ApplyKenBurnsEffect(
           .build()
       }
 
-    // The resting pose is the plain crop, which is inside the bounds for every geometry.
-    val zoom = remember { Animatable(KenBurnsGeometry.MIN_ZOOM) }
+    val scale = remember { Animatable(KenBurnsGeometry.MIN_SCALE) }
     val panX = remember { Animatable(0f) }
     val panY = remember { Animatable(0f) }
 
-    // Only the carousel's current item animates. Deselecting cancels the in-flight animation and
-    // freezes the Animatables where they are; reselecting resumes from that position.
     LaunchedEffect(key1 = drawableResourceId, key2 = animationSpeed, key3 = isSelected) {
       if (!isSelected) return@LaunchedEffect
       snapshotFlow { geometry }
@@ -277,11 +260,9 @@ private fun ApplyKenBurnsEffect(
               easing = FastOutSlowInEasing,
             )
           while (isActive) {
-            // All three properties share one spec, so every frame is a plain lerp between two
-            // in-bounds poses; the pan limit is linear in zoom, so the lerp stays in bounds too.
             val pose = geometry.randomPose()
             coroutineScope {
-              launch { zoom.animateTo(pose.zoom, spec) }
+              launch { scale.animateTo(pose.scale, spec) }
               launch { panX.animateTo(pose.panX, spec) }
               launch { panY.animateTo(pose.panY, spec) }
             }
@@ -305,19 +286,15 @@ private fun ApplyKenBurnsEffect(
             Modifier.fillMaxSize()
               .onSizeChanged { intSize -> containerSize = intSize }
               .graphicsLayer {
-                val bounds = geometry ?: return@graphicsLayer
                 transformOrigin = TransformOrigin.Center
-                val currentZoom = zoom.value.coerceAtLeast(KenBurnsGeometry.MIN_ZOOM)
-                scaleX = currentZoom
-                scaleY = currentZoom
-                // The animation already targets in-bounds poses; this clamp is the safety net
-                // for a resize mid-segment, so the container behind the image is never exposed.
-                val maxPanX = bounds.maxPanX(currentZoom)
-                val maxPanY = bounds.maxPanY(currentZoom)
+                val currentScale = scale.value.coerceAtLeast(1f)
+                scaleX = currentScale
+                scaleY = currentScale
+                val maxPanX = (size.width * (currentScale - 1f)).coerceAtLeast(0f) / 2f
+                val maxPanY = (size.height * (currentScale - 1f)).coerceAtLeast(0f) / 2f
                 translationX = panX.value.coerceIn(-maxPanX, maxPanX)
                 translationY = panY.value.coerceIn(-maxPanY, maxPanY)
-              }
-              .layoutAsCrop(imageSize),
+              },
         )
       }
     }
@@ -325,35 +302,22 @@ private fun ApplyKenBurnsEffect(
 }
 
 /** One zoom/pan pose of the image; [panX] and [panY] are pixel translations of the container. */
-private data class KenBurnsPose(val zoom: Float, val panX: Float, val panY: Float)
+private data class KenBurnsPose(val scale: Float, val panX: Float, val panY: Float)
 
-/**
- * Geometry of a [ContentScale.Crop]-sized image inside its container. [displayedWidth] and
- * [displayedHeight] are the crop-scaled image dimensions: at least one equals the container and the
- * other carries the crop overflow, which panning can reveal instead of it being clipped away.
- */
-private data class KenBurnsGeometry(val imageSize: Size, val containerSize: Size) {
-  private val cropScale =
-    max(containerSize.width / imageSize.width, containerSize.height / imageSize.height)
-  val displayedWidth = imageSize.width * cropScale
-  val displayedHeight = imageSize.height * cropScale
+/** Geometry of a [ContentScale.Crop]-sized image inside its container. */
+private data class KenBurnsGeometry(val containerSize: Size) {
+  fun maxPanX(scale: Float) = ((containerSize.width * (scale - 1f)) / 2f).coerceAtLeast(0f)
 
-  /** Zooming past 1:1 image-to-screen pixels only blurs, so cap there when the image allows it. */
-  val maxZoom = (1f / cropScale).coerceIn(MIN_MAX_ZOOM, MAX_MAX_ZOOM)
-
-  /** Largest horizontal translation at [zoom] that keeps the image covering the container. */
-  fun maxPanX(zoom: Float) = ((displayedWidth * zoom - containerSize.width) / 2f).coerceAtLeast(0f)
-
-  /** Largest vertical translation at [zoom] that keeps the image covering the container. */
-  fun maxPanY(zoom: Float) =
-    ((displayedHeight * zoom - containerSize.height) / 2f).coerceAtLeast(0f)
+  fun maxPanY(scale: Float) = ((containerSize.height * (scale - 1f)) / 2f).coerceAtLeast(0f)
 
   fun randomPose(): KenBurnsPose {
-    val zoom = Random.nextDouble(MIN_ZOOM.toDouble(), maxZoom.toDouble()).toFloat()
+    val scale = Random.nextDouble(MIN_SCALE.toDouble(), MAX_SCALE.toDouble()).toFloat()
+    val maxPanX = maxPanX(scale)
+    val maxPanY = maxPanY(scale)
     return KenBurnsPose(
-      zoom = zoom,
-      panX = randomWithin(maxPanX(zoom)),
-      panY = randomWithin(maxPanY(zoom)),
+      scale = scale,
+      panX = randomWithin(maxPanX),
+      panY = randomWithin(maxPanY),
     )
   }
 
@@ -361,37 +325,13 @@ private data class KenBurnsGeometry(val imageSize: Size, val containerSize: Size
     if (limit <= 0f) 0f else Random.nextDouble(-limit.toDouble(), limit.toDouble()).toFloat()
 
   companion object {
-    const val MIN_ZOOM = 1f
-    private const val MIN_MAX_ZOOM = 1.25f
-    private const val MAX_MAX_ZOOM = 1.6f
+    const val MIN_SCALE = 1.15f
+    const val MAX_SCALE = 1.45f
 
-    fun of(imageSize: Size, containerSize: IntSize): KenBurnsGeometry? {
+    fun of(containerSize: IntSize): KenBurnsGeometry? {
       if (containerSize.width <= 0 || containerSize.height <= 0) return null
-      if (!imageSize.isSpecified || imageSize.width <= 0f || imageSize.height <= 0f) return null
-      return KenBurnsGeometry(imageSize, containerSize.toSize())
+      return KenBurnsGeometry(containerSize.toSize())
     }
-  }
-}
-
-/**
- * Measures the content at its [ContentScale.Crop] size for the incoming constraints and centres it,
- * so the crop overflow spills past the container (where the parent clips it) instead of being cut
- * off inside the image. Reports the container size to the parent.
- */
-private fun Modifier.layoutAsCrop(imageSize: Size): Modifier = layout { measurable, constraints ->
-  val geometry =
-    if (constraints.hasBoundedWidth && constraints.hasBoundedHeight)
-      KenBurnsGeometry.of(imageSize, IntSize(constraints.maxWidth, constraints.maxHeight))
-    else null
-  if (geometry == null) {
-    val placeable = measurable.measure(constraints)
-    return@layout layout(placeable.width, placeable.height) { placeable.place(0, 0) }
-  }
-  val width = ceil(geometry.displayedWidth).roundToInt()
-  val height = ceil(geometry.displayedHeight).roundToInt()
-  val placeable = measurable.measure(Constraints.fixed(width, height))
-  layout(constraints.maxWidth, constraints.maxHeight) {
-    placeable.place((constraints.maxWidth - width) / 2, (constraints.maxHeight - height) / 2)
   }
 }
 

@@ -87,7 +87,7 @@ private fun isLowRamDevice(context: Context): Boolean {
 
 private fun enableStrictMode() {
   StrictMode.setVmPolicy(
-    StrictMode.VmPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build()
+    StrictMode.VmPolicy.Builder().detectAll().penaltyLog() /*.penaltyDeath()*/.build()
   )
   StrictMode.setThreadPolicy(
     StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build()

@@ -89,6 +89,6 @@ private fun enableStrictMode() {
     StrictMode.VmPolicy.Builder().detectAll().penaltyLog() /*.penaltyDeath()*/.build()
   )
   StrictMode.setThreadPolicy(
-    StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog().penaltyDeath().build()
+    StrictMode.ThreadPolicy.Builder().detectAll().penaltyLog() /*.penaltyDeath()*/.build()
   )
 }

@@ -1,10 +1,12 @@
 package com.dhimandasgupta.funposables.composables.kenburns
 
 import android.graphics.drawable.BitmapDrawable
+import android.util.LruCache
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -35,6 +37,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.CarouselState
@@ -46,6 +49,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.movableContentOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -75,7 +79,6 @@ import com.dhimandasgupta.funposables.R
 import com.dhimandasgupta.funposables.ui.common.layoutAtLookaheadSize
 import kotlin.random.Random
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
@@ -92,6 +95,13 @@ enum class AnimationSpeed(val durationType: Float) {
   SLOW(durationType = 1.5f),
   VERY_SLOW(durationType = 2f),
 }
+
+/**
+ * Swatch colors per drawable resource. A resource's palette never changes, so carousel items that
+ * scroll back into view, or a revisit of the screen, reuse it instead of running [Palette] again.
+ * Thread-safe, as it is written from [Dispatchers.Default] and read on the main thread.
+ */
+private val swatchColorsCache = LruCache<Int, ImmutableList<Color>>(32)
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
 @Composable
@@ -111,16 +121,41 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
   val carousalState = rememberCarouselState(initialItem = 0, itemCount = { items.size })
 
   val swatchColorsByItem = remember { mutableStateMapOf<Int, ImmutableList<Color>>() }
-  val currentSwatchColors by remember {
-    derivedStateOf { swatchColorsByItem[carousalState.currentItem] }
-  }
+  val currentSwatchColors by
+    remember(carousalState.currentItem) {
+      derivedStateOf { swatchColorsByItem[carousalState.currentItem] }
+    }
   var animationSpeed by remember { mutableStateOf(AnimationSpeed.NORMAL) }
-  val onAnimationSpeedChange = { selectedAnimationSpeed: AnimationSpeed ->
-    animationSpeed = selectedAnimationSpeed
+
+  val speedSelector = remember {
+    movableContentOf { selectorModifier: Modifier, useRow: Boolean, selectedSpeed: AnimationSpeed ->
+      AnimationSpeedSelectorSection(
+        modifier = selectorModifier,
+        useRow = useRow,
+        animationSpeed = selectedSpeed,
+        onAnimationSpeedChange = { animationSpeed = it },
+      )
+    }
   }
-  val onSwatchColors = { index: Int, swatchColors: ImmutableList<Color> ->
-    Timber.tag("KenBurnsEffectPane").d("Item received: $index")
-    swatchColorsByItem[index] = swatchColors
+  val carousel = remember {
+    movableContentOf { carouselModifier: Modifier, carouselAnimationSpeed: AnimationSpeed ->
+      KenBurnsCarousel(
+        modifier = carouselModifier,
+        carousalState = carousalState,
+        items = items,
+        animationSpeed = carouselAnimationSpeed,
+        onSwatchColors = { index, swatchColors ->
+          Timber.tag("KenBurnsEffectPane").d("Item received: $index")
+          swatchColorsByItem[index] = swatchColors
+        },
+      )
+    }
+  }
+  val palettePane = remember {
+    movableContentOf { paneModifier: Modifier, useRow: Boolean, swatchColors: ImmutableList<Color>?
+      ->
+      CurrentImagePalettePane(modifier = paneModifier, swatchColors = swatchColors, useRow = useRow)
+    }
   }
 
   BoxWithConstraints(modifier = modifier.fillMaxSize().layoutAtLookaheadSize()) {
@@ -129,21 +164,19 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
       LayoutHorizontally(
         Modifier,
         animationSpeed,
-        onAnimationSpeedChange,
-        carousalState,
-        items,
-        onSwatchColors,
         currentSwatchColors,
+        speedSelector,
+        carousel,
+        palettePane,
       )
     } else {
       LayoutVertically(
         Modifier,
         animationSpeed,
-        onAnimationSpeedChange,
-        carousalState,
-        items,
-        onSwatchColors,
         currentSwatchColors,
+        speedSelector,
+        carousel,
+        palettePane,
       )
     }
   }
@@ -154,11 +187,10 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
 private fun LayoutVertically(
   modifier: Modifier,
   animationSpeed: AnimationSpeed,
-  onAnimationSpeedChange: (AnimationSpeed) -> Unit,
-  carousalState: CarouselState,
-  items: PersistentList<Int>,
-  onSwatchColors: (Int, ImmutableList<Color>) -> Unit,
   currentSwatchColors: ImmutableList<Color>?,
+  speedSelector: @Composable (Modifier, Boolean, AnimationSpeed) -> Unit,
+  carousel: @Composable (Modifier, AnimationSpeed) -> Unit,
+  palettePane: @Composable (Modifier, Boolean, ImmutableList<Color>?) -> Unit,
 ) {
   Column(
     modifier =
@@ -191,21 +223,14 @@ private fun LayoutVertically(
           )
     )
 
-    AnimationSpeedSelectorSection(
-      useRow = true,
-      animationSpeed = animationSpeed,
-      onAnimationSpeedChange = onAnimationSpeedChange,
+    speedSelector(Modifier, true, animationSpeed)
+
+    carousel(
+      Modifier.fillMaxWidth().fillMaxHeight(0.4f).padding(horizontal = 16.dp),
+      animationSpeed,
     )
 
-    KenBurnsCarousel(
-      modifier = Modifier.fillMaxWidth().fillMaxHeight(0.4f).padding(horizontal = 16.dp),
-      carousalState = carousalState,
-      items = items,
-      animationSpeed = animationSpeed,
-      onSwatchColors = onSwatchColors,
-    )
-
-    CurrentImagePalettePane(swatchColors = currentSwatchColors, useRow = true)
+    palettePane(Modifier, true, currentSwatchColors)
 
     Spacer(
       modifier =
@@ -225,11 +250,10 @@ private fun LayoutVertically(
 private fun LayoutHorizontally(
   modifier: Modifier,
   animationSpeed: AnimationSpeed,
-  onAnimationSpeedChange: (AnimationSpeed) -> Unit,
-  carousalState: CarouselState,
-  items: PersistentList<Int>,
-  onSwatchColors: (Int, ImmutableList<Color>) -> Unit,
   currentSwatchColors: ImmutableList<Color>?,
+  speedSelector: @Composable (Modifier, Boolean, AnimationSpeed) -> Unit,
+  carousel: @Composable (Modifier, AnimationSpeed) -> Unit,
+  palettePane: @Composable (Modifier, Boolean, ImmutableList<Color>?) -> Unit,
 ) {
   Row(
     modifier =
@@ -249,26 +273,14 @@ private fun LayoutHorizontally(
         ),
     verticalAlignment = Alignment.CenterVertically,
   ) {
-    AnimationSpeedSelectorSection(
-      modifier = Modifier.weight(1f),
-      useRow = false,
-      animationSpeed = animationSpeed,
-      onAnimationSpeedChange = onAnimationSpeedChange,
+    speedSelector(Modifier.weight(1f), false, animationSpeed)
+
+    carousel(
+      Modifier.weight(2f).fillMaxHeight(0.75f).padding(horizontal = 16.dp),
+      animationSpeed,
     )
 
-    KenBurnsCarousel(
-      modifier = Modifier.weight(2f).fillMaxHeight(0.75f).padding(horizontal = 16.dp),
-      carousalState = carousalState,
-      items = items,
-      animationSpeed = animationSpeed,
-      onSwatchColors = onSwatchColors,
-    )
-
-    CurrentImagePalettePane(
-      modifier = Modifier.weight(1f),
-      swatchColors = currentSwatchColors,
-      useRow = false,
-    )
+    palettePane(Modifier.weight(1f), false, currentSwatchColors)
   }
 }
 
@@ -342,7 +354,7 @@ private fun AnimationSpeedSelectorSection(
     FlowColumn(
       modifier = paddedModifier,
       verticalArrangement = Arrangement.spacedBy(8.dp),
-      horizontalArrangement = Arrangement.Center,
+      horizontalArrangement = Arrangement.Start,
       maxItemsInEachColumn = Int.MAX_VALUE,
     ) {
       speedEntries()
@@ -375,11 +387,16 @@ private fun ApplyKenBurnsEffect(
           .allowHardware(false) // Required for the Palette API
           .crossfade(true)
           .listener { _, result ->
+            swatchColorsCache.get(drawableResourceId)?.let { cachedSwatchColors ->
+              updateSwatchColors(indexForPallet, cachedSwatchColors)
+              return@listener
+            }
             scope.launch(Dispatchers.Default) {
               val bitmap = (result.drawable as? BitmapDrawable)?.bitmap ?: return@launch
               Timber.tag("KenBurnsEffectPane").d("Item produce: $indexForPallet")
               val swatchColors =
                 Palette.from(bitmap).generate().swatches.map { Color(it.rgb) }.toImmutableList()
+              swatchColorsCache.put(drawableResourceId, swatchColors)
               updateSwatchColors(indexForPallet, swatchColors)
             }
           }
@@ -489,13 +506,20 @@ private fun CurrentImagePalettePane(
       vertical = 32.dp,
     )
   val swatches: @Composable () -> Unit = {
+    val swatchShape = RoundedCornerShape(8.dp)
+    val borderColor = colorScheme.onSurface
     swatchColors?.forEach { swatchColor ->
       Box(
         modifier =
           Modifier.size(36.dp)
             .background(
               color = swatchColor,
-              shape = RoundedCornerShape(8.dp),
+              shape = swatchShape,
+            )
+            .border(
+              width = 0.5.dp,
+              color = borderColor,
+              shape = swatchShape,
             )
       )
     }

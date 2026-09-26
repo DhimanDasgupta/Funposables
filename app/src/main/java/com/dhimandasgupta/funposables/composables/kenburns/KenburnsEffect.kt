@@ -8,9 +8,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowColumn
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
@@ -20,6 +24,7 @@ import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -32,6 +37,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
+import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
 import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
@@ -66,10 +72,12 @@ import androidx.palette.graphics.Palette
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.dhimandasgupta.funposables.R
-import com.dhimandasgupta.funposables.ui.common.DeviceLayoutType
-import com.dhimandasgupta.funposables.ui.common.getDeviceLayoutType
+import com.dhimandasgupta.funposables.ui.common.layoutAtLookaheadSize
 import kotlin.random.Random
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.PersistentList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.collectLatest
@@ -100,22 +108,58 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
       R.drawable.wallpaper_08,
       R.drawable.wallpaper_09,
     )
-  val deviceLayoutType = getDeviceLayoutType()
-
-  val carousalModifier =
-    when (deviceLayoutType) {
-      DeviceLayoutType.PHONE_PORTRAIT -> Modifier.fillMaxWidth().fillMaxHeight(0.4f)
-      else -> Modifier.fillMaxSize(0.75f)
-    }
-
   val carousalState = rememberCarouselState(initialItem = 0, itemCount = { items.size })
 
-  val palettes = remember { mutableStateMapOf<Int, Palette>() }
-  // Derived rather than copied through an effect: it tracks both the settled item and a palette
-  // arriving later for that item, without restarting anything on each change.
-  val currentPalette by remember { derivedStateOf { palettes[carousalState.currentItem] } }
+  val swatchColorsByItem = remember { mutableStateMapOf<Int, ImmutableList<Color>>() }
+  val currentSwatchColors by remember {
+    derivedStateOf { swatchColorsByItem[carousalState.currentItem] }
+  }
   var animationSpeed by remember { mutableStateOf(AnimationSpeed.NORMAL) }
+  val onAnimationSpeedChange = { selectedAnimationSpeed: AnimationSpeed ->
+    animationSpeed = selectedAnimationSpeed
+  }
+  val onSwatchColors = { index: Int, swatchColors: ImmutableList<Color> ->
+    Timber.tag("KenBurnsEffectPane").d("Item received: $index")
+    swatchColorsByItem[index] = swatchColors
+  }
 
+  BoxWithConstraints(modifier = modifier.fillMaxSize().layoutAtLookaheadSize()) {
+    val shouldLayoutHorizontally = constraints.hasBoundedHeight && maxWidth > maxHeight
+    if (shouldLayoutHorizontally) {
+      LayoutHorizontally(
+        Modifier,
+        animationSpeed,
+        onAnimationSpeedChange,
+        carousalState,
+        items,
+        onSwatchColors,
+        currentSwatchColors,
+      )
+    } else {
+      LayoutVertically(
+        Modifier,
+        animationSpeed,
+        onAnimationSpeedChange,
+        carousalState,
+        items,
+        onSwatchColors,
+        currentSwatchColors,
+      )
+    }
+  }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun LayoutVertically(
+  modifier: Modifier,
+  animationSpeed: AnimationSpeed,
+  onAnimationSpeedChange: (AnimationSpeed) -> Unit,
+  carousalState: CarouselState,
+  items: PersistentList<Int>,
+  onSwatchColors: (Int, ImmutableList<Color>) -> Unit,
+  currentSwatchColors: ImmutableList<Color>?,
+) {
   Column(
     modifier =
       modifier
@@ -126,71 +170,147 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
               .union(WindowInsets.navigationBars)
               .asPaddingValues()
               .calculateStartPadding(LayoutDirection.Ltr),
-          top =
-            WindowInsets.displayCutout
-              .union(WindowInsets.statusBars)
-              .asPaddingValues()
-              .calculateTopPadding(),
           end =
             WindowInsets.displayCutout
               .union(WindowInsets.navigationBars)
               .asPaddingValues()
               .calculateEndPadding(LayoutDirection.Ltr),
-          bottom =
-            WindowInsets.displayCutout
-              .union(WindowInsets.navigationBars)
-              .asPaddingValues()
-              .calculateBottomPadding(),
         )
         .verticalScroll(state = rememberScrollState()),
     horizontalAlignment = Alignment.CenterHorizontally,
     verticalArrangement = Arrangement.Center,
   ) {
-    AnimationSpeedSelectorSection(
-      animationSpeed = animationSpeed,
-      onAnimationSpeedChange = { selectedAnimationSpeed ->
-        animationSpeed = selectedAnimationSpeed
-      },
+    Spacer(
+      modifier =
+        Modifier.fillMaxWidth()
+          .height(
+            WindowInsets.displayCutout
+              .union(WindowInsets.statusBars)
+              .asPaddingValues()
+              .calculateTopPadding()
+          )
     )
 
-    HorizontalCenteredHeroCarousel(
-      state = carousalState,
-      itemSpacing = 8.dp,
-      modifier = carousalModifier.padding(horizontal = 16.dp),
-      contentPadding = PaddingValues(horizontal = 0.dp),
-    ) { itemIndex ->
-      ApplyKenBurnsEffect(
-        modifier = Modifier.fillMaxWidth().aspectRatio(1f).maskClip(RoundedCornerShape(16.dp)),
-        drawableResourceId = items[itemIndex],
-        animationSpeed = animationSpeed,
-        isSelected = carousalState.currentItem == itemIndex,
-        indexForPallet = itemIndex,
-        updatePalette = { index, newPalette ->
-          Timber.tag("KenBurnsEffectPane").d("Item received: $index")
-          palettes[itemIndex] = newPalette
-        },
-      )
-    }
+    AnimationSpeedSelectorSection(
+      useRow = true,
+      animationSpeed = animationSpeed,
+      onAnimationSpeedChange = onAnimationSpeedChange,
+    )
 
-    CurrentImagePalettePane(currentPalette)
+    KenBurnsCarousel(
+      modifier = Modifier.fillMaxWidth().fillMaxHeight(0.4f).padding(horizontal = 16.dp),
+      carousalState = carousalState,
+      items = items,
+      animationSpeed = animationSpeed,
+      onSwatchColors = onSwatchColors,
+    )
+
+    CurrentImagePalettePane(swatchColors = currentSwatchColors, useRow = true)
+
+    Spacer(
+      modifier =
+        Modifier.fillMaxWidth()
+          .height(
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateBottomPadding()
+          )
+    )
+  }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun LayoutHorizontally(
+  modifier: Modifier,
+  animationSpeed: AnimationSpeed,
+  onAnimationSpeedChange: (AnimationSpeed) -> Unit,
+  carousalState: CarouselState,
+  items: PersistentList<Int>,
+  onSwatchColors: (Int, ImmutableList<Color>) -> Unit,
+  currentSwatchColors: ImmutableList<Color>?,
+) {
+  Row(
+    modifier =
+      modifier
+        .fillMaxSize()
+        .padding(
+          start =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateStartPadding(LayoutDirection.Ltr),
+          end =
+            WindowInsets.displayCutout
+              .union(WindowInsets.navigationBars)
+              .asPaddingValues()
+              .calculateEndPadding(LayoutDirection.Ltr),
+        ),
+    verticalAlignment = Alignment.CenterVertically,
+  ) {
+    AnimationSpeedSelectorSection(
+      modifier = Modifier.weight(1f),
+      useRow = false,
+      animationSpeed = animationSpeed,
+      onAnimationSpeedChange = onAnimationSpeedChange,
+    )
+
+    KenBurnsCarousel(
+      modifier = Modifier.weight(2f).fillMaxHeight(0.75f).padding(horizontal = 16.dp),
+      carousalState = carousalState,
+      items = items,
+      animationSpeed = animationSpeed,
+      onSwatchColors = onSwatchColors,
+    )
+
+    CurrentImagePalettePane(
+      modifier = Modifier.weight(1f),
+      swatchColors = currentSwatchColors,
+      useRow = false,
+    )
+  }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun KenBurnsCarousel(
+  carousalState: CarouselState,
+  items: ImmutableList<Int>,
+  animationSpeed: AnimationSpeed,
+  onSwatchColors: (Int, ImmutableList<Color>) -> Unit,
+  modifier: Modifier = Modifier,
+) {
+  HorizontalCenteredHeroCarousel(
+    state = carousalState,
+    itemSpacing = 8.dp,
+    modifier = modifier,
+    contentPadding = PaddingValues(horizontal = 0.dp),
+  ) { itemIndex ->
+    ApplyKenBurnsEffect(
+      modifier = Modifier.fillMaxWidth().aspectRatio(1f).maskClip(RoundedCornerShape(16.dp)),
+      drawableResourceId = items[itemIndex],
+      animationSpeed = animationSpeed,
+      isSelected = carousalState.currentItem == itemIndex,
+      indexForPallet = itemIndex,
+      updateSwatchColors = onSwatchColors,
+    )
   }
 }
 
 @Composable
 private fun AnimationSpeedSelectorSection(
+  modifier: Modifier = Modifier,
+  useRow: Boolean,
   animationSpeed: AnimationSpeed,
   onAnimationSpeedChange: (AnimationSpeed) -> Unit,
 ) {
-  FlowRow(
-    modifier =
-      Modifier.padding(
-        horizontal = 16.dp,
-        vertical = 32.dp,
-      ),
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
-    verticalArrangement = Arrangement.Center,
-    maxItemsInEachRow = Int.MAX_VALUE,
-  ) {
+  val paddedModifier =
+    modifier.padding(
+      horizontal = 16.dp,
+      vertical = 32.dp,
+    )
+  val speedEntries: @Composable () -> Unit = {
     AnimationSpeed.entries.forEach { animationSpeedEntry ->
       Text(
         text = animationSpeedEntry.name.toUpperCase(LocalLocale.current).replace("_", " "),
@@ -208,6 +328,26 @@ private fun AnimationSpeedSelectorSection(
       )
     }
   }
+
+  if (useRow) {
+    FlowRow(
+      modifier = paddedModifier,
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalArrangement = Arrangement.Center,
+      maxItemsInEachRow = Int.MAX_VALUE,
+    ) {
+      speedEntries()
+    }
+  } else {
+    FlowColumn(
+      modifier = paddedModifier,
+      verticalArrangement = Arrangement.spacedBy(8.dp),
+      horizontalArrangement = Arrangement.Center,
+      maxItemsInEachColumn = Int.MAX_VALUE,
+    ) {
+      speedEntries()
+    }
+  }
 }
 
 @Composable
@@ -217,7 +357,7 @@ private fun ApplyKenBurnsEffect(
   animationSpeed: AnimationSpeed,
   isSelected: Boolean,
   indexForPallet: Int,
-  updatePalette: (Int, Palette) -> Unit,
+  updateSwatchColors: (Int, ImmutableList<Color>) -> Unit,
 ) {
   key(drawableResourceId, indexForPallet) {
     val scope = rememberCoroutineScope()
@@ -238,7 +378,9 @@ private fun ApplyKenBurnsEffect(
             scope.launch(Dispatchers.Default) {
               val bitmap = (result.drawable as? BitmapDrawable)?.bitmap ?: return@launch
               Timber.tag("KenBurnsEffectPane").d("Item produce: $indexForPallet")
-              updatePalette(indexForPallet, Palette.from(bitmap).generate())
+              val swatchColors =
+                Palette.from(bitmap).generate().swatches.map { Color(it.rgb) }.toImmutableList()
+              updateSwatchColors(indexForPallet, swatchColors)
             }
           }
           .build()
@@ -335,28 +477,47 @@ private data class KenBurnsGeometry(val containerSize: Size) {
   }
 }
 
-@Suppress("ParamsComparedByRef")
 @Composable
-private fun CurrentImagePalettePane(currentPalette: Palette?) {
-  FlowRow(
-    modifier =
-      Modifier.padding(
-        horizontal = 16.dp,
-        vertical = 32.dp,
-      ),
-    horizontalArrangement = Arrangement.spacedBy(8.dp),
-    verticalArrangement = Arrangement.spacedBy(4.dp),
-    maxItemsInEachRow = Int.MAX_VALUE,
-  ) {
-    currentPalette?.swatches?.asSequence()?.filterNotNull()?.forEach { swatch ->
+private fun CurrentImagePalettePane(
+  swatchColors: ImmutableList<Color>?,
+  useRow: Boolean,
+  modifier: Modifier = Modifier,
+) {
+  val paddedModifier =
+    modifier.padding(
+      horizontal = 16.dp,
+      vertical = 32.dp,
+    )
+  val swatches: @Composable () -> Unit = {
+    swatchColors?.forEach { swatchColor ->
       Box(
         modifier =
           Modifier.size(36.dp)
             .background(
-              color = Color(swatch.rgb),
+              color = swatchColor,
               shape = RoundedCornerShape(8.dp),
             )
       )
+    }
+  }
+
+  if (useRow) {
+    FlowRow(
+      modifier = paddedModifier,
+      horizontalArrangement = Arrangement.spacedBy(8.dp),
+      verticalArrangement = Arrangement.spacedBy(4.dp),
+      maxItemsInEachRow = Int.MAX_VALUE,
+    ) {
+      swatches()
+    }
+  } else {
+    FlowColumn(
+      modifier = paddedModifier,
+      verticalArrangement = Arrangement.spacedBy(8.dp),
+      horizontalArrangement = Arrangement.spacedBy(4.dp),
+      maxItemsInEachColumn = Int.MAX_VALUE,
+    ) {
+      swatches()
     }
   }
 }

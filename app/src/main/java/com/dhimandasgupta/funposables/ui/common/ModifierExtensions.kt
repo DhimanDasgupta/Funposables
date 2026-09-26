@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -19,13 +20,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ApproachLayoutModifierNode
+import androidx.compose.ui.layout.ApproachMeasureScope
+import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.ModifierNodeElement
 import androidx.compose.ui.node.invalidateDraw
 import androidx.compose.ui.platform.InspectorInfo
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.round
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
@@ -594,5 +607,53 @@ private fun Modifier.bottomFade(
           ),
       )
     }
+  }
+}
+
+/**
+ * Measures the content at its lookahead (final) size and keeps it at its final position while an
+ * enclosing pane animates its bounds, clipping to the animated bounds. Without this, a list-detail
+ * pane resize (for example on rotation) re-measures the content at every intermediate width, and
+ * the flow rows visibly re-wrap on each frame.
+ */
+fun Modifier.layoutAtLookaheadSize(): Modifier = clipToBounds().then(LayoutAtLookaheadSizeElement)
+
+private data object LayoutAtLookaheadSizeElement :
+  ModifierNodeElement<LayoutAtLookaheadSizeNode>() {
+  override fun create() = LayoutAtLookaheadSizeNode()
+
+  override fun update(node: LayoutAtLookaheadSizeNode) = Unit
+}
+
+private class LayoutAtLookaheadSizeNode : Modifier.Node(), ApproachLayoutModifierNode {
+  private var lookaheadCoordinates: LayoutCoordinates? = null
+
+  override fun isMeasurementApproachInProgress(lookaheadSize: IntSize): Boolean = true
+
+  override fun Placeable.PlacementScope.isPlacementApproachInProgress(
+    lookaheadCoordinates: LayoutCoordinates
+  ): Boolean {
+    this@LayoutAtLookaheadSizeNode.lookaheadCoordinates = lookaheadCoordinates
+    return true
+  }
+
+  override fun ApproachMeasureScope.approachMeasure(
+    measurable: Measurable,
+    constraints: Constraints,
+  ): MeasureResult {
+    val placeable = measurable.measure(Constraints.fixed(lookaheadSize.width, lookaheadSize.height))
+    return layout(
+      constraints.constrainWidth(placeable.width),
+      constraints.constrainHeight(placeable.height),
+    ) {
+      val target = lookaheadCoordinates?.takeIf { it.isAttached }?.positionInRoot()
+      val current = coordinates?.positionInRoot()
+      val offset = if (target != null && current != null) target - current else Offset.Zero
+      placeable.place(offset.round())
+    }
+  }
+
+  override fun onDetach() {
+    lookaheadCoordinates = null
   }
 }

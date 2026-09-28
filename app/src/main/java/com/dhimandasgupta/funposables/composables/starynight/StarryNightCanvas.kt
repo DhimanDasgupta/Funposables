@@ -54,7 +54,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.tooling.preview.Preview
-import kotlin.coroutines.coroutineContext
+import androidx.core.graphics.createBitmap
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -67,6 +67,7 @@ import kotlin.math.sin
 import kotlin.math.sqrt
 import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -101,7 +102,7 @@ import kotlinx.coroutines.withContext
 private const val ART_W = 800f
 private const val ART_H = 1422f
 
-private val PI_F = PI.toFloat()
+private const val PI_F = PI.toFloat()
 private const val TAU = 2.0 * PI
 
 // ---------------------------------------------------------------------------
@@ -2029,8 +2030,8 @@ private const val D_STEP = 3.6f // integration step along one
 private const val D_TEST = D_SEP * 0.80f // how close a line may come to its neighbour
 private const val MAX_STEPS = 70
 
-private val GRID_COLS = (ART_W / D_SEP).toInt() + 2
-private val GRID_ROWS = (ART_H / D_SEP).toInt() + 2
+private const val GRID_COLS = (ART_W / D_SEP).toInt() + 2
+private const val GRID_ROWS = (ART_H / D_SEP).toInt() + 2
 
 /**
  * Occupancy for the streamline placement, as buckets of a linked list over three flat arrays. Every
@@ -2055,7 +2056,7 @@ private class SeedGrid(capacity: Int) {
   }
 
   fun free(x: Float, y: Float, dmin: Float): Boolean {
-    if (x < 0f || x >= ART_W || y < 0f || y >= ART_H) return false
+    if (x !in 0f..<ART_W || y < 0f || y >= ART_H) return false
     val cx = (x / D_SEP).toInt()
     val cy = (y / D_SEP).toInt()
     val d2 = dmin * dmin
@@ -2098,7 +2099,7 @@ private fun trace(grid: SeedGrid, sx: Float, sy: Float, dir: Float, out: Floats,
     flowAt(x, y, v)
     x += v[0] * D_STEP * dir
     y += v[1] * D_STEP * dir
-    if (x < 0f || x >= ART_W || y < 0f || y >= ART_H) return
+    if (x !in 0f..<ART_W || y < 0f || y >= ART_H) return
   }
 }
 
@@ -2134,7 +2135,7 @@ private suspend fun placeStreamlines(): Streamlines {
   while (cursor < qr.n) {
     // Neither loop suspends, so without this the layout runs to completion
     // on a background thread after the screen it was for has gone.
-    if ((cursor and 255) == 0) coroutineContext.ensureActive()
+    if ((cursor and 255) == 0) currentCoroutineContext().ensureActive()
     val sx = qx.a[cursor]
     val sy = qy.a[cursor]
     val rib = qr.a[cursor]
@@ -2343,8 +2344,8 @@ private fun buildWash(): Bitmap {
  * needs and a sixth soft on a 1440p one, which the mesh's own filtering would cost anyway.
  */
 private const val RASTER = 2.0f
-private val RASTER_W = (ART_W * RASTER).toInt()
-private val RASTER_H = (ART_H * RASTER).toInt()
+private const val RASTER_W = (ART_W * RASTER).toInt()
+private const val RASTER_H = (ART_H * RASTER).toInt()
 
 /**
  * Strokes one run of paint into a software canvas, reusing a single Path and Paint the way the
@@ -2370,7 +2371,7 @@ private fun strokeInto(c: AndroidCanvas, paint: AndroidPaint, path: AndroidPath,
 }
 
 private suspend fun rasterise(wash: Bitmap, sky: StrokeSet, stars: StrokeSet): Bitmap {
-  val bmp = Bitmap.createBitmap(RASTER_W, RASTER_H, Bitmap.Config.ARGB_8888)
+  val bmp = createBitmap(RASTER_W, RASTER_H)
   val c = AndroidCanvas(bmp)
   c.scale(RASTER, RASTER)
   c.drawBitmap(
@@ -2379,7 +2380,7 @@ private suspend fun rasterise(wash: Bitmap, sky: StrokeSet, stars: StrokeSet): B
     RectF(0f, 0f, ART_W, ART_H),
     AndroidPaint(AndroidPaint.FILTER_BITMAP_FLAG),
   )
-  coroutineContext.ensureActive()
+  currentCoroutineContext().ensureActive()
   val paint =
     AndroidPaint(AndroidPaint.ANTI_ALIAS_FLAG).apply {
       style = AndroidPaint.Style.STROKE
@@ -2388,7 +2389,7 @@ private suspend fun rasterise(wash: Bitmap, sky: StrokeSet, stars: StrokeSet): B
     }
   val path = AndroidPath()
   strokeInto(c, paint, path, sky)
-  coroutineContext.ensureActive()
+  currentCoroutineContext().ensureActive()
   strokeInto(c, paint, path, stars)
   // The wash covers the whole rect from an opaque source, so nothing here is
   // translucent — saying so lets HWUI skip blending once the entry fade is
@@ -2407,7 +2408,7 @@ private suspend fun rasterise(wash: Bitmap, sky: StrokeSet, stars: StrokeSet): B
 private suspend fun paintSky(lines: Streamlines, rnd: Random): StrokeSet {
   val b = StrokeBuilder(7000)
   for (li in 0 until lines.size) {
-    if ((li and 127) == 0) coroutineContext.ensureActive()
+    if ((li and 127) == 0) currentCoroutineContext().ensureActive()
     val f = lines.first[li]
     val n = lines.count[li]
     val rib = lines.ribbon[li]

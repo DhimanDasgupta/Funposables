@@ -62,6 +62,10 @@ flow-redux-extension-jvm = { module = "com.freeletics.flowredux2:extensions-jvm"
 timber = { group = "com.jakewharton.timber", name = "timber", version.ref = "timber" }
 kotlinx-collections-immutable = { group = "org.jetbrains.kotlinx", name = "kotlinx-collections-immutable", version.ref = "kotlinxCollectionsImmutable" }
 
+# Dependencies of the included build-logic
+android-gradlePlugin = { group = "com.android.tools.build", name = "gradle", version.ref = "agp" }
+kotlin-gradlePlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
@@ -69,3 +73,7 @@ kotlinx-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", vers
 metro = { id = "dev.zacsweers.metro", version.ref = "metro" }
 google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "googleDevtoolsKsp" }
 
+# Plugins defined by this project in build-logic
+funposables-android-application = { id = "funposables.android.application", version = "unspecified" }
+funposables-android-application-compose = { id = "funposables.android.application.compose", version = "unspecified" }
+funposables-compose-stability = { id = "funposables.compose.stability", version = "unspecified" }

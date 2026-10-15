@@ -44,6 +44,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.dhimandasgupta.funposables.ui.common.bottomFadeForLazyColumn
 import com.dhimandasgupta.funposables.ui.common.verticalScrollbarForLazyColumn
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
@@ -114,6 +117,14 @@ private fun ExpandableCardList(
 ) {
   var expanded by remember { mutableStateOf(false) }
   val scrollState = rememberLazyListState()
+
+  // Back collapses the expanded accounts before Nav3 pops the screen
+  val navigationState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+  NavigationBackHandler(
+    state = navigationState,
+    isBackEnabled = expanded,
+    onBackCompleted = { expanded = false },
+  )
 
   LazyColumn(
     state = scrollState,

@@ -53,6 +53,10 @@ dependencies {
   implementation(libs.kotlinx.serialization.core)
   implementation(libs.androidx.material3.adaptive.navigation3)
 
+  // Navigation Event
+  implementation(libs.androidx.navigationevent)
+  implementation(libs.androidx.navigationevent.compose)
+
   // Flow Redux
   implementation(libs.flow.redux.jvm)
   implementation(libs.flow.redux.extension.jvm)

@@ -43,13 +43,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.carousel.CarouselState
 import androidx.compose.material3.carousel.HorizontalCenteredHeroCarousel
 import androidx.compose.material3.carousel.rememberCarouselState
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.movableContentOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,6 +72,10 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.NavigationEventTransitionState
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import androidx.palette.graphics.Palette
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -83,6 +87,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -103,9 +108,9 @@ enum class AnimationSpeed(val durationType: Float) {
  */
 private val swatchColorsCache = LruCache<Int, ImmutableList<Color>>(32)
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterial3WindowSizeClassApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
+fun KenBurnsEffectPane(modifier: Modifier = Modifier, onBack: () -> Unit = {}) {
   val items =
     persistentListOf(
       R.drawable.wallpaper_01,
@@ -158,7 +163,29 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
     }
   }
 
-  BoxWithConstraints(modifier = modifier.fillMaxSize().layoutAtLookaheadSize()) {
+  var progress by remember { mutableFloatStateOf(0f) }
+  val navigationState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+  NavigationBackHandler(
+    state = navigationState,
+    isBackEnabled = true,
+    onBackCancelled = { progress = 0f },
+    onBackCompleted = { if (progress > 0.5f) onBack() },
+  )
+
+  BoxWithConstraints(
+    modifier =
+      modifier.fillMaxSize().layoutAtLookaheadSize().graphicsLayer {
+        progress =
+          (navigationState.transitionState as? NavigationEventTransitionState.InProgress)
+            ?.latestEvent
+            ?.progress ?: 0f
+
+        alpha = 1f - progress
+        scaleX = 1f - 0.2f * progress
+        scaleY = 1f - 0.2f * progress
+        transformOrigin = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
+      }
+  ) {
     val shouldLayoutHorizontally = constraints.hasBoundedHeight && maxWidth > maxHeight
     if (shouldLayoutHorizontally) {
       LayoutHorizontally(
@@ -183,7 +210,6 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier) {
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 private fun LayoutVertically(
   modifier: Modifier,
   animationSpeed: AnimationSpeed,
@@ -246,7 +272,6 @@ private fun LayoutVertically(
 }
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 private fun LayoutHorizontally(
   modifier: Modifier,
   animationSpeed: AnimationSpeed,
@@ -418,7 +443,7 @@ private fun ApplyKenBurnsEffect(
               durationMillis = (10000 * animationSpeed.durationType).toInt(),
               easing = FastOutSlowInEasing,
             )
-          while (isActive) {
+          while (currentCoroutineContext().isActive) {
             val pose = geometry.randomPose()
             coroutineScope {
               launch { scale.animateTo(pose.scale, spec) }

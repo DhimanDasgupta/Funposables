@@ -26,7 +26,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,8 +34,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.TransformOrigin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.navigationevent.NavigationEventInfo
+import androidx.navigationevent.NavigationEventTransitionState
+import androidx.navigationevent.compose.NavigationBackHandler
+import androidx.navigationevent.compose.rememberNavigationEventState
 import com.dhimandasgupta.funposables.ui.theme.FunposablesTheme
 
 @Composable
@@ -72,6 +77,14 @@ fun SearchExpander(modifier: Modifier = Modifier) {
 private fun ExpandableTextFieldVisibility(modifier: Modifier) {
   val searchTextState = rememberTextFieldState()
   var isExpanded by remember { mutableStateOf(false) }
+
+  // Back collapses the search field before Nav3 pops the screen
+  val navigationState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
+  NavigationBackHandler(
+    state = navigationState,
+    isBackEnabled = isExpanded,
+    onBackCompleted = { isExpanded = false },
+  )
 
   // Container Row
   Row(
@@ -110,13 +123,22 @@ private fun ExpandableTextFieldVisibility(modifier: Modifier) {
             focusedContainerColor = Color.Transparent,
             unfocusedContainerColor = Color.Transparent,
           ),
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+          Modifier.fillMaxWidth().graphicsLayer {
+            // Shrink towards the end while the predictive back gesture is in progress
+            val progress =
+              (navigationState.transitionState as? NavigationEventTransitionState.InProgress)
+                ?.latestEvent
+                ?.progress ?: 0f
+            alpha = 1f - progress
+            scaleX = 1f - 0.2f * progress
+            transformOrigin = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
+          },
       )
     }
   }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 private fun SearchExpanderPreview() {

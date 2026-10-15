@@ -144,7 +144,7 @@ fun FunposablesRoot(modifier: Modifier) {
             DragOrTransformBox(modifier = modifier)
           }
           entry<KenBurnsEffectNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
-            KenBurnsEffectPane(modifier = modifier)
+            KenBurnsEffectPane(modifier = modifier, onBack = { backStack.removeLastOrNull() })
           }
           entry<SearchExpanderNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
             SearchExpander(modifier = modifier)

@@ -1,6 +1,5 @@
 package com.dhimandasgupta.funposables.composables.checkbox
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,13 +23,13 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.windowsizeclass.ExperimentalMaterial3WindowSizeClassApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextLayoutResult
@@ -89,55 +88,19 @@ private fun TextAndCheckAlignment(
   text: String,
   modifier: Modifier = Modifier,
 ) {
-  Box(modifier = modifier) {
-    var checked by remember { mutableStateOf(false) }
-    var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
-    var checkBoxSize by remember { mutableStateOf(IntSize.Zero) }
+  var textLayoutResult by remember { mutableStateOf<TextLayoutResult?>(null) }
+  val lineColor = colorScheme.error
+  val baseLineColor = colorScheme.onBackground
 
-    Row(
-      modifier = Modifier.padding(horizontal = 16.dp).clickable(onClick = { checked = !checked })
-    ) {
-      Checkbox(
-        checked = checked,
-        onCheckedChange = null,
-        modifier =
-          Modifier.padding(horizontal = 4.dp).alignBy {
-            textLayoutResult?.let { nonNullTextLayoutResult ->
-              checkBoxSize = IntSize(it.measuredWidth, it.measuredHeight)
-              val checkBoxHeight = it.measuredHeight
-              val lineHeight =
-                nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount
-              println("Text Height: ${nonNullTextLayoutResult.size.height}")
-              println("Line Height: $lineHeight")
-              println("Check Box Height: $checkBoxHeight")
-              if (lineHeight >= checkBoxHeight) {
-                checkBoxHeight / 2 - lineHeight / 2
-              } else {
-                0
-              }
-            } ?: 0
-          },
-      )
+  // textLayoutResult is written in layout (onTextLayout), so it is only read in layout (alignBy)
+  // and draw (drawWithContent): a new text layout re-draws the guide lines without recomposing.
+  Box(
+    modifier =
+      modifier.drawWithContent {
+        drawContent()
 
-      Text(
-        text = text,
-        style = typography.displaySmall,
-        onTextLayout = { textLayoutResultComputed ->
-          textLayoutResult = textLayoutResultComputed
-        },
-        modifier = Modifier,
-      )
+        val nonNullTextLayoutResult = textLayoutResult ?: return@drawWithContent
 
-      Spacer(modifier = Modifier.width(24.dp))
-
-      Text(text = "Size: ${checkBoxSize.width} x ${checkBoxSize.height}")
-    }
-
-    textLayoutResult?.let { nonNullTextLayoutResult ->
-      val lineColor = colorScheme.error
-      val baseLineColor = colorScheme.onBackground
-
-      Canvas(modifier = Modifier.matchParentSize()) {
         drawLine(
           color = baseLineColor,
           start = Offset(x = 0f, y = nonNullTextLayoutResult.firstBaseline),
@@ -181,11 +144,51 @@ private fun TextAndCheckAlignment(
           )
         }
       }
+  ) {
+    var checked by remember { mutableStateOf(false) }
+    var checkBoxSize by remember { mutableStateOf(IntSize.Zero) }
+
+    Row(
+      modifier = Modifier.padding(horizontal = 16.dp).clickable(onClick = { checked = !checked })
+    ) {
+      Checkbox(
+        checked = checked,
+        onCheckedChange = null,
+        modifier =
+          Modifier.padding(horizontal = 4.dp).alignBy {
+            textLayoutResult?.let { nonNullTextLayoutResult ->
+              checkBoxSize = IntSize(it.measuredWidth, it.measuredHeight)
+              val checkBoxHeight = it.measuredHeight
+              val lineHeight =
+                nonNullTextLayoutResult.size.height / nonNullTextLayoutResult.lineCount
+              println("Text Height: ${nonNullTextLayoutResult.size.height}")
+              println("Line Height: $lineHeight")
+              println("Check Box Height: $checkBoxHeight")
+              if (lineHeight >= checkBoxHeight) {
+                checkBoxHeight / 2 - lineHeight / 2
+              } else {
+                0
+              }
+            } ?: 0
+          },
+      )
+
+      Text(
+        text = text,
+        style = typography.displaySmall,
+        onTextLayout = { textLayoutResultComputed ->
+          textLayoutResult = textLayoutResultComputed
+        },
+        modifier = Modifier,
+      )
+
+      Spacer(modifier = Modifier.width(24.dp))
+
+      Text(text = "Size: ${checkBoxSize.width} x ${checkBoxSize.height}")
     }
   }
 }
 
-@OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
 @Preview
 @Composable
 private fun FirstLineAlignedCheckboxPreview() {

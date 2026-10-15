@@ -89,10 +89,11 @@ fun Mandelbrot(modifier: Modifier) {
 
       // Pan sensitivity must scale with zoom level to feel natural
       val sensitivity = zoom / 1000f
+      val currentCenter = center
       center =
         Offset(
-          center.x - offsetChange.x * sensitivity,
-          center.y + offsetChange.y * sensitivity,
+          currentCenter.x - offsetChange.x * sensitivity,
+          currentCenter.y + offsetChange.y * sensitivity,
         )
     }
 
@@ -111,7 +112,8 @@ fun Mandelbrot(modifier: Modifier) {
           onDrawBehind {
             // Dynamic uniforms: Updated every frame
             shader.setFloatUniform("zoom", zoom)
-            shader.setFloatUniform("center", center.x, center.y)
+            val currentCenter = center
+            shader.setFloatUniform("center", currentCenter.x, currentCenter.y)
 
             drawRect(brush = brush)
           }

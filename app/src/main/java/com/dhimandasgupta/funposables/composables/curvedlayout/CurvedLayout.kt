@@ -95,6 +95,10 @@ class ConcaveTopShape(private val dipDepthDp: Dp) : Shape {
   }
 }
 
+// ConcaveTopShape has no equals(), so a new instance per recomposition would make the Surface's
+// layer rebuild its outline (and Path); share one instance since its input is constant.
+private val CurvedContainerShape = ConcaveTopShape(CurveDipDepth)
+
 @Composable
 fun CurvedLayout(modifier: Modifier = Modifier) {
   ResponsiveCurvedLayoutScreen(modifier)
@@ -152,7 +156,7 @@ fun ResponsiveCurvedLayoutScreen(modifier: Modifier = Modifier) {
             // Important: Add padding to the top of the surface so the content
             // starts below where the icon will sit.
             .padding(top = IconSize / 2),
-        shape = ConcaveTopShape(CurveDipDepth),
+        shape = CurvedContainerShape,
         color = ContainerWhite,
         shadowElevation = 4.dp,
       ) {

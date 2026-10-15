@@ -3029,7 +3029,6 @@ fun StarryNightCanvas(modifier: Modifier = Modifier) {
   // Read in the draw lambda, so the screen shows its ground colour and then the
   // painting rises out of it the moment the build finishes.
   val painting = remember { mutableStateOf<Painting?>(null) }
-  LaunchedEffect(Unit) { painting.value = buildPainting() }
 
   val touch = remember { Touch() }
   val livePaths = remember { Array(LIVE_BUCKETS) { Path() } }
@@ -3041,7 +3040,14 @@ fun StarryNightCanvas(modifier: Modifier = Modifier) {
   val surge = remember { Animatable(0f) }
 
   val flowTime = remember { mutableDoubleStateOf(0.0) }
+  // One effect for the build, the entry and the clock. The entry follows the
+  // build in the same coroutine rather than keying an effect on the result, so
+  // painting is never read in composition and its arrival does not recompose.
   LaunchedEffect(Unit) {
+    launch {
+      painting.value = buildPainting()
+      assemble.animateTo(1f, tween(1800, easing = LinearEasing))
+    }
     var last = withFrameNanos { it }
     val tick: (Long) -> Unit = { now ->
       val dt = ((now - last) / 1_000_000_000f).coerceIn(0f, 0.05f)
@@ -3063,10 +3069,6 @@ fun StarryNightCanvas(modifier: Modifier = Modifier) {
       }
     }
     while (true) withFrameNanos(tick)
-  }
-
-  LaunchedEffect(painting.value) {
-    if (painting.value != null) assemble.animateTo(1f, tween(1800, easing = LinearEasing))
   }
 
   Canvas(

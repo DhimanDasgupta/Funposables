@@ -6,13 +6,15 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -64,63 +66,75 @@ fun ThinkingNineLoader(modifier: Modifier = Modifier) {
       label = "rotation",
     )
 
-  Canvas(modifier = modifier.size(200.dp).graphicsLayer { rotationZ = rotation }) {
-    val baseRadius = 7.0f
-    val detailAmplitude = 3.0f
-    val petalCount = 9
-    val curveScale = 3.9f
-    val particleCount = 68
-    val trailSpan = 0.39f
+  Spacer(
+    modifier =
+      modifier
+        .size(200.dp)
+        .graphicsLayer { rotationZ = rotation }
+        .drawWithCache {
+          // Path and Stroke are allocated once per size; the path is rewound and rebuilt each
+          // frame.
+          val path = Path()
+          val trailStroke = Stroke(width = 5.5f.dp.toPx(), cap = StrokeCap.Round)
+          onDrawBehind {
+            val baseRadius = 7.0f
+            val detailAmplitude = 3.0f
+            val petalCount = 9
+            val curveScale = 3.9f
+            val particleCount = 68
+            val trailSpan = 0.39f
 
-    val pulseAngle = pulse * TWO_PI + 0.55f
-    val detailScale = 0.52f + ((sin(pulseAngle) + 1f) / 2f) * 0.48f
+            val pulseAngle = pulse * TWO_PI + 0.55f
+            val detailScale = 0.52f + ((sin(pulseAngle) + 1f) / 2f) * 0.48f
 
-    // Draw trail path (faint)
-    val path = androidx.compose.ui.graphics.Path()
-    for (i in 0..480) {
-      val t = (i / 480f) * TWO_PI
-      val x =
-        center.x +
-          (baseRadius * cos(t) - detailAmplitude * detailScale * cos(petalCount * t)) *
-            curveScale *
-            (size.width / 200f)
-      val y =
-        center.y +
-          (baseRadius * sin(t) - detailAmplitude * detailScale * sin(petalCount * t)) *
-            curveScale *
-            (size.height / 200f)
-      if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
-    }
-    drawPath(
-      path,
-      color = Color.White.copy(alpha = 0.1f),
-      style = Stroke(width = 5.5f.dp.toPx(), cap = StrokeCap.Round),
-    )
+            // Draw trail path (faint)
+            path.rewind()
+            for (i in 0..480) {
+              val t = (i / 480f) * TWO_PI
+              val x =
+                center.x +
+                  (baseRadius * cos(t) - detailAmplitude * detailScale * cos(petalCount * t)) *
+                    curveScale *
+                    (size.width / 200f)
+              val y =
+                center.y +
+                  (baseRadius * sin(t) - detailAmplitude * detailScale * sin(petalCount * t)) *
+                    curveScale *
+                    (size.height / 200f)
+              if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            drawPath(
+              path,
+              color = Color.White.copy(alpha = 0.1f),
+              style = trailStroke,
+            )
 
-    // Draw particles
-    for (i in 0 until particleCount) {
-      val tailOffset = i.toFloat() / (particleCount - 1)
-      val p = ((progress - tailOffset * trailSpan) % 1f + 1f) % 1f
-      val t = p * TWO_PI
-      val px =
-        center.x +
-          (baseRadius * cos(t) - detailAmplitude * detailScale * cos(petalCount * t)) *
-            curveScale *
-            (size.width / 200f)
-      val py =
-        center.y +
-          (baseRadius * sin(t) - detailAmplitude * detailScale * sin(petalCount * t)) *
-            curveScale *
-            (size.height / 200f)
-      val fade = (1f - tailOffset).pow(0.56f)
-      val radius = (0.9f + fade * 2.7f).dp.toPx()
-      drawCircle(
-        Color.White.copy(alpha = 0.04f + fade * 0.96f),
-        radius = radius,
-        center = Offset(px, py),
-      )
-    }
-  }
+            // Draw particles
+            for (i in 0 until particleCount) {
+              val tailOffset = i.toFloat() / (particleCount - 1)
+              val p = ((progress - tailOffset * trailSpan) % 1f + 1f) % 1f
+              val t = p * TWO_PI
+              val px =
+                center.x +
+                  (baseRadius * cos(t) - detailAmplitude * detailScale * cos(petalCount * t)) *
+                    curveScale *
+                    (size.width / 200f)
+              val py =
+                center.y +
+                  (baseRadius * sin(t) - detailAmplitude * detailScale * sin(petalCount * t)) *
+                    curveScale *
+                    (size.height / 200f)
+              val fade = (1f - tailOffset).pow(0.56f)
+              val radius = (0.9f + fade * 2.7f).dp.toPx()
+              drawCircle(
+                Color.White.copy(alpha = 0.04f + fade * 0.96f),
+                radius = radius,
+                center = Offset(px, py),
+              )
+            }
+          }
+        }
+  )
 }
 
 private const val TWO_PI = 2f * Math.PI.toFloat()

@@ -54,8 +54,10 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.persistentMapOf
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.withContext
 
 /* Configuration for styling the rendered Markdown content.
  *
@@ -394,8 +396,10 @@ private fun RowScope.TableCell(
 
 @Composable
 private fun rememberParsedMarkdown(text: String, style: WFMarkdownStyle): AnnotatedString {
+  // Regex/auto-link matching per block is kept off the main thread (lazy items compose while
+  // scrolling); the initial empty value and the produceState keys are unchanged.
   return produceState(initialValue = AnnotatedString(""), text, style) {
-      value = parseInlineMarkdown(text, style)
+      value = withContext(Dispatchers.Default) { parseInlineMarkdown(text, style) }
     }
     .value
 }

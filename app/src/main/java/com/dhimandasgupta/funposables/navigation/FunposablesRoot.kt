@@ -10,6 +10,7 @@ import androidx.compose.material3.adaptive.ExperimentalMaterial3AdaptiveApi
 import androidx.compose.material3.adaptive.navigation3.ListDetailSceneStrategy
 import androidx.compose.material3.adaptive.navigation3.rememberListDetailSceneStrategy
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.navigation3.runtime.NavKey
@@ -154,8 +155,11 @@ fun FunposablesRoot(modifier: Modifier) {
           }
           entry<CounterNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
             val graph = LocalFunposablesGraph.current
-            val counterStateMachineFactory = remember { graph.counterStateMachineFactory }
-            println("CounterStateMachineFactory: $counterStateMachineFactory")
+            val counterStateMachineFactory = remember(graph) { graph.counterStateMachineFactory }
+            // Log once per factory instance instead of on every (possibly discarded) composition
+            SideEffect(counterStateMachineFactory) {
+              println("CounterStateMachineFactory: $counterStateMachineFactory")
+            }
             val counterStateMachine = counterStateMachineFactory.produceStateMachine()
 
             Counter(

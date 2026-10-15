@@ -15,16 +15,17 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
-import com.dhimandasgupta.funposables.ui.utils.MarkdownBlock
 import com.dhimandasgupta.funposables.ui.utils.RenderBlock
 import com.dhimandasgupta.funposables.ui.utils.WFMarkdownStyle
 import com.dhimandasgupta.funposables.ui.utils.parseMarkdownBlocks
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @Composable
 fun RichTextMarkdownText(modifier: Modifier = Modifier) {
@@ -105,14 +106,11 @@ fun RichTextMarkdownText(modifier: Modifier = Modifier) {
     """
       .trimIndent()
 
-  val list = remember { mutableStateListOf<MarkdownBlock>() }
-  LaunchedEffect(markdown) {
-    list.clear()
-
-    parseMarkdownBlocks(markdown).forEach { item ->
-      list.add(item)
+  // Regex-heavy block parsing runs off the main thread and publishes the whole list at once.
+  val list by
+    produceState(initialValue = emptyList(), markdown) {
+      value = withContext(Dispatchers.Default) { parseMarkdownBlocks(markdown) }
     }
-  }
 
   val lazyListState = rememberLazyListState()
   // One style instance for the whole list rather than a fresh 20-field object per visible item.
@@ -134,7 +132,7 @@ fun RichTextMarkdownText(modifier: Modifier = Modifier) {
             .calculateEndPadding(LayoutDirection.Ltr) + 16.dp,
       ),
   ) {
-    item {
+    item(key = "top_spacer", contentType = "spacer") {
       Spacer(
         modifier =
           Modifier.height(
@@ -149,6 +147,7 @@ fun RichTextMarkdownText(modifier: Modifier = Modifier) {
     itemsIndexed(
       items = list,
       key = { index, block -> block.key + index },
+      contentType = { _, block -> block.javaClass.name },
     ) { _, item ->
       RenderBlock(
         block = item,
@@ -156,7 +155,7 @@ fun RichTextMarkdownText(modifier: Modifier = Modifier) {
       )
     }
 
-    item {
+    item(key = "bottom_spacer", contentType = "spacer") {
       Spacer(
         modifier =
           Modifier.height(

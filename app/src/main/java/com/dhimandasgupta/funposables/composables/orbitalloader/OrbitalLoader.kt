@@ -9,7 +9,6 @@ import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,11 +16,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.withTransform
 import kotlin.math.PI
 import kotlin.math.sin
@@ -159,6 +160,9 @@ fun OrbitalLoader(modifier: Modifier = Modifier) {
       label = "ring2",
     )
 
+  // A single node draws the background and the scene: the size-dependent brushes and strokes are
+  // built once per size in drawWithCache, and the animated values are only read in onDrawBehind,
+  // so animation frames neither recompose nor allocate gradients.
   Box(
     modifier =
       modifier
@@ -172,172 +176,200 @@ fun OrbitalLoader(modifier: Modifier = Modifier) {
               )
           )
         )
-  ) {
-    Canvas(modifier = Modifier.matchParentSize()) {
-      val center = Offset(size.width / 2, size.height / 2)
+        .drawWithCache {
+          val center = Offset(size.width / 2, size.height / 2)
 
-      // Orbital radii
-      val orbit1Radius = size.minDimension * 0.15f
-      val orbit2Radius = size.minDimension * 0.27f
-      val orbit3Radius = size.minDimension * 0.40f
-      val moonOrbitRadius = size.minDimension * 0.06f
+          // Orbital radii
+          val orbit1Radius = size.minDimension * 0.15f
+          val orbit2Radius = size.minDimension * 0.27f
+          val orbit3Radius = size.minDimension * 0.40f
+          val moonOrbitRadius = size.minDimension * 0.06f
 
-      // Body sizes
-      val coreRadius = size.minDimension * 0.07f * corePulse
-      val planetRadius = size.minDimension * 0.025f
-      val moonRadius = size.minDimension * 0.012f
+          // Body sizes
+          val baseCoreRadius = size.minDimension * 0.07f
+          val planetRadius = size.minDimension * 0.025f
+          val moonRadius = size.minDimension * 0.012f
 
-      // Number of trail segments
-      val trailCount = 12
+          // Number of trail segments
+          val trailCount = 12
 
-      // LAYER 0: STARFIELD BACKGROUND
-      drawStarfield(stars, starTwinkle)
+          val orbitStroke = Stroke(width = 1f)
 
-      // LAYER 1: ORBIT PATHS (subtle guide lines)
-      listOf(orbit1Radius, orbit2Radius, orbit3Radius).forEach { radius ->
-        drawCircle(
-          color = CosmicColors.orbitLine,
-          radius = radius,
-          center = center,
-          style = Stroke(width = 1f),
-        )
-      }
+          // The core brushes are built at the un-pulsed radius; the pulse is applied as a scale
+          // around the center at draw time, which yields the same geometry and gradients.
+          val coreBrushes = GlowingCoreBrushes(center = center, radius = baseCoreRadius)
+          val planet1Brushes =
+            GlowingPlanetBrushes(
+              color = CosmicColors.planet1,
+              glowColor = CosmicColors.planet1Glow,
+              radius = planetRadius,
+            )
+          val planet2Brushes =
+            GlowingPlanetBrushes(
+              color = CosmicColors.planet2,
+              glowColor = CosmicColors.planet2Glow,
+              radius = planetRadius * 1.1f,
+            )
+          val planet3Brushes =
+            GlowingPlanetBrushes(
+              color = CosmicColors.planet3,
+              glowColor = CosmicColors.planet3Glow,
+              radius = planetRadius * 1.2f,
+            )
+          val moonGlowBrush =
+            Brush.radialGradient(
+              colors =
+                listOf(
+                  CosmicColors.planet2.copy(alpha = 0.4f),
+                  Color.Transparent,
+                ),
+              center = Offset.Zero,
+              radius = moonRadius * 3f,
+            )
 
-      // LAYER 2: EXPANDING ENERGY RINGS FROM CORE
-      drawEnergyRing(center, coreRadius, orbit1Radius * 1.5f, ringExpansion)
-      drawEnergyRing(center, coreRadius, orbit1Radius * 1.5f, ringExpansion2)
+          onDrawBehind {
+            val coreRadius = baseCoreRadius * corePulse
 
-      // LAYER 3: PLANET TRAILS (drawn before planets for correct z-order)
-      // Using the SAME transformation logic, just at previous angles
+            // LAYER 0: STARFIELD BACKGROUND
+            drawStarfield(stars, starTwinkle)
 
-      // Trail for Planet 1
-      drawOrbitalTrail(
-        center = center,
-        orbitRadius = orbit1Radius,
-        currentAngle = orbit1Angle,
-        trailCount = trailCount,
-        planetRadius = planetRadius,
-        color = CosmicColors.planet1,
-      )
+            // LAYER 1: ORBIT PATHS (subtle guide lines)
+            drawCircle(
+              color = CosmicColors.orbitLine,
+              radius = orbit1Radius,
+              center = center,
+              style = orbitStroke,
+            )
+            drawCircle(
+              color = CosmicColors.orbitLine,
+              radius = orbit2Radius,
+              center = center,
+              style = orbitStroke,
+            )
+            drawCircle(
+              color = CosmicColors.orbitLine,
+              radius = orbit3Radius,
+              center = center,
+              style = orbitStroke,
+            )
 
-      // Trail for Planet 2
-      drawOrbitalTrail(
-        center = center,
-        orbitRadius = orbit2Radius,
-        currentAngle = orbit2Angle,
-        trailCount = trailCount,
-        planetRadius = planetRadius * 1.1f,
-        color = CosmicColors.planet2,
-      )
+            // LAYER 2: EXPANDING ENERGY RINGS FROM CORE
+            drawEnergyRing(center, coreRadius, orbit1Radius * 1.5f, ringExpansion)
+            drawEnergyRing(center, coreRadius, orbit1Radius * 1.5f, ringExpansion2)
 
-      // Trail for Planet 3
-      drawOrbitalTrail(
-        center = center,
-        orbitRadius = orbit3Radius,
-        currentAngle = orbit3Angle,
-        trailCount = trailCount + 4, // Longer trail for an outer planet
-        planetRadius = planetRadius * 1.2f,
-        color = CosmicColors.planet3,
-      )
+            // LAYER 3: PLANET TRAILS (drawn before planets for correct z-order)
+            // Using the SAME transformation logic, just at previous angles
 
-      // LAYER 4: THE CORE (Central Star)
-      drawGlowingCore(center, coreRadius)
+            // Trail for Planet 1
+            drawOrbitalTrail(
+              center = center,
+              orbitRadius = orbit1Radius,
+              currentAngle = orbit1Angle,
+              trailCount = trailCount,
+              planetRadius = planetRadius,
+              color = CosmicColors.planet1,
+            )
 
-      // LAYER 5: PLANETS WITH GLOW
-      // Same transformation principles as before!
+            // Trail for Planet 2
+            drawOrbitalTrail(
+              center = center,
+              orbitRadius = orbit2Radius,
+              currentAngle = orbit2Angle,
+              trailCount = trailCount,
+              planetRadius = planetRadius * 1.1f,
+              color = CosmicColors.planet2,
+            )
 
-      // Planet 1 - Inner orbit
-      withTransform({
-        rotate(degrees = orbit1Angle, pivot = center)
-        translate(left = center.x + orbit1Radius, top = center.y)
-      }) {
-        drawGlowingPlanet(
-          color = CosmicColors.planet1,
-          glowColor = CosmicColors.planet1Glow,
-          radius = planetRadius,
-        )
-      }
+            // Trail for Planet 3
+            drawOrbitalTrail(
+              center = center,
+              orbitRadius = orbit3Radius,
+              currentAngle = orbit3Angle,
+              trailCount = trailCount + 4, // Longer trail for an outer planet
+              planetRadius = planetRadius * 1.2f,
+              color = CosmicColors.planet3,
+            )
 
-      // Planet 2 - Middle orbit (counter-rotating) with the moon
-      withTransform({
-        rotate(degrees = orbit2Angle, pivot = center)
-        translate(left = center.x + orbit2Radius, top = center.y)
-      }) {
-        drawGlowingPlanet(
-          color = CosmicColors.planet2,
-          glowColor = CosmicColors.planet2Glow,
-          radius = planetRadius * 1.1f,
-        )
+            // LAYER 4: THE CORE (Central Star)
+            scale(scale = corePulse, pivot = center) { drawGlowingCore(coreBrushes) }
 
-        // Moon orbiting this planet
-        withTransform({
-          rotate(degrees = moonAngle, pivot = Offset.Zero)
-          translate(left = moonOrbitRadius, top = 0f)
-        }) {
-          // Moon glow
-          drawCircle(
-            brush =
-              Brush.radialGradient(
-                colors =
-                  listOf(
-                    CosmicColors.planet2.copy(alpha = 0.4f),
-                    Color.Transparent,
-                  ),
-                center = Offset.Zero,
-                radius = moonRadius * 3f,
-              ),
-            radius = moonRadius * 3f,
-            center = Offset.Zero,
-          )
-          drawCircle(
-            color = CosmicColors.planet2.copy(alpha = 0.8f),
-            radius = moonRadius,
-            center = Offset.Zero,
-          )
+            // LAYER 5: PLANETS WITH GLOW
+            // Same transformation principles as before!
+
+            // Planet 1 - Inner orbit
+            withTransform({
+              rotate(degrees = orbit1Angle, pivot = center)
+              translate(left = center.x + orbit1Radius, top = center.y)
+            }) {
+              drawGlowingPlanet(planet1Brushes)
+            }
+
+            // Planet 2 - Middle orbit (counter-rotating) with the moon
+            val currentMoonAngle = moonAngle
+            withTransform({
+              rotate(degrees = orbit2Angle, pivot = center)
+              translate(left = center.x + orbit2Radius, top = center.y)
+            }) {
+              drawGlowingPlanet(planet2Brushes)
+
+              // Moon orbiting this planet
+              withTransform({
+                rotate(degrees = currentMoonAngle, pivot = Offset.Zero)
+                translate(left = moonOrbitRadius, top = 0f)
+              }) {
+                // Moon glow
+                drawCircle(
+                  brush = moonGlowBrush,
+                  radius = moonRadius * 3f,
+                  center = Offset.Zero,
+                )
+                drawCircle(
+                  color = CosmicColors.planet2.copy(alpha = 0.8f),
+                  radius = moonRadius,
+                  center = Offset.Zero,
+                )
+              }
+            }
+
+            // Planet 3 - Outer orbit
+            withTransform({
+              rotate(degrees = orbit3Angle, pivot = center)
+              translate(left = center.x + orbit3Radius, top = center.y)
+            }) {
+              drawGlowingPlanet(planet3Brushes)
+
+              // Two moons for the outer planet
+              withTransform({
+                rotate(degrees = -currentMoonAngle, pivot = Offset.Zero)
+                translate(left = moonOrbitRadius * 1.2f, top = 0f)
+              }) {
+                drawCircle(
+                  color = CosmicColors.planet3.copy(alpha = 0.7f),
+                  radius = moonRadius,
+                  center = Offset.Zero,
+                )
+              }
+
+              withTransform({
+                rotate(degrees = currentMoonAngle + 180f, pivot = Offset.Zero)
+                translate(left = moonOrbitRadius * 0.8f, top = 0f)
+              }) {
+                drawCircle(
+                  color = CosmicColors.planet3.copy(alpha = 0.5f),
+                  radius = moonRadius * 0.7f,
+                  center = Offset.Zero,
+                )
+              }
+            }
+          }
         }
-      }
-
-      // Planet 3 - Outer orbit
-      withTransform({
-        rotate(degrees = orbit3Angle, pivot = center)
-        translate(left = center.x + orbit3Radius, top = center.y)
-      }) {
-        drawGlowingPlanet(
-          color = CosmicColors.planet3,
-          glowColor = CosmicColors.planet3Glow,
-          radius = planetRadius * 1.2f,
-        )
-
-        // Two moons for the outer planet
-        withTransform({
-          rotate(degrees = -moonAngle, pivot = Offset.Zero)
-          translate(left = moonOrbitRadius * 1.2f, top = 0f)
-        }) {
-          drawCircle(
-            color = CosmicColors.planet3.copy(alpha = 0.7f),
-            radius = moonRadius,
-            center = Offset.Zero,
-          )
-        }
-
-        withTransform({
-          rotate(degrees = moonAngle + 180f, pivot = Offset.Zero)
-          translate(left = moonOrbitRadius * 0.8f, top = 0f)
-        }) {
-          drawCircle(
-            color = CosmicColors.planet3.copy(alpha = 0.5f),
-            radius = moonRadius * 0.7f,
-            center = Offset.Zero,
-          )
-        }
-      }
-    }
-  }
+  )
 }
 
 /** Draws twinkling stars in the background */
 private fun DrawScope.drawStarfield(stars: List<Star>, twinklePhase: Float) {
-  stars.forEach { star ->
+  for (index in stars.indices) {
+    val star = stars[index]
     // Calculate twinkle: each star has its own phase based on twinkleSpeed
     val twinkle = (sin((twinklePhase * 2 * PI + star.twinkleSpeed).toFloat()) + 1f) / 2f
     val currentAlpha = star.alpha * (0.5f + 0.5f * twinkle)
@@ -368,55 +400,70 @@ private fun DrawScope.drawEnergyRing(
   )
 }
 
+/** Size-dependent brushes of the central glowing core/star, built once per size. */
+private class GlowingCoreBrushes(val center: Offset, val radius: Float) {
+  // Outer glow (largest, most transparent)
+  val outerGlow =
+    Brush.radialGradient(
+      colors =
+        listOf(
+          CosmicColors.coreGlow.copy(alpha = 0.3f),
+          CosmicColors.coreGlow.copy(alpha = 0.1f),
+          Color.Transparent,
+        ),
+      center = center,
+      radius = radius * 4f,
+    )
+
+  // Middle glow
+  val middleGlow =
+    Brush.radialGradient(
+      colors =
+        listOf(
+          CosmicColors.coreGlow.copy(alpha = 0.5f),
+          CosmicColors.coreGlow.copy(alpha = 0.2f),
+          Color.Transparent,
+        ),
+      center = center,
+      radius = radius * 2.5f,
+    )
+
+  // Core body with gradient
+  val body =
+    Brush.radialGradient(
+      colors =
+        listOf(
+          CosmicColors.coreCenter,
+          CosmicColors.coreMiddle,
+          CosmicColors.coreEdge,
+        ),
+      center = center,
+      radius = radius,
+    )
+}
+
 /** Draws the central glowing core/star */
-private fun DrawScope.drawGlowingCore(center: Offset, radius: Float) {
+private fun DrawScope.drawGlowingCore(brushes: GlowingCoreBrushes) {
+  val center = brushes.center
+  val radius = brushes.radius
+
   // Outer glow (largest, most transparent)
   drawCircle(
-    brush =
-      Brush.radialGradient(
-        colors =
-          listOf(
-            CosmicColors.coreGlow.copy(alpha = 0.3f),
-            CosmicColors.coreGlow.copy(alpha = 0.1f),
-            Color.Transparent,
-          ),
-        center = center,
-        radius = radius * 4f,
-      ),
+    brush = brushes.outerGlow,
     radius = radius * 4f,
     center = center,
   )
 
   // Middle glow
   drawCircle(
-    brush =
-      Brush.radialGradient(
-        colors =
-          listOf(
-            CosmicColors.coreGlow.copy(alpha = 0.5f),
-            CosmicColors.coreGlow.copy(alpha = 0.2f),
-            Color.Transparent,
-          ),
-        center = center,
-        radius = radius * 2.5f,
-      ),
+    brush = brushes.middleGlow,
     radius = radius * 2.5f,
     center = center,
   )
 
   // Core body with gradient
   drawCircle(
-    brush =
-      Brush.radialGradient(
-        colors =
-          listOf(
-            CosmicColors.coreCenter,
-            CosmicColors.coreMiddle,
-            CosmicColors.coreEdge,
-          ),
-        center = center,
-        radius = radius,
-      ),
+    brush = brushes.body,
     radius = radius,
     center = center,
   )
@@ -455,57 +502,70 @@ private fun DrawScope.drawOrbitalTrail(
   }
 }
 
+/**
+ * Size-dependent brushes of a planet with a glow effect, centered at the (transformed) origin and
+ * built once per size.
+ */
+private class GlowingPlanetBrushes(color: Color, glowColor: Color, val radius: Float) {
+  // Outer glow
+  val outerGlow =
+    Brush.radialGradient(
+      colors =
+        listOf(
+          glowColor.copy(alpha = 0.4f),
+          glowColor.copy(alpha = 0.1f),
+          Color.Transparent,
+        ),
+      center = Offset.Zero,
+      radius = radius * 4f,
+    )
+
+  // Inner glow
+  val innerGlow =
+    Brush.radialGradient(
+      colors =
+        listOf(
+          color.copy(alpha = 0.6f),
+          Color.Transparent,
+        ),
+      center = Offset.Zero,
+      radius = radius * 2f,
+    )
+
+  // Planet body
+  val body =
+    Brush.radialGradient(
+      colors =
+        listOf(
+          color,
+          glowColor,
+        ),
+      center = Offset(-radius * 0.3f, -radius * 0.3f), // Off-center for 3D effect
+      radius = radius * 1.5f,
+    )
+}
+
 /** Draws a planet with a glow effect at the current (transformed) origin */
-private fun DrawScope.drawGlowingPlanet(
-  color: Color,
-  glowColor: Color,
-  radius: Float,
-) {
+private fun DrawScope.drawGlowingPlanet(brushes: GlowingPlanetBrushes) {
+  val radius = brushes.radius
+
   // Outer glow
   drawCircle(
-    brush =
-      Brush.radialGradient(
-        colors =
-          listOf(
-            glowColor.copy(alpha = 0.4f),
-            glowColor.copy(alpha = 0.1f),
-            Color.Transparent,
-          ),
-        center = Offset.Zero,
-        radius = radius * 4f,
-      ),
+    brush = brushes.outerGlow,
     radius = radius * 4f,
     center = Offset.Zero,
   )
 
   // Inner glow
   drawCircle(
-    brush =
-      Brush.radialGradient(
-        colors =
-          listOf(
-            color.copy(alpha = 0.6f),
-            Color.Transparent,
-          ),
-        center = Offset.Zero,
-        radius = radius * 2f,
-      ),
+    brush = brushes.innerGlow,
     radius = radius * 2f,
     center = Offset.Zero,
   )
 
   // Planet body
   drawCircle(
-    brush =
-      Brush.radialGradient(
-        colors =
-          listOf(
-            color,
-            glowColor,
-          ),
-        center = Offset(-radius * 0.3f, -radius * 0.3f), // Off-center for 3D effect
-        radius = radius * 1.5f,
-      ),
+    brush = brushes.body,
     radius = radius,
     center = Offset.Zero,
   )

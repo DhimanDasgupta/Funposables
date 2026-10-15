@@ -92,7 +92,9 @@ fun RichHTMLText(modifier: Modifier) {
 
   val scope = rememberCoroutineScope()
 
-  LaunchedEffect(html) {
+  // Colors are keys too: uiMode changes are handled in-place (no Activity recreation), so a theme
+  // switch must re-run the (Dispatchers.Default) conversion instead of keeping stale link colors.
+  LaunchedEffect(html, linkColor, customLinkColor) {
     annotatedString =
       html.convertToAnnotatedString(
         params =

@@ -103,7 +103,8 @@ fun InteractiveJulia(modifier: Modifier) {
 
             onDrawBehind {
               // Updating only the interactive coordinate per frame
-              shader.setFloatUniform("mouse", mousePos.x, mousePos.y)
+              val mouse = mousePos
+              shader.setFloatUniform("mouse", mouse.x, mouse.y)
               drawRect(brush = brush)
             }
           }

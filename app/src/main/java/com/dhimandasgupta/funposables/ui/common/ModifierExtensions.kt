@@ -3,12 +3,6 @@ package com.dhimandasgupta.funposables.ui.common
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
@@ -40,9 +34,6 @@ import androidx.compose.ui.unit.constrainWidth
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import kotlin.math.roundToInt
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 
 /**
  * Draws a grid pattern on the background of the composable.
@@ -63,6 +54,7 @@ fun Modifier.drawBackgroundGrid(
 
   val strokeWidth = 1f
   val offset = strokeWidth / 2f
+  val gridStroke = Stroke(width = strokeWidth)
 
   val gridPath =
     Path().apply {
@@ -87,7 +79,7 @@ fun Modifier.drawBackgroundGrid(
     drawPath(
       path = gridPath,
       color = gridColor,
-      style = Stroke(width = strokeWidth),
+      style = gridStroke,
     )
   }
 }
@@ -173,32 +165,22 @@ private class VerticalScrollbarNode(
   private var endPadding: Dp,
 ) : Modifier.Node(), DrawModifierNode {
 
-  private var scrollJob: Job? = null
-
-  private var currentScrollValue by mutableIntStateOf(0)
-  private var currentMaxScrollValue by mutableIntStateOf(0)
-
-  override fun onAttach() {
-    observeScrollState()
-  }
-
-  override fun onDetach() {
-    scrollJob?.cancel()
-    scrollJob = null
-  }
-
   override fun ContentDrawScope.draw() {
     drawContent()
 
-    if (currentMaxScrollValue <= 0) return
+    // Scroll state is read directly in the draw phase. Reads in a DrawModifierNode's draw are
+    // snapshot-observed, so a scroll only invalidates this draw, in the same frame, without a
+    // snapshotFlow coroutine or intermediate state.
+    val maxScrollValue = scrollState.maxValue
+    if (maxScrollValue <= 0) return
 
     val viewportHeight = size.height
-    val contentHeight = viewportHeight + currentMaxScrollValue
+    val contentHeight = viewportHeight + maxScrollValue
 
     if (contentHeight <= 0f) return
 
     drawScrollbar(
-      scrollProgress = currentScrollValue / currentMaxScrollValue.toFloat(),
+      scrollProgress = scrollState.value / maxScrollValue.toFloat(),
       viewportToContentRatio = viewportHeight / contentHeight,
       width = width,
       thumbWidth = thumbWidth,
@@ -216,8 +198,6 @@ private class VerticalScrollbarNode(
     minThumbHeight: Dp,
     endPadding: Dp,
   ) {
-    val scrollStateChanged = this.scrollState != scrollState
-
     this.scrollState = scrollState
     this.width = width
     this.thumbWidth = thumbWidth
@@ -225,26 +205,7 @@ private class VerticalScrollbarNode(
     this.minThumbHeight = minThumbHeight
     this.endPadding = endPadding
 
-    if (scrollStateChanged) {
-      observeScrollState()
-    } else {
-      invalidateDraw()
-    }
-  }
-
-  private fun observeScrollState() {
-    scrollJob?.cancel()
-
-    scrollJob = coroutineScope.launch {
-      snapshotFlow {
-          scrollState.value to scrollState.maxValue
-        }
-        .collectLatest { (value, maxValue) ->
-          currentScrollValue = value
-          currentMaxScrollValue = maxValue
-          invalidateDraw()
-        }
-    }
+    invalidateDraw()
   }
 }
 
@@ -334,31 +295,41 @@ private class LazyListVerticalScrollbarNode(
   private var endPadding: Dp,
 ) : Modifier.Node(), DrawModifierNode {
 
-  private var scrollJob: Job? = null
-
-  private var currentScrollProgress by mutableFloatStateOf(0f)
-  private var currentViewportToContentRatio by mutableFloatStateOf(1f)
-  private var canScroll by mutableStateOf(false)
-  private var reachedBottom by mutableStateOf(false)
-
-  override fun onAttach() {
-    observeLazyListState()
-  }
-
-  override fun onDetach() {
-    scrollJob?.cancel()
-    scrollJob = null
-  }
-
   override fun ContentDrawScope.draw() {
     drawContent()
 
-    if (!canScroll) return
-    if (reachedBottom) return
+    // Lazy list state is read directly in the draw phase. Reads in a DrawModifierNode's draw are
+    // snapshot-observed, so a scroll only invalidates this draw, in the same frame, without a
+    // snapshotFlow coroutine, per-tick metrics allocation, or intermediate state.
+    val state = lazyListState
+    if (!state.canScrollForward) return
+
+    val layoutInfo = state.layoutInfo
+    val visibleItems = layoutInfo.visibleItemsInfo
+    val totalItemsCount = layoutInfo.totalItemsCount
+
+    if (visibleItems.isEmpty() || totalItemsCount == 0) return
+
+    val viewportSize = layoutInfo.viewportEndOffset - layoutInfo.viewportStartOffset
+
+    var visibleItemsSize = 0
+    for (index in visibleItems.indices) {
+      visibleItemsSize += visibleItems[index].size
+    }
+    val averageItemSize = visibleItemsSize.toFloat() / visibleItems.size
+
+    val estimatedContentSize = averageItemSize * totalItemsCount
+
+    if (estimatedContentSize <= viewportSize) return
+
+    val estimatedScrollOffset =
+      state.firstVisibleItemIndex * averageItemSize + state.firstVisibleItemScrollOffset
+
+    val maxScrollOffset = (estimatedContentSize - viewportSize).coerceAtLeast(1f)
 
     drawScrollbar(
-      scrollProgress = currentScrollProgress,
-      viewportToContentRatio = currentViewportToContentRatio,
+      scrollProgress = (estimatedScrollOffset / maxScrollOffset).coerceIn(0f, 1f),
+      viewportToContentRatio = (viewportSize / estimatedContentSize).coerceIn(0f, 1f),
       width = width,
       thumbWidth = thumbWidth,
       color = color,
@@ -375,8 +346,6 @@ private class LazyListVerticalScrollbarNode(
     minThumbHeight: Dp,
     endPadding: Dp,
   ) {
-    val lazyListStateChanged = this.lazyListState != lazyListState
-
     this.lazyListState = lazyListState
     this.width = width
     this.thumbWidth = thumbWidth
@@ -384,62 +353,7 @@ private class LazyListVerticalScrollbarNode(
     this.minThumbHeight = minThumbHeight
     this.endPadding = endPadding
 
-    if (lazyListStateChanged) {
-      observeLazyListState()
-    } else {
-      invalidateDraw()
-    }
-  }
-
-  private fun observeLazyListState() {
-    scrollJob?.cancel()
-
-    scrollJob = coroutineScope.launch {
-      snapshotFlow {
-          val layoutInfo = lazyListState.layoutInfo
-          val visibleItems = layoutInfo.visibleItemsInfo
-          val totalItemsCount = layoutInfo.totalItemsCount
-
-          if (visibleItems.isEmpty() || totalItemsCount == 0) {
-            LazyListScrollbarMetrics(
-              scrollProgress = 0f,
-              viewportToContentRatio = 1f,
-              canScroll = false,
-            )
-          } else {
-            val viewportStartOffset = layoutInfo.viewportStartOffset
-            val viewportEndOffset = layoutInfo.viewportEndOffset
-            val viewportSize = viewportEndOffset - viewportStartOffset
-
-            val averageItemSize = visibleItems.sumOf { it.size }.toFloat() / visibleItems.size
-
-            val estimatedContentSize = averageItemSize * totalItemsCount
-
-            val estimatedScrollOffset =
-              lazyListState.firstVisibleItemIndex * averageItemSize +
-                lazyListState.firstVisibleItemScrollOffset
-
-            val maxScrollOffset = (estimatedContentSize - viewportSize).coerceAtLeast(1f)
-
-            val scrollProgress = (estimatedScrollOffset / maxScrollOffset).coerceIn(0f, 1f)
-
-            val viewportToContentRatio = (viewportSize / estimatedContentSize).coerceIn(0f, 1f)
-
-            LazyListScrollbarMetrics(
-              scrollProgress = scrollProgress,
-              viewportToContentRatio = viewportToContentRatio,
-              canScroll = estimatedContentSize > viewportSize,
-            )
-          }
-        }
-        .collectLatest { metrics ->
-          currentScrollProgress = metrics.scrollProgress
-          currentViewportToContentRatio = metrics.viewportToContentRatio
-          canScroll = metrics.canScroll
-          reachedBottom = !lazyListState.canScrollForward
-          invalidateDraw()
-        }
-    }
+    invalidateDraw()
   }
 }
 
@@ -496,13 +410,6 @@ private fun ContentDrawScope.drawScrollbar(
       ),
   )
 }
-
-private data class LazyListScrollbarMetrics(
-  val scrollProgress: Float,
-  val viewportToContentRatio: Float,
-  val canScroll: Boolean,
-  val reachedBottom: Boolean = false,
-)
 
 /**
  * Applies a bottom fade gradient to a column, based on the given scroll state and fading

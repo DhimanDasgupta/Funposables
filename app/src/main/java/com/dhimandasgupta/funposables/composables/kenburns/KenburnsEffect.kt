@@ -1,5 +1,6 @@
 package com.dhimandasgupta.funposables.composables.kenburns
 
+import android.content.Context
 import android.graphics.drawable.BitmapDrawable
 import android.util.LruCache
 import androidx.compose.animation.core.Animatable
@@ -49,7 +50,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.movableContentOf
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -108,28 +108,32 @@ enum class AnimationSpeed(val durationType: Float) {
  */
 private val swatchColorsCache = LruCache<Int, ImmutableList<Color>>(32)
 
+/** Carousel images; allocated once instead of on every recomposition of the pane. */
+private val kenBurnsItems =
+  persistentListOf(
+    R.drawable.wallpaper_01,
+    R.drawable.wallpaper_02,
+    R.drawable.wallpaper_03,
+    R.drawable.wallpaper_04,
+    R.drawable.wallpaper_05,
+    R.drawable.wallpaper_06,
+    R.drawable.wallpaper_07,
+    R.drawable.wallpaper_08,
+    R.drawable.wallpaper_09,
+  )
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun KenBurnsEffectPane(modifier: Modifier = Modifier, onBack: () -> Unit = {}) {
-  val items =
-    persistentListOf(
-      R.drawable.wallpaper_01,
-      R.drawable.wallpaper_02,
-      R.drawable.wallpaper_03,
-      R.drawable.wallpaper_04,
-      R.drawable.wallpaper_05,
-      R.drawable.wallpaper_06,
-      R.drawable.wallpaper_07,
-      R.drawable.wallpaper_08,
-      R.drawable.wallpaper_09,
-    )
+  val items = kenBurnsItems
   val carousalState = rememberCarouselState(initialItem = 0, itemCount = { items.size })
 
   val swatchColorsByItem = remember { mutableStateMapOf<Int, ImmutableList<Color>>() }
-  val currentSwatchColors by
-    remember(carousalState.currentItem) {
-      derivedStateOf { swatchColorsByItem[carousalState.currentItem] }
-    }
+  // derivedStateOf tracks currentItem itself; keying remember on it would recreate the derived
+  // state on every page change.
+  val currentSwatchColors by remember {
+    derivedStateOf { swatchColorsByItem[carousalState.currentItem] }
+  }
   var animationSpeed by remember { mutableStateOf(AnimationSpeed.NORMAL) }
 
   val speedSelector = remember {
@@ -163,26 +167,25 @@ fun KenBurnsEffectPane(modifier: Modifier = Modifier, onBack: () -> Unit = {}) {
     }
   }
 
-  var progress by remember { mutableFloatStateOf(0f) }
   val navigationState = rememberNavigationEventState(currentInfo = NavigationEventInfo.None)
   NavigationBackHandler(
     state = navigationState,
     isBackEnabled = true,
-    onBackCancelled = { progress = 0f },
-    onBackCompleted = { if (progress > 0.5f) onBack() },
+    onBackCompleted = onBack,
   )
 
   BoxWithConstraints(
     modifier =
       modifier.fillMaxSize().layoutAtLookaheadSize().graphicsLayer {
-        progress =
+        // Shrink and fade while the predictive back gesture is in progress
+        val backProgress =
           (navigationState.transitionState as? NavigationEventTransitionState.InProgress)
             ?.latestEvent
             ?.progress ?: 0f
 
-        alpha = 1f - progress
-        scaleX = 1f - 0.2f * progress
-        scaleY = 1f - 0.2f * progress
+        alpha = 1f - backProgress
+        scaleX = 1f - 0.2f * backProgress
+        scaleY = 1f - 0.2f * backProgress
         transformOrigin = TransformOrigin(pivotFractionX = 1f, pivotFractionY = 0.5f)
       }
   ) {
@@ -318,6 +321,8 @@ private fun KenBurnsCarousel(
   onSwatchColors: (Int, ImmutableList<Color>) -> Unit,
   modifier: Modifier = Modifier,
 ) {
+  // Resolved once here instead of in every (pre-fetched) carousel item.
+  val context = LocalContext.current
   HorizontalCenteredHeroCarousel(
     state = carousalState,
     itemSpacing = 8.dp,
@@ -327,6 +332,7 @@ private fun KenBurnsCarousel(
     ApplyKenBurnsEffect(
       modifier = Modifier.fillMaxWidth().aspectRatio(1f).maskClip(RoundedCornerShape(16.dp)),
       drawableResourceId = items[itemIndex],
+      context = context,
       animationSpeed = animationSpeed,
       isSelected = carousalState.currentItem == itemIndex,
       indexForPallet = itemIndex,
@@ -391,6 +397,7 @@ private fun AnimationSpeedSelectorSection(
 private fun ApplyKenBurnsEffect(
   modifier: Modifier = Modifier,
   drawableResourceId: Int,
+  context: Context,
   animationSpeed: AnimationSpeed,
   isSelected: Boolean,
   indexForPallet: Int,
@@ -402,9 +409,8 @@ private fun ApplyKenBurnsEffect(
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
     val geometry by remember { derivedStateOf { KenBurnsGeometry.of(containerSize) } }
 
-    val context = LocalContext.current
     val imageRequest =
-      remember(drawableResourceId) {
+      remember(drawableResourceId, context) {
         ImageRequest.Builder(context)
           .memoryCacheKey(drawableResourceId.toString())
           .diskCacheKey(drawableResourceId.toString())

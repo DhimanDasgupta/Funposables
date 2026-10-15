@@ -536,7 +536,8 @@ fun SubwayPane(modifier: Modifier = Modifier) {
 
   val steps =
     remember(stepCount, activeStepIndex, hasMultilineLabel) {
-        (0 until stepCount).map { i ->
+      (0 until stepCount)
+        .map { i ->
           val label =
             if (i == 0 && hasMultilineLabel) {
               "Long label that wraps\nto a second line"
@@ -556,8 +557,8 @@ fun SubwayPane(modifier: Modifier = Modifier) {
             state = state,
           )
         }
-      }
-      .toImmutableList()
+        .toImmutableList()
+    }
 
   val scrollState = rememberScrollState()
 

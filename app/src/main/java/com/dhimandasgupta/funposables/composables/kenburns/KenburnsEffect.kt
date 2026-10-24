@@ -1,6 +1,5 @@
 package com.dhimandasgupta.funposables.composables.kenburns
 
-import android.content.Context
 import android.graphics.drawable.BitmapDrawable
 import android.util.LruCache
 import androidx.compose.animation.core.Animatable
@@ -321,8 +320,6 @@ private fun KenBurnsCarousel(
   onSwatchColors: (Int, ImmutableList<Color>) -> Unit,
   modifier: Modifier = Modifier,
 ) {
-  // Resolved once here instead of in every (pre-fetched) carousel item.
-  val context = LocalContext.current
   HorizontalCenteredHeroCarousel(
     state = carousalState,
     itemSpacing = 8.dp,
@@ -332,7 +329,6 @@ private fun KenBurnsCarousel(
     ApplyKenBurnsEffect(
       modifier = Modifier.fillMaxWidth().aspectRatio(1f).maskClip(RoundedCornerShape(16.dp)),
       drawableResourceId = items[itemIndex],
-      context = context,
       animationSpeed = animationSpeed,
       isSelected = carousalState.currentItem == itemIndex,
       indexForPallet = itemIndex,
@@ -397,7 +393,6 @@ private fun AnimationSpeedSelectorSection(
 private fun ApplyKenBurnsEffect(
   modifier: Modifier = Modifier,
   drawableResourceId: Int,
-  context: Context,
   animationSpeed: AnimationSpeed,
   isSelected: Boolean,
   indexForPallet: Int,
@@ -405,6 +400,7 @@ private fun ApplyKenBurnsEffect(
 ) {
   key(drawableResourceId, indexForPallet) {
     val scope = rememberCoroutineScope()
+    val context = LocalContext.current
 
     var containerSize by remember { mutableStateOf(IntSize.Zero) }
     val geometry by remember { derivedStateOf { KenBurnsGeometry.of(containerSize) } }

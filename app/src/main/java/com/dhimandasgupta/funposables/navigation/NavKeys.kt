@@ -36,3 +36,5 @@ import kotlinx.serialization.Serializable
 @Serializable data object SubwayNavKey : NavKey
 
 @Serializable data object StaryNightNavKey : NavKey
+
+@Serializable data object RotaryDialNavKey : NavKey

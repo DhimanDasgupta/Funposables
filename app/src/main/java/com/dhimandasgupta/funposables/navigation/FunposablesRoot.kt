@@ -31,6 +31,7 @@ import com.dhimandasgupta.funposables.composables.mandelbrot.Mandelbrot
 import com.dhimandasgupta.funposables.composables.orbitalloader.OrbitalLoader
 import com.dhimandasgupta.funposables.composables.richhtml.RichHTMLText
 import com.dhimandasgupta.funposables.composables.richmarkdown.RichTextMarkdownText
+import com.dhimandasgupta.funposables.composables.rotarydial.RotaryDialPane
 import com.dhimandasgupta.funposables.composables.search.SearchExpander
 import com.dhimandasgupta.funposables.composables.starynight.StarryNightCanvas
 import com.dhimandasgupta.funposables.composables.subway.SubwayPane
@@ -133,6 +134,9 @@ fun FunposablesRoot(modifier: Modifier) {
               navigateToStaryNight = {
                 backStack.add(StaryNightNavKey)
               },
+              navigateToRotaryDial = {
+                backStack.add(RotaryDialNavKey)
+              },
             )
           }
           entry<ExpandableCollapsableItemsNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
@@ -194,6 +198,9 @@ fun FunposablesRoot(modifier: Modifier) {
           }
           entry<StaryNightNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
             StarryNightCanvas(modifier = modifier)
+          }
+          entry<RotaryDialNavKey>(metadata = ListDetailSceneStrategy.detailPane()) {
+            RotaryDialPane(modifier = modifier)
           }
         },
     )

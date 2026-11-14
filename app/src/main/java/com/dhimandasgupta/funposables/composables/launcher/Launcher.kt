@@ -51,6 +51,7 @@ fun Launcher(
   navigateToRichTextMarkdown: () -> Unit,
   navigateToSubway: () -> Unit,
   navigateToStaryNight: () -> Unit,
+  navigateToRotaryDial: () -> Unit,
 ) {
   val cardModifier = Modifier.padding(horizontal = 16.dp).fillMaxWidth().height(56.dp)
 
@@ -287,6 +288,17 @@ fun Launcher(
       )
     }
 
+    OutlinedCard(
+      modifier = cardModifier,
+      onClick = navigateToRotaryDial,
+    ) {
+      Text(
+        "Rotary Dial",
+        modifier = textModifier,
+        color = colorScheme.error,
+      )
+    }
+
     Spacer(
       modifier =
         Modifier.fillMaxWidth()
@@ -323,6 +335,7 @@ private fun LauncherPreview() {
       navigateToRichTextMarkdown = {},
       navigateToSubway = {},
       navigateToStaryNight = {},
+      navigateToRotaryDial = {},
     )
   }
 }

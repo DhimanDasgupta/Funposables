@@ -45,6 +45,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -55,6 +56,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -73,10 +75,12 @@ import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.util.VelocityTracker1D
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
@@ -300,7 +304,8 @@ internal data class DialPlacement(val edge: DialEdge, val visibleFraction: Float
  * Drag on the outer ring (the band holding the items) to rotate the wheel with your finger. Drags
  * that start on the inner ring, the center or outside the dial are ignored. When the finger lifts,
  * the wheel flings and then snaps so that one item sits exactly under the pointer. Tapping an item
- * rotates it to the pointer.
+ * rotates it to the pointer. A light haptic tick plays each time an item crosses the pointer while
+ * the wheel moves, and a firm one when it comes to rest.
  *
  * At most [maxVisibleItems] items are composed at a time. With more items than that, the wheel is a
  * sliding window over [items]: each time the wheel turns by one item, the item that moved furthest
@@ -398,6 +403,26 @@ fun RotaryDial(
   val scope = rememberCoroutineScope()
   val currentOnSelectedItemChange by rememberUpdatedState(onSelectedItemChange)
   val currentItems by rememberUpdatedState(items)
+  val currentHapticFeedback by rememberUpdatedState(LocalHapticFeedback.current)
+
+  // A light tick each time an item crosses the pointer while the wheel is still moving (dragging,
+  // flinging or settling). Observed outside composition so it never triggers a recomposition.
+  LaunchedEffect(position) {
+    var previousCount = -1
+    snapshotFlow {
+        val count = currentItems.size
+        // Comparing modulo the item count ignores the jump when the position is normalized after
+        // a long spin, which keeps the same item under the pointer.
+        count to if (count == 0) 0 else centerIndex.mod(count)
+      }
+      .collect { (count, _) ->
+        // Skip the first value and changes caused by a new item list rather than by rotation.
+        if (count == previousCount) {
+          currentHapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+        }
+        previousCount = count
+      }
+  }
 
   /** Animates the wheel so the logical index [target] sits under the pointer. */
   suspend fun settleAt(target: Int, initialVelocity: Float) {
@@ -406,6 +431,8 @@ fun RotaryDial(
       animationSpec = spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow),
       initialVelocity = initialVelocity,
     )
+    // Only reached when the wheel actually came to rest: a new drag cancels animateTo first.
+    currentHapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
     val snapshot = currentItems
     if (snapshot.isEmpty()) return
     // Keep the position small after long spins. Shifting by a multiple of the item count does not

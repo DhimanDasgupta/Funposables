@@ -189,50 +189,45 @@ data class RotaryDialColors(
  * Start and end follow the layout direction, so in right-to-left layouts the `START_CENTER`
  * positions are on the right edge and show the left part of the dial.
  */
-enum class DialPosition(
-  /** The edge the dial sits on in a left-to-right layout. */
-  private val ltrEdge: DialEdge,
-  /** Fraction of the disk's diameter that is visible. */
-  private val visibleFraction: Float,
-) {
+enum class DialPosition {
   /** At the start edge, half visible; the selection is the end-most item. */
-  START_CENTER(DialEdge.Left, 0.5f),
+  START_CENTER,
 
   /** At the start edge, 30% of the disk visible; the selection is the end-most item. */
-  START_CENTER_MEDIUM(DialEdge.Left, 0.30f),
+  START_CENTER_MEDIUM,
 
   /** At the start edge, 20% of the disk visible; the selection is the end-most item. */
-  START_CENTER_SMALL(DialEdge.Left, 0.20f),
+  START_CENTER_SMALL,
 
   /** At the end edge, half visible; the selection is the start-most item. */
-  END_CENTER(DialEdge.Right, 0.5f),
+  END_CENTER,
 
   /** At the end edge, 30% of the disk visible; the selection is the start-most item. */
-  END_CENTER_MEDIUM(DialEdge.Right, 0.30f),
+  END_CENTER_MEDIUM,
 
   /** At the end edge, 20% of the disk visible; the selection is the start-most item. */
-  END_CENTER_SMALL(DialEdge.Right, 0.20f),
+  END_CENTER_SMALL,
 
   /** At the top edge, half visible; the selection is the bottom-most item. */
-  TOP_CENTER(DialEdge.Top, 0.5f),
+  TOP_CENTER,
 
   /** At the top edge, a quarter of the disk visible; the selection is the bottom-most item. */
-  TOP_CENTER_MEDIUM(DialEdge.Top, 0.25f),
+  TOP_CENTER_MEDIUM,
 
   /** At the top edge, 15% of the disk visible; the selection is the bottom-most item. */
-  TOP_CENTER_SMALL(DialEdge.Top, 0.15f),
+  TOP_CENTER_SMALL,
 
   /** At the bottom edge, half visible; the selection is the top-most item. */
-  BOTTOM_CENTER(DialEdge.Bottom, 0.5f),
+  BOTTOM_CENTER,
 
   /** At the bottom edge, a quarter of the disk visible; the selection is the top-most item. */
-  BOTTOM_CENTER_MEDIUM(DialEdge.Bottom, 0.25f),
+  BOTTOM_CENTER_MEDIUM,
 
   /** At the bottom edge, 15% of the disk visible; the selection is the top-most item. */
-  BOTTOM_CENTER_SMALL(DialEdge.Bottom, 0.15f),
+  BOTTOM_CENTER_SMALL,
 
   /** The whole dial is shown; the selection is the top-most item. */
-  CENTER(DialEdge.None, 1f);
+  CENTER;
 
   /** The alignment that puts the dial against its edge of the parent. */
   val alignment: Alignment
@@ -244,25 +239,63 @@ enum class DialPosition(
         DialEdge.Bottom -> Alignment.BottomCenter
         DialEdge.None -> Alignment.Center
       }
+}
 
-  /** Resolves start/end to the physical left/right edge. */
-  internal fun placement(layoutDirection: LayoutDirection): DialPlacement {
-    val edge =
-      when {
-        layoutDirection == LayoutDirection.Ltr -> ltrEdge
-        ltrEdge == DialEdge.Left -> DialEdge.Right
-        ltrEdge == DialEdge.Right -> DialEdge.Left
-        else -> ltrEdge
-      }
-    return DialPlacement(edge, visibleFraction)
-  }
+/** The edge a [DialPosition] sits on in a left-to-right layout. */
+private val DialPosition.ltrEdge: DialEdge
+  get() =
+    when (this) {
+      DialPosition.START_CENTER,
+      DialPosition.START_CENTER_MEDIUM,
+      DialPosition.START_CENTER_SMALL -> DialEdge.Left
+      DialPosition.END_CENTER,
+      DialPosition.END_CENTER_MEDIUM,
+      DialPosition.END_CENTER_SMALL -> DialEdge.Right
+      DialPosition.TOP_CENTER,
+      DialPosition.TOP_CENTER_MEDIUM,
+      DialPosition.TOP_CENTER_SMALL -> DialEdge.Top
+      DialPosition.BOTTOM_CENTER,
+      DialPosition.BOTTOM_CENTER_MEDIUM,
+      DialPosition.BOTTOM_CENTER_SMALL -> DialEdge.Bottom
+      DialPosition.CENTER -> DialEdge.None
+    }
+
+/** Fraction of the disk's diameter that is visible for a [DialPosition]. */
+private val DialPosition.visibleFraction: Float
+  get() =
+    when (this) {
+      DialPosition.START_CENTER,
+      DialPosition.END_CENTER,
+      DialPosition.TOP_CENTER,
+      DialPosition.BOTTOM_CENTER -> 0.5f
+      DialPosition.START_CENTER_MEDIUM,
+      DialPosition.END_CENTER_MEDIUM -> 0.30f
+      DialPosition.START_CENTER_SMALL,
+      DialPosition.END_CENTER_SMALL -> 0.20f
+      DialPosition.TOP_CENTER_MEDIUM,
+      DialPosition.BOTTOM_CENTER_MEDIUM -> 0.25f
+      DialPosition.TOP_CENTER_SMALL,
+      DialPosition.BOTTOM_CENTER_SMALL -> 0.15f
+      DialPosition.CENTER -> 1f
+    }
+
+/** Resolves start/end to the physical left/right edge for [layoutDirection]. */
+private fun DialPosition.placement(layoutDirection: LayoutDirection): DialPlacement {
+  val edge =
+    when {
+      layoutDirection == LayoutDirection.Ltr -> ltrEdge
+      ltrEdge == DialEdge.Left -> DialEdge.Right
+      ltrEdge == DialEdge.Right -> DialEdge.Left
+      else -> ltrEdge
+    }
+  return DialPlacement(edge, visibleFraction)
 }
 
 /**
  * A physical edge of the layout, with the pointer angle (clockwise from 12 o'clock) facing away
  * from it.
  */
-internal enum class DialEdge(val selectionAngle: Float) {
+private enum class DialEdge(val selectionAngle: Float) {
   Left(90f),
   Right(270f),
   Top(180f),
@@ -274,7 +307,7 @@ internal enum class DialEdge(val selectionAngle: Float) {
  * A [DialPosition] resolved for the layout direction: the physical edge and how much is visible.
  */
 @Immutable
-internal data class DialPlacement(val edge: DialEdge, val visibleFraction: Float) {
+private data class DialPlacement(val edge: DialEdge, val visibleFraction: Float) {
   val selectionAngle: Float
     get() = edge.selectionAngle
 
@@ -315,7 +348,7 @@ internal data class DialPlacement(val edge: DialEdge, val visibleFraction: Float
  *
  * Everything (the wheel, the highlight, the pointer and the icons) is sized relative to the space
  * the layout gets, so sizing it through [modifier] scales the whole dial. Without a size constraint
- * it is [DefaultDialSize] square.
+ * it is 320.dp square.
  *
  * @param items The full list of items. Ids must be unique.
  * @param dialPosition Which edge the dial sits against, which half of it is shown, and where the
@@ -542,7 +575,7 @@ fun RotaryDial(
 }
 
 /** Size used when [RotaryDial] gets no size constraint from its modifier or parent. */
-val DefaultDialSize = 320.dp
+private val DefaultDialSize = 320.dp
 
 private const val SelectedItemScale = 1.4f
 
@@ -882,7 +915,7 @@ private fun Float.toDegrees(): Float = this * (180f / PI.toFloat())
 
 // region Previews
 
-internal val PreviewDialItems: ImmutableList<RotaryDialItem> =
+private val PreviewDialItems: ImmutableList<RotaryDialItem> =
   listOf(
       "lock" to R.drawable.ic_dial_lock,
       "face" to R.drawable.ic_dial_face,

@@ -46,6 +46,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -56,7 +57,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
@@ -132,6 +132,7 @@ fun RotaryDialPane(
       modifier = Modifier.align(currentPosition.alignment).dialFrame(currentPosition),
       dialPosition = currentPosition,
       onSelectedItemChange = { selected = it },
+      onDialPositionChange = { currentPosition = it },
     )
     DialControls(
       selected = selected,
@@ -279,6 +280,40 @@ private val DialPosition.visibleFraction: Float
       DialPosition.CENTER -> 1f
     }
 
+/** The sizes available on each edge, largest first. */
+private val StartSizes =
+  listOf(
+    DialPosition.START_CENTER,
+    DialPosition.START_CENTER_MEDIUM,
+    DialPosition.START_CENTER_SMALL,
+  )
+private val EndSizes =
+  listOf(DialPosition.END_CENTER, DialPosition.END_CENTER_MEDIUM, DialPosition.END_CENTER_SMALL)
+private val TopSizes =
+  listOf(DialPosition.TOP_CENTER, DialPosition.TOP_CENTER_MEDIUM, DialPosition.TOP_CENTER_SMALL)
+private val BottomSizes =
+  listOf(
+    DialPosition.BOTTOM_CENTER,
+    DialPosition.BOTTOM_CENTER_MEDIUM,
+    DialPosition.BOTTOM_CENTER_SMALL,
+  )
+
+/**
+ * The next smaller ([shrink]) or larger size on the same edge, or null when there is none: already
+ * at the end of the range, or [DialPosition.CENTER], which has no sizes.
+ */
+private fun DialPosition.resized(shrink: Boolean): DialPosition? {
+  val sizes =
+    when (ltrEdge) {
+      DialEdge.Left -> StartSizes
+      DialEdge.Right -> EndSizes
+      DialEdge.Top -> TopSizes
+      DialEdge.Bottom -> BottomSizes
+      DialEdge.None -> return null
+    }
+  return sizes.getOrNull(sizes.indexOf(this) + if (shrink) 1 else -1)
+}
+
 /** Resolves start/end to the physical left/right edge for [layoutDirection]. */
 private fun DialPosition.placement(layoutDirection: LayoutDirection): DialPlacement {
   val edge =
@@ -340,6 +375,15 @@ private data class DialPlacement(val edge: DialEdge, val visibleFraction: Float)
  * rotates it to the pointer. A light haptic tick plays each time an item crosses the pointer while
  * the wheel moves, and a firm one when it comes to rest.
  *
+ * For every [dialPosition] except [DialPosition.CENTER], swiping straight toward or away from the
+ * dial's center (rather than around it) changes its size, when [onDialPositionChange] is set:
+ * pushing in toward the screen edge steps down, for example `START_CENTER` to `START_CENTER_MEDIUM`
+ * to `START_CENTER_SMALL`, and pulling out steps back up. One swipe changes one step, and the dial
+ * animates to the new size. The swipe can start anywhere on the dial, including the inner ring.
+ *
+ * Whenever [dialPosition] changes, from the swipe or from anywhere else, the dial plays a firm
+ * haptic.
+ *
  * At most [maxVisibleItems] items are composed at a time. With more items than that, the wheel is a
  * sliding window over [items]: each time the wheel turns by one item, the item that moved furthest
  * from the pointer is dropped and the next item from [items] is inserted in its place. That swap
@@ -360,6 +404,9 @@ private data class DialPlacement(val edge: DialEdge, val visibleFraction: Float)
  *   pulse fades out as the item is rotated away from the pointer.
  * @param onSelectedItemChange Called with the item under the pointer each time the wheel comes to
  *   rest after a drag or tap.
+ * @param onDialPositionChange Called with the next size on the same edge when the dial is swiped in
+ *   or out. Pass the new value back as [dialPosition] to apply it. When null, the swipe is
+ *   disabled.
  */
 @Composable
 fun RotaryDial(
@@ -371,10 +418,10 @@ fun RotaryDial(
   colors: RotaryDialColors = RotaryDialColors(),
   pulseSelectedItem: Boolean = true,
   onSelectedItemChange: (RotaryDialItem) -> Unit = {},
+  onDialPositionChange: ((DialPosition) -> Unit)? = null,
 ) {
   require(maxVisibleItems > 0) { "maxVisibleItems must be positive, was $maxVisibleItems" }
 
-  // Extra scale for the selected item, read only in the draw phase so pulsing never recomposes.
   val pulse: () -> Float =
     if (pulseSelectedItem) {
       val pulseScale =
@@ -395,23 +442,29 @@ fun RotaryDial(
     }
 
   val placement = dialPosition.placement(LocalLayoutDirection.current)
+
+  val visibleFraction = remember(placement.edge) { Animatable(placement.visibleFraction) }
+  LaunchedEffect(visibleFraction, placement.visibleFraction) {
+    visibleFraction.animateTo(
+      targetValue = placement.visibleFraction,
+      animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+    )
+  }
+  val livePlacement: () -> DialPlacement =
+    remember(placement, visibleFraction) {
+      { placement.copy(visibleFraction = visibleFraction.value) }
+    }
+  val currentLivePlacement by rememberUpdatedState(livePlacement)
+  val currentDialPosition by rememberUpdatedState(dialPosition)
+  val currentOnDialPositionChange by rememberUpdatedState(onDialPositionChange)
   val itemCount = items.size
   val visibleCount = min(itemCount, maxVisibleItems)
-  // Degrees between two neighbouring items.
   val step = if (visibleCount == 0) 360f else 360f / visibleCount
 
-  // Index of the item under the pointer when the wheel last came to rest. Survives config changes.
   var settledIndex by rememberSaveable { mutableIntStateOf(initialSelectedIndex) }
 
-  /**
-   * Rotation of the wheel in item units: the (fractional) logical index under the pointer. It grows
-   * as the wheel turns counter-clockwise. The logical index `i` maps to `items[i mod size]`, which
-   * makes the list wrap around.
-   */
   val position = remember { Animatable(settledIndex.toFloat()) }
 
-  // The logical index nearest the pointer. Only changes when the wheel turns past half an item,
-  // so the window below is only rebuilt once per item rather than once per frame.
   val centerIndex by remember { derivedStateOf { position.value.roundToInt() } }
 
   val slots =
@@ -419,8 +472,6 @@ fun RotaryDial(
       if (visibleCount == 0) {
         emptyList()
       } else {
-        // Window of logical indices around the pointer. For an even count the extra slot is the
-        // one at the bottom (180°), which is where items are inserted and dropped.
         val first = centerIndex - (visibleCount - 1) / 2
         List(visibleCount) { k ->
           val logicalIndex = first + k
@@ -438,23 +489,18 @@ fun RotaryDial(
   val currentItems by rememberUpdatedState(items)
   val currentHapticFeedback by rememberUpdatedState(LocalHapticFeedback.current)
 
-  // A light tick each time an item crosses the pointer while the wheel is still moving (dragging,
-  // flinging or settling). Observed outside composition so it never triggers a recomposition.
-  LaunchedEffect(position) {
-    var previousCount = -1
-    snapshotFlow {
-        val count = currentItems.size
-        // Comparing modulo the item count ignores the jump when the position is normalized after
-        // a long spin, which keeps the same item under the pointer.
-        count to if (count == 0) 0 else centerIndex.mod(count)
-      }
-      .collect { (count, _) ->
-        // Skip the first value and changes caused by a new item list rather than by rotation.
-        if (count == previousCount) {
-          currentHapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
-        }
-        previousCount = count
-      }
+  val selectedIndex = if (itemCount == 0) 0 else centerIndex.mod(itemCount)
+  val hapticState = remember { DialHapticState(dialPosition, itemCount, selectedIndex) }
+  SideEffect(dialPosition, itemCount, selectedIndex) {
+    if (hapticState.itemCount == itemCount && hapticState.selectedIndex != selectedIndex) {
+      currentHapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentFrequentTick)
+    }
+    if (hapticState.dialPosition != dialPosition) {
+      currentHapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
+    }
+    hapticState.dialPosition = dialPosition
+    hapticState.itemCount = itemCount
+    hapticState.selectedIndex = selectedIndex
   }
 
   /** Animates the wheel so the logical index [target] sits under the pointer. */
@@ -464,12 +510,9 @@ fun RotaryDial(
       animationSpec = spring(dampingRatio = 0.72f, stiffness = Spring.StiffnessMediumLow),
       initialVelocity = initialVelocity,
     )
-    // Only reached when the wheel actually came to rest: a new drag cancels animateTo first.
     currentHapticFeedback.performHapticFeedback(HapticFeedbackType.Confirm)
     val snapshot = currentItems
     if (snapshot.isEmpty()) return
-    // Keep the position small after long spins. Shifting by a multiple of the item count does not
-    // change which items are shown or where.
     val normalized = target.mod(snapshot.size)
     position.snapTo(normalized.toFloat())
     settledIndex = normalized
@@ -482,15 +525,14 @@ fun RotaryDial(
   Layout(
     modifier =
       modifier
-        // Hides the half of the dial that is off-screen for the edge positions.
         .clipToBounds()
         .dialBackground(
           colors = colors,
           visibleCount = visibleCount,
-          placement = placement,
+          placement = livePlacement,
           rotation = { -position.value * step },
         )
-        .pointerInput(visibleCount, placement) {
+        .pointerInput(visibleCount) {
           if (visibleCount == 0) return@pointerInput
           val decay = exponentialDecay<Float>(frictionMultiplier = 1.6f)
           val tracker = VelocityTracker1D(isDataDifferential = false)
@@ -503,7 +545,15 @@ fun RotaryDial(
           }
 
           detectDialDrag(
-            placement = placement,
+            placement = { currentLivePlacement() },
+            canResize = {
+              currentOnDialPositionChange != null && currentDialPosition != DialPosition.CENTER
+            },
+            onResize = { shrink ->
+              val next = currentDialPosition.resized(shrink)
+              val callback = currentOnDialPositionChange
+              if (next != null && callback != null) callback(next)
+            },
             onDragStart = {
               tracker.resetTracking()
               dragPosition = position.value
@@ -520,9 +570,6 @@ fun RotaryDial(
     content = {
       slots.fastForEach { slot ->
         key(slot.item.id) {
-          // Every slot's item gets a new angle each time the wheel moves by one item. Pass only the
-          // fields that are drawn, and let the lambdas capture just the index, so an icon whose
-          // inputs didn't change can skip instead of all of them recomposing on every step.
           val logicalIndex = slot.logicalIndex
           DialIcon(
             id = slot.item.id,
@@ -538,9 +585,9 @@ fun RotaryDial(
       }
     },
   ) { measurables, constraints ->
-    // Largest dial whose visible part fits the constraints.
-    val widthUnits = placement.widthInHalfSides
-    val heightUnits = placement.heightInHalfSides
+    val currentPlacement = livePlacement()
+    val widthUnits = currentPlacement.widthInHalfSides
+    val heightUnits = currentPlacement.heightInHalfSides
     val halfSideForWidth =
       if (constraints.hasBoundedWidth) constraints.maxWidth / widthUnits
       else Float.POSITIVE_INFINITY
@@ -552,14 +599,12 @@ fun RotaryDial(
         ?: (DefaultDialSize.toPx() / 2f)
     val width = constraints.constrainWidth((halfSide * widthUnits).roundToInt())
     val height = constraints.constrainHeight((halfSide * heightUnits).roundToInt())
-    val geometry = DialGeometry(Size(width.toFloat(), height.toFloat()), placement)
+    val geometry = DialGeometry(Size(width.toFloat(), height.toFloat()), currentPlacement)
     val itemSize = geometry.itemSize.roundToInt().coerceAtLeast(0)
     val itemConstraints = Constraints.fixed(itemSize, itemSize)
     val placeables = measurables.fastMap { it.measure(itemConstraints) }
 
     layout(width, height) {
-      // Reading the position here means rotation only re-runs placement, not measure/composition.
-      // Read it once per pass rather than once per child.
       val rotation = position.value
       placeables.fastForEachIndexed { index, placeable ->
         val angle = (slots[index].logicalIndex - rotation) * step
@@ -591,6 +636,16 @@ private const val SelectedItemPulseMillis = 700
 private fun closenessOf(angle: Float, step: Float): Float =
   (1f - abs(angle) / step).coerceIn(0f, 1f)
 
+/**
+ * The values the dial last played haptics for, so a change can be told apart from the first
+ * composition. Plain fields, not snapshot state: only read and written from the dial's side effect.
+ */
+private class DialHapticState(
+  var dialPosition: DialPosition,
+  var itemCount: Int,
+  var selectedIndex: Int,
+)
+
 @Immutable private data class DialSlot(val logicalIndex: Int, val item: RotaryDialItem)
 
 @Composable
@@ -608,20 +663,15 @@ private fun DialIcon(
   Box(
     modifier =
       Modifier.graphicsLayer {
-          // One read of the wheel's position per frame; closeness is derived from it.
           val angle = angle()
           val closeness = closenessOf(angle, step)
-          // Only items near the pointer read the pulse, so the others are not redrawn every frame.
           val pulseScale = if (closeness > 0f) lerp(1f, pulse(), closeness) else 1f
           val scale = lerp(1f, SelectedItemScale, closeness) * pulseScale
           scaleX = scale
           scaleY = scale
-          // Tilt by the angle from the selection, so the selected item (angle 0) is upright and the
-          // others lean with the wheel.
           rotationZ = angle
         }
         .clickable(
-          // No indication, so no interaction source needs to be created and remembered.
           interactionSource = null,
           indication = null,
           role = Role.Button,
@@ -632,9 +682,6 @@ private fun DialIcon(
           this.selected = selected
         }
         .drawWithCache {
-          // The draw block runs every frame while the wheel moves, but only the icons next to the
-          // pointer change color. Reuse one filter for each end of the blend instead of allocating
-          // a new one per icon per frame.
           val restingFilter = ColorFilter.tint(colors.icon)
           val selectedFilter = ColorFilter.tint(colors.selectedIcon)
           val iconInset = size.minDimension * 0.12f
@@ -697,9 +744,10 @@ private class DialGeometry(size: Size, placement: DialPlacement) {
 private fun Modifier.dialBackground(
   colors: RotaryDialColors,
   visibleCount: Int,
-  placement: DialPlacement,
+  placement: () -> DialPlacement,
   rotation: () -> Float,
 ) = drawWithCache {
+  val placement = placement()
   val geometry = DialGeometry(size, placement)
   val step = if (visibleCount == 0) 360f else 360f / visibleCount
   val highlightHalfAngle = min(step / 2f, 24f).toRadians()
@@ -718,11 +766,8 @@ private fun Modifier.dialBackground(
       close()
     }
   val ringWidth = geometry.ringOuterRadius - geometry.ringInnerRadius
-  // Dividers are clipped to the disk so their ends never poke past its curved edge.
   val disk = Path().apply { addOval(Rect(center = geometry.center, radius = geometry.outerRadius)) }
 
-  // Tyre-like shoulder: flat across most of the disk, catching light on a crest near the edge, then
-  // darkening as the surface rolls away.
   val rimWidth = geometry.outerRadius - geometry.rimStartRadius
   val rimMidRadius = geometry.rimStartRadius + rimWidth / 2f
   val shoulder =
@@ -735,7 +780,6 @@ private fun Modifier.dialBackground(
       center = geometry.center,
       radius = geometry.outerRadius,
     )
-  // Fixed light from the top-left, so the rim looks tilted: lit on one side, shaded on the other.
   val lightOffset = Offset(geometry.outerRadius, geometry.outerRadius) * 0.7071f
   val tilt =
     Brush.linearGradient(
@@ -745,12 +789,10 @@ private fun Modifier.dialBackground(
       start = geometry.center - lightOffset,
       end = geometry.center + lightOffset,
     )
-  // Soft shadow the inner ring casts onto the disk, so the ring sits above it.
   val ringShadowWidth = geometry.outerRadius * 0.06f
   val ringShadowStart = geometry.ringOuterRadius / (geometry.ringOuterRadius + ringShadowWidth)
   val ringShadow =
     Brush.radialGradient(
-      // Nothing inside the ring, so the center disk keeps its flat color.
       0f to Color.Transparent,
       ringShadowStart - 0.001f to Color.Transparent,
       ringShadowStart to colors.rimShadow,
@@ -766,7 +808,6 @@ private fun Modifier.dialBackground(
       val offset = placement.selectionAngle + rotation()
       clipPath(disk) {
         repeat(visibleCount) { index ->
-          // Dividers sit halfway between two items.
           val radians = (offset + (index + 0.5f) * step).toRadians()
           drawLine(
             color = colors.divider,
@@ -779,7 +820,6 @@ private fun Modifier.dialBackground(
       }
     }
 
-    // Shading goes over the dividers so they too fade into the curved edge.
     drawCircle(brush = shoulder, radius = geometry.outerRadius, center = geometry.center)
     drawCircle(
       brush = tilt,
@@ -825,7 +865,6 @@ private fun highlightPath(geometry: DialGeometry, halfAngle: Float): Path {
     quadraticTo(leftCorner.x, leftCorner.y, leftArcStart.x, leftArcStart.y)
     arcTo(
       rect = arcRect,
-      // Path angles are measured clockwise from 3 o'clock, ours from 12 o'clock.
       startAngleDegrees = (-halfAngle + cornerAngle).toDegrees() - 90f,
       sweepAngleDegrees = (2 * (halfAngle - cornerAngle)).toDegrees(),
       forceMoveTo = false,
@@ -838,36 +877,70 @@ private fun highlightPath(geometry: DialGeometry, halfAngle: Float): Path {
   }
 }
 
+/** How far a swipe toward or away from the dial's center must travel to change its size. */
+private val ResizeSwipeThreshold = 32.dp
+
 /**
- * Reports drags as rotation around the center of the layout: [onDrag] receives the pointer's uptime
- * and the angle, in degrees (clockwise positive), that the finger swept since the last event.
+ * Handles the dial's two drag gestures, told apart by the direction of the first movement past the
+ * touch slop, measured from the dial's center:
+ * - Around the center (tangential): rotation. [onDrag] receives the pointer's uptime and the angle,
+ *   in degrees (clockwise positive), that the finger swept since the last event. Only picked up
+ *   when the finger first touched down on the outer ring, the band that holds the items.
+ * - Toward or away from the center (radial): a size change, when [canResize]. [onResize] is called
+ *   once per gesture, with `shrink = true` for a push toward the center, after
+ *   [ResizeSwipeThreshold] of radial travel. Can start anywhere on the dial.
  *
- * A gesture is only picked up when the finger first touches down on the outer ring, the band
- * between the inner ring and the dial's edge that holds the items. Gestures that start on the inner
- * ring, the center, or outside the dial are ignored for their whole duration, even if the finger
- * later moves onto the outer ring.
+ * Gestures that start elsewhere, or a rotation that starts off the outer ring, are ignored for
+ * their whole duration.
  */
 private suspend fun PointerInputScope.detectDialDrag(
-  placement: DialPlacement,
+  placement: () -> DialPlacement,
+  canResize: () -> Boolean,
+  onResize: (shrink: Boolean) -> Unit,
   onDragStart: () -> Unit,
   onDrag: (uptimeMillis: Long, degrees: Float) -> Unit,
   onDragEnd: () -> Unit,
 ) {
   awaitEachGesture {
-    // Children (the clickable icons) may consume the down, so look at it regardless.
     val down = awaitFirstDown(requireUnconsumed = false)
-    val geometry = DialGeometry(size.toSize(), placement)
-    val downRadius = (down.position - geometry.center).getDistance()
-    if (downRadius < geometry.ringOuterRadius || downRadius > geometry.outerRadius) {
-      return@awaitEachGesture
-    }
+    val geometry = DialGeometry(size.toSize(), placement())
+    val fromCenter = down.position - geometry.center
+    val downRadius = fromCenter.getDistance()
+    val onOuterRing = downRadius in geometry.ringOuterRadius..geometry.outerRadius
+    val resizable = canResize() && downRadius in 1f..geometry.highlightOuterRadius
+    if (!onOuterRing && !resizable) return@awaitEachGesture
 
     val slopChange =
       awaitTouchSlopOrCancellation(down.id) { change, _ -> change.consume() }
         ?: return@awaitEachGesture
 
+    val radialDirection = fromCenter / downRadius
+    val movement = slopChange.position - down.position
+    val radialMovement = movement.x * radialDirection.x + movement.y * radialDirection.y
+    val tangentialMovement = movement.x * radialDirection.y - movement.y * radialDirection.x
+
+    if (resizable && abs(radialMovement) > abs(tangentialMovement)) {
+      val threshold = ResizeSwipeThreshold.toPx()
+      var travelled = radialMovement
+      var resized = false
+      fun resizeOnceAtThreshold() {
+        if (!resized && abs(travelled) >= threshold) {
+          resized = true
+          onResize(travelled < 0f)
+        }
+      }
+      resizeOnceAtThreshold()
+      drag(slopChange.id) { change ->
+        change.consume()
+        val delta = change.position - change.previousPosition
+        travelled += delta.x * radialDirection.x + delta.y * radialDirection.y
+        resizeOnceAtThreshold()
+      }
+      return@awaitEachGesture
+    }
+    if (!onOuterRing) return@awaitEachGesture
+
     onDragStart()
-    // Count the movement spent getting past the touch slop, so the wheel doesn't lag the finger.
     reportRotation(
       geometry.center,
       down.position,
@@ -885,7 +958,6 @@ private suspend fun PointerInputScope.detectDialDrag(
         onDrag,
       )
     }
-    // Lifted or cancelled: either way, let the wheel settle on an item.
     onDragEnd()
   }
 }
@@ -899,7 +971,6 @@ private fun PointerInputScope.reportRotation(
 ) {
   val previous = from - center
   val current = to - center
-  // Angles are unstable right at the center, so ignore movement there if the finger wanders in.
   val deadZone = min(size.width, size.height) * 0.05f
   if (previous.getDistance() > deadZone && current.getDistance() > deadZone) {
     val delta = current.clockwiseDegreesFromTop() - previous.clockwiseDegreesFromTop()
@@ -912,8 +983,6 @@ private fun Offset.clockwiseDegreesFromTop(): Float = atan2(x, -y).toDegrees()
 private fun Float.toRadians(): Float = this * (PI.toFloat() / 180f)
 
 private fun Float.toDegrees(): Float = this * (180f / PI.toFloat())
-
-// region Previews
 
 private val PreviewDialItems: ImmutableList<RotaryDialItem> =
   listOf(
@@ -955,7 +1024,6 @@ private fun DialControls(
   ) {
     Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
       Text(text = "Selected: ${selected.id}", style = typography.titleMedium)
-      // The menu anchors to this Box, so it opens right under the button.
       Box {
         TextButton(
           onClick = { expanded = true },
@@ -1113,5 +1181,3 @@ private fun RotaryDialPanePreview(
 ) {
   FunposablesTheme { RotaryDialPane(dialPosition = position) }
 }
-
-// endregion
